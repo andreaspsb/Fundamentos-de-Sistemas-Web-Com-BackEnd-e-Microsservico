@@ -98,14 +98,60 @@ function processarCadastro() {
   
   dados.necessidades = necessidades;
   
-  console.log('📝 Dados do cadastro:', dados);
+  console.log('═══════════════════════════════════════');
+  console.log('🚀 INICIANDO PROCESSAMENTO DO CADASTRO');
+  console.log('═══════════════════════════════════════');
+  console.log('📝 Dados coletados:', dados);
+  console.log('⏳ Aguardando 2 segundos (setTimeout)...');
+  console.log('═══════════════════════════════════════');
   
-  // Simular envio com delay (função temporal)
+  // Mostrar loading no botão
   mostrarLoading();
   
+  // Mostrar toast de processamento
+  mostrarToastProcessamento();
+  
+  // Simular envio com delay de 2 segundos (demonstração de setTimeout)
+  let tempoDecorrido = 0;
+  const intervalo = setInterval(() => {
+    tempoDecorrido++;
+    const toastTimer = document.getElementById('toastTimer');
+    if (toastTimer) {
+      toastTimer.textContent = `${tempoDecorrido}s`;
+    }
+    console.log(`⏱️ Processando... ${tempoDecorrido} segundo(s) decorrido(s)`);
+  }, 1000);
+  
   setTimeout(() => {
+    clearInterval(intervalo);
+    console.log('═══════════════════════════════════════');
+    console.log('✅ TIMEOUT DE 2 SEGUNDOS CONCLUÍDO!');
+    console.log('═══════════════════════════════════════');
+    ocultarToastProcessamento();
     finalizarCadastro(dados);
   }, 2000);
+}
+
+/**
+ * Mostra toast de processamento
+ */
+function mostrarToastProcessamento() {
+  const toastEl = document.getElementById('loadingToast');
+  const toast = new bootstrap.Toast(toastEl, {
+    autohide: false
+  });
+  toast.show();
+}
+
+/**
+ * Oculta toast de processamento
+ */
+function ocultarToastProcessamento() {
+  const toastEl = document.getElementById('loadingToast');
+  const toast = bootstrap.Toast.getInstance(toastEl);
+  if (toast) {
+    toast.hide();
+  }
 }
 
 /**
@@ -113,10 +159,15 @@ function processarCadastro() {
  */
 function mostrarLoading() {
   const submitBtn = document.querySelector('button[type="submit"]');
+  const originalHTML = submitBtn.innerHTML;
+  
   submitBtn.disabled = true;
   submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processando...';
   
-  console.log('⏳ Processando cadastro...');
+  console.log('⏳ Processando cadastro... (aguarde 2 segundos)');
+  
+  // Retornar HTML original para restauração posterior
+  return originalHTML;
 }
 
 /**
@@ -126,26 +177,67 @@ function finalizarCadastro(dados) {
   const submitBtn = document.querySelector('button[type="submit"]');
   const form = document.getElementById('cadastroForm');
   const sucessoMsg = document.getElementById('sucessoMsg');
+  const countdownSpan = document.getElementById('countdown');
+  
+  console.log('🎯 Iniciando finalização do cadastro...');
   
   // Restaurar botão
   submitBtn.disabled = false;
   submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Cadastrar';
   
-  // Mostrar mensagem de sucesso
-  sucessoMsg.style.display = 'block';
-  sucessoMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  
   // Resetar formulário
   form.reset();
   form.classList.remove('was-validated');
   
-  console.log('✅ Cadastro finalizado com sucesso!');
-  console.log(`Cliente: ${dados.nomeCliente}`);
-  console.log(`Pet: ${dados.nomePet} (${dados.raca})`);
+  // Mostrar mensagem de sucesso
+  if (sucessoMsg) {
+    sucessoMsg.style.display = 'block';
+    sucessoMsg.style.visibility = 'visible';
+    sucessoMsg.style.opacity = '1';
+    
+    console.log('✅ Mensagem de sucesso exibida!');
+    console.log('📍 Elemento sucessoMsg:', sucessoMsg);
+    console.log('📍 Display:', sucessoMsg.style.display);
+  } else {
+    console.error('❌ Elemento sucessoMsg não encontrado!');
+  }
   
-  // Ocultar mensagem após 8 segundos
+  // Scroll suave para a mensagem
   setTimeout(() => {
-    sucessoMsg.style.display = 'none';
+    if (sucessoMsg) {
+      sucessoMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, 200);
+  
+  console.log('✅ Cadastro finalizado com sucesso!');
+  console.log(`👤 Cliente: ${dados.nomeCliente}`);
+  console.log(`🐾 Pet: ${dados.nomePet} (${dados.raca})`);
+  console.log('⏰ Iniciando countdown de 8 segundos...');
+  
+  // Countdown de 8 segundos (demonstração de setInterval)
+  let segundosRestantes = 8;
+  const countdownInterval = setInterval(() => {
+    segundosRestantes--;
+    if (countdownSpan) {
+      countdownSpan.textContent = segundosRestantes;
+    }
+    console.log(`⏰ Tempo restante: ${segundosRestantes}s`);
+    
+    if (segundosRestantes <= 0) {
+      clearInterval(countdownInterval);
+    }
+  }, 1000);
+  
+  // Ocultar mensagem após 8 segundos (demonstração de setTimeout)
+  setTimeout(() => {
+    clearInterval(countdownInterval);
+    console.log('⏰ 8 segundos transcorridos - ocultando mensagem');
+    if (sucessoMsg) {
+      sucessoMsg.style.display = 'none';
+    }
+    if (countdownSpan) {
+      countdownSpan.textContent = '8'; // Reset para próxima vez
+    }
   }, 8000);
 }
 
