@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendamento — Pet Shop</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  
+  <!-- CSS Customizado -->
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="bg-primary text-white py-5 text-center">
+    <div class="container">
+      <h1 class="display-4 fw-bold">Agendamento de Serviços</h1>
+      <p class="lead">Agende banho e tosa para seu pet</p>
+    </div>
+  </header>
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand fw-bold text-primary" href="../">🐾 Pet Shop</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="../">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../categorias/racoes-alimentacao/">Rações e Alimentação</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../categorias/acessorios-brinquedos/">Acessórios e Brinquedos</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../categorias/higiene-cuidados/">Higiene e Cuidados</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active" href="./">Serviços</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../cadastro.html">Cadastro</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="container my-5">
+    <!-- Mensagem de Sucesso -->
+    <div id="sucessoMsg" class="alert alert-success alert-dismissible mb-4" role="alert" style="display: none;">
+      <h4 class="alert-heading">✅ Agendamento confirmado!</h4>
+      <p>Seu agendamento foi realizado com sucesso!</p>
+      <hr>
+      <p class="mb-0"><small>💡 Você receberá uma confirmação por telefone em breve.</small></p>
+      <button type="button" class="btn-close" aria-label="Close" onclick="document.getElementById('sucessoMsg').style.display='none'"></button>
+    </div>
+    
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="card shadow-lg">
+          <div class="card-body p-4">
+            <form id="agendamentoForm" novalidate>
+              
+              <!-- Seção: Escolha do Serviço -->
+              <section class="mb-5">
+                <h2 class="text-primary mb-4 border-bottom border-3 border-warning pb-2">
+                  <i class="bi bi-scissors"></i> Escolha o(s) Serviço(s)
+                </h2>
+                
+                <div class="row g-3">
+                  <!-- Cards de Serviços -->
+                  <div class="col-md-4">
+                    <div class="card h-100 servico-card" id="cardBanho">
+                      <div class="card-body text-center">
+                        <input class="form-check-input d-none" type="checkbox" id="servicoBanho" name="servicos" value="banho">
+                        <label class="w-100 cursor-pointer" for="servicoBanho">
+                          <div class="display-4 mb-3">🛁</div>
+                          <h5 class="card-title">Banho</h5>
+                          <p class="card-text small">Banho completo com produtos de qualidade</p>
+                          <p class="text-primary fw-bold">R$ 50,00</p>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="card h-100 servico-card" id="cardTosa">
+                      <div class="card-body text-center">
+                        <input class="form-check-input d-none" type="checkbox" id="servicoTosa" name="servicos" value="tosa">
+                        <label class="w-100 cursor-pointer" for="servicoTosa">
+                          <div class="display-4 mb-3">✂️</div>
+                          <h5 class="card-title">Tosa</h5>
+                          <p class="card-text small">Tosa higiênica ou completa</p>
+                          <p class="text-primary fw-bold">R$ 40,00</p>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="card h-100 servico-card border-warning" id="cardCompleto">
+                      <div class="card-body text-center">
+                        <input class="form-check-input d-none" type="checkbox" id="servicoCompleto" name="servicos" value="completo">
+                        <label class="w-100 cursor-pointer" for="servicoCompleto">
+                          <span class="badge bg-warning text-dark mb-2">Combo</span>
+                          <div class="display-4 mb-3">🛁✂️</div>
+                          <h5 class="card-title">Banho + Tosa</h5>
+                          <p class="card-text small">Pacote completo com desconto</p>
+                          <p class="text-success fw-bold">R$ 80,00 <small class="text-muted text-decoration-line-through">R$ 90,00</small></p>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="invalid-feedback" id="servicoError" style="display: none;">
+                      Por favor, selecione pelo menos um serviço.
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Seção: Método de Agendamento -->
+              <section class="mb-5">
+                <h2 class="text-primary mb-4 border-bottom border-3 border-warning pb-2">
+                  <i class="bi bi-geo-alt-fill"></i> Método de Atendimento
+                </h2>
+                
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="card h-100 metodo-card" id="cardTelebusca">
+                      <div class="card-body">
+                        <input class="form-check-input d-none" type="radio" name="metodo" id="metodoTelebusca" value="telebusca" required>
+                        <label class="w-100 cursor-pointer" for="metodoTelebusca">
+                          <div class="d-flex align-items-center mb-3">
+                            <span class="fs-1 me-3">🚗</span>
+                            <div>
+                              <h5 class="card-title mb-1">Tele-busca</h5>
+                              <p class="card-text small mb-0">Buscamos e entregamos seu pet</p>
+                            </div>
+                          </div>
+                          <div class="alert alert-info mb-0">
+                            <small><strong>+ R$ 20,00</strong> - Busca e entrega em domicílio</small>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-md-6">
+                    <div class="card h-100 metodo-card" id="cardLocal">
+                      <div class="card-body">
+                        <input class="form-check-input d-none" type="radio" name="metodo" id="metodoLocal" value="local" required>
+                        <label class="w-100 cursor-pointer" for="metodoLocal">
+                          <div class="d-flex align-items-center mb-3">
+                            <span class="fs-1 me-3">🏪</span>
+                            <div>
+                              <h5 class="card-title mb-1">Entrega no Local</h5>
+                              <p class="card-text small mb-0">Você traz e busca seu pet</p>
+                            </div>
+                          </div>
+                          <div class="alert alert-success mb-0">
+                            <small><strong>Sem taxa adicional</strong></small>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-12">
+                    <div class="invalid-feedback" id="metodoError" style="display: none;">
+                      Por favor, selecione um método de atendimento.
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Seção: Data e Horário -->
+              <section class="mb-5">
+                <h2 class="text-primary mb-4 border-bottom border-3 border-warning pb-2">
+                  <i class="bi bi-calendar-check"></i> Data e Horário
+                </h2>
+                
+                <div class="row g-3">
+                  <!-- Data -->
+                  <div class="col-md-6">
+                    <label for="dataAgendamento" class="form-label">Data do Agendamento *</label>
+                    <input type="date" class="form-control" id="dataAgendamento" name="dataAgendamento" required>
+                    <div class="invalid-feedback">
+                      Por favor, selecione uma data.
+                    </div>
+                    <small class="text-muted">Atendemos de segunda a sábado</small>
+                  </div>
+
+                  <!-- Horário -->
+                  <div class="col-md-6">
+                    <label for="horarioAgendamento" class="form-label">Horário *</label>
+                    <select class="form-select" id="horarioAgendamento" name="horarioAgendamento" required>
+                      <option value="" selected>Selecione o horário...</option>
+                      <option value="08:00">08:00</option>
+                      <option value="09:00">09:00</option>
+                      <option value="10:00">10:00</option>
+                      <option value="11:00">11:00</option>
+                      <option value="12:00">12:00</option>
+                      <option value="13:00">13:00</option>
+                      <option value="14:00">14:00</option>
+                      <option value="15:00">15:00</option>
+                      <option value="16:00">16:00</option>
+                      <option value="17:00">17:00</option>
+                      <option value="18:00">18:00</option>
+                    </select>
+                    <div class="invalid-feedback">
+                      Por favor, selecione um horário.
+                    </div>
+                    <small class="text-muted">Horário de funcionamento: 8h às 18h</small>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Seção: Dados do Cliente e Pet -->
+              <section class="mb-5">
+                <h2 class="text-primary mb-4 border-bottom border-3 border-warning pb-2">
+                  <i class="bi bi-person-heart"></i> Seus Dados
+                </h2>
+                
+                <div class="row g-3">
+                  <!-- Nome do Cliente -->
+                  <div class="col-md-6">
+                    <label for="nomeCliente" class="form-label">Seu Nome *</label>
+                    <input type="text" class="form-control" id="nomeCliente" name="nomeCliente" 
+                           placeholder="Digite seu nome" required minlength="3">
+                    <div class="invalid-feedback">
+                      Por favor, informe seu nome.
+                    </div>
+                  </div>
+
+                  <!-- Telefone -->
+                  <div class="col-md-6">
+                    <label for="telefone" class="form-label">Telefone *</label>
+                    <input type="tel" class="form-control" id="telefone" name="telefone" 
+                           placeholder="(00) 00000-0000" required
+                           pattern="\(\d{2}\) \d{4,5}-\d{4}"
+                           maxlength="15">
+                    <div class="invalid-feedback">
+                      Por favor, informe um telefone válido no formato (00) 00000-0000.
+                    </div>
+                  </div>
+
+                  <!-- Nome do Pet -->
+                  <div class="col-md-6">
+                    <label for="nomePet" class="form-label">Nome do Pet *</label>
+                    <input type="text" class="form-control" id="nomePet" name="nomePet" 
+                           placeholder="Nome do seu pet" required>
+                    <div class="invalid-feedback">
+                      Por favor, informe o nome do pet.
+                    </div>
+                  </div>
+
+                  <!-- Porte do Pet -->
+                  <div class="col-md-6">
+                    <label for="portePet" class="form-label">Porte do Pet *</label>
+                    <select class="form-select" id="portePet" name="portePet" required>
+                      <option value="" selected>Selecione...</option>
+                      <option value="pequeno">Pequeno (até 10kg)</option>
+                      <option value="medio">Médio (10kg a 25kg)</option>
+                      <option value="grande">Grande (acima de 25kg)</option>
+                    </select>
+                    <div class="invalid-feedback">
+                      Por favor, selecione o porte do pet.
+                    </div>
+                  </div>
+
+                  <!-- Observações -->
+                  <div class="col-12">
+                    <label for="observacoes" class="form-label">Observações</label>
+                    <textarea class="form-control" id="observacoes" name="observacoes" rows="2" 
+                              placeholder="Informações adicionais (alergias, comportamento, etc.)"></textarea>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Resumo do Agendamento -->
+              <section class="mb-4">
+                <div class="alert alert-light border" id="resumoAgendamento" style="display: none;">
+                  <h5 class="alert-heading text-primary">📋 Resumo do Agendamento</h5>
+                  <hr>
+                  <div id="resumoConteudo"></div>
+                  <hr>
+                  <p class="mb-0"><strong>Total: <span id="valorTotal" class="text-success fs-4">R$ 0,00</span></strong></p>
+                </div>
+              </section>
+
+              <!-- Botões -->
+              <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="button" class="btn btn-outline-info btn-lg" onclick="calcularResumo()">
+                  <i class="bi bi-calculator"></i> Ver Resumo
+                </button>
+                <button type="reset" class="btn btn-outline-secondary btn-lg">
+                  <i class="bi bi-arrow-counterclockwise"></i> Limpar
+                </button>
+                <button type="submit" class="btn btn-primary btn-lg">
+                  <i class="bi bi-check-circle"></i> Confirmar Agendamento
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white text-center py-4 mt-5">
+    <div class="container">
+      <p class="mb-0">&copy; 2025 Pet Shop - Todos os direitos reservados</p>
+    </div>
+  </footer>
+  
+  <!-- Bootstrap 5 JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  
+  <!-- JavaScript Customizado -->
+  <script src="../js/script.js"></script>
+  <script src="../js/agendamento.js"></script>
+</body>
+</html>

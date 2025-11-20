@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Serviços — Pet Shop</title>
   
   <!-- Bootstrap 5 CSS -->
@@ -58,37 +58,42 @@
       <h2 class="text-primary mb-4">Nossos Serviços</h2>
       
       <div class="row g-4">
-        <div class="col-md-6">
+        <div class="col-md-4">
           <div class="card h-100 shadow-sm">
-            <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&h=300&fit=crop" class="card-img-top" alt="Banho e Tosa" style="height: 250px; object-fit: cover;">
-            <div class="card-body">
-              <div class="d-flex align-items-center mb-3">
-                <span class="fs-1 me-3">🛁</span>
-                <h3 class="card-title mb-0">Banho e Tosa</h3>
-              </div>
-              <p class="card-text">Banho completo com shampoo adequado à pelagem do seu pet, secagem, escovação e tosa higiênica ou completa conforme solicitado.</p>
-              <div class="d-flex justify-content-between align-items-center mt-3">
-                <span class="badge bg-success fs-5">R$ 80,00</span>
-                <button class="btn btn-outline-primary">Agendar</button>
-              </div>
+            <img src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?w=600&h=300&fit=crop" class="card-img-top" alt="Banho" style="height: 250px; object-fit: cover;">
+            <div class="card-body text-center">
+              <div class="display-4 mb-3">🛁</div>
+              <h3 class="card-title">Banho</h3>
+              <p class="card-text">Banho completo com produtos de qualidade</p>
+              <p class="text-primary fw-bold fs-4">R$ 50,00</p>
+              <a href="agendamento.html?servico=banho" class="btn btn-outline-primary w-100">Agendar</a>
             </div>
           </div>
         </div>
 
-        <div class="col-md-6">
-          <div class="card h-100 shadow-sm border-primary">
-            <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&h=300&fit=crop" class="card-img-top" alt="Banho e Tosa com Tele-busca" style="height: 250px; object-fit: cover;">
-            <div class="card-body">
-              <div class="d-flex align-items-center mb-3">
-                <span class="fs-1 me-3">🚗</span>
-                <h3 class="card-title mb-0">Banho e Tosa com Tele-busca</h3>
-              </div>
-              <span class="badge bg-warning text-dark mb-2">Mais Popular</span>
-              <p class="card-text">Banho completo com shampoo adequado, secagem, escovação e tosa, incluindo busca e entrega do seu pet em domicílio.</p>
-              <div class="d-flex justify-content-between align-items-center mt-3">
-                <span class="badge bg-success fs-5">R$ 120,00</span>
-                <button class="btn btn-primary">Agendar</button>
-              </div>
+        <div class="col-md-4">
+          <div class="card h-100 shadow-sm">
+            <img src="https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&h=300&fit=crop" class="card-img-top" alt="Tosa" style="height: 250px; object-fit: cover;">
+            <div class="card-body text-center">
+              <div class="display-4 mb-3">✂️</div>
+              <h3 class="card-title">Tosa</h3>
+              <p class="card-text">Tosa higiênica ou completa</p>
+              <p class="text-primary fw-bold fs-4">R$ 40,00</p>
+              <a href="agendamento.html?servico=tosa" class="btn btn-outline-primary w-100">Agendar</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card h-100 shadow-sm border-warning">
+            <img src="https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?w=600&h=300&fit=crop" class="card-img-top" alt="Banho + Tosa" style="height: 250px; object-fit: cover;">
+            <div class="card-body text-center">
+              <span class="badge bg-warning text-dark mb-2">Combo</span>
+              <div class="display-4 mb-3">🛁✂️</div>
+              <h3 class="card-title">Banho + Tosa</h3>
+              <p class="card-text">Pacote completo com desconto</p>
+              <p class="text-success fw-bold fs-4">R$ 80,00 <small class="text-muted text-decoration-line-through">R$ 90,00</small></p>
+              <a href="agendamento.html?servico=completo" class="btn btn-primary w-100">Agendar</a>
             </div>
           </div>
         </div>
@@ -96,12 +101,37 @@
     </section>
 
     <section class="bg-light p-4 rounded">
-      <h2 class="text-primary mb-3">Agendamento</h2>
-      <p class="mb-3">Para agendar, ligue para nossa loja ou use o formulário de contato.</p>
-      <div class="d-flex align-items-center">
-        <span class="fs-4 me-2">📞</span>
-        <strong>Horário de atendimento:</strong>
-        <span class="ms-2 badge bg-info">9h–18h</span>
+      <h2 class="text-primary mb-3">🚗 Opções de Entrega</h2>
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-body">
+              <h5 class="card-title">Tele-busca</h5>
+              <p class="card-text">Buscamos e entregamos seu pet no conforto da sua casa.</p>
+              <p class="text-primary fw-bold">+ R$ 20,00</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100 border-success">
+            <div class="card-body">
+              <h5 class="card-title">Entrega no Local</h5>
+              <p class="card-text">Você traz e busca seu pet em nossa loja.</p>
+              <p class="text-success fw-bold">Sem taxa adicional</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <h2 class="text-primary mb-3">📅 Como Agendar</h2>
+      <p class="mb-3">Escolha o serviço desejado acima e clique em "Agendar", ou acesse diretamente nosso formulário de agendamento online.</p>
+      <div class="d-flex flex-wrap gap-3 align-items-center">
+        <a href="agendamento.html" class="btn btn-primary">Agendar Online</a>
+        <div class="d-flex align-items-center">
+          <span class="fs-4 me-2">📞</span>
+          <strong>Horário de atendimento:</strong>
+          <span class="ms-2 badge bg-info">Seg-Sáb: 8h–18h</span>
+        </div>
       </div>
     </section>
   </main>
