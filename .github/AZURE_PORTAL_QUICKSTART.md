@@ -588,6 +588,60 @@ git push origin main
 
 ## 🆘 Problemas Comuns
 
+### ⚠️ Erro: "Site Disabled (CODE: 403)" - App Service Parado
+
+**Sintomas:**
+- Deploy falha com erro 403
+- Portal mostra "Site has been disabled"
+- App Service aparece como "Stopped"
+
+**Causa:** O App Service foi parado (manual ou automático) e precisa ser reiniciado.
+
+**Solução Completa:**
+
+1. **Iniciar o App Service:**
+   - Portal Azure → App Services → `petshop-backend-aspnet`
+   - Na página Overview, clique em **"Start"** no topo
+   - Aguarde status mudar para "Running" (~30 segundos)
+
+2. **Configurar Firewall do Azure SQL Database:**
+   - Portal Azure → SQL databases → `petshop-db`
+   - Menu lateral: **"Networking"** ou **"Firewalls and virtual networks"**
+   - ✅ Marque: **"Allow Azure services and resources to access this server"**
+   - Clique em **"Save"**
+   
+   **Importante:** Sem essa configuração, o App Service não consegue conectar ao banco!
+
+3. **Adicionar Connection String no App Service:**
+   - Portal Azure → App Services → `petshop-backend-aspnet`
+   - Menu lateral: **"Configuration"** ou **"Environment variables"**
+   - Seção **"Connection strings"** → **"+ New connection string"**
+   - Preencha:
+     ```
+     Name: DefaultConnection
+     Value: Server=tcp:petshop-db.database.windows.net,1433;Initial Catalog=petshop-db;Persist Security Info=False;User ID=petshop_admin;Password=SUA_SENHA;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;
+     Type: SQLAzure
+     ```
+   - **⚠️ Substitua `SUA_SENHA` pela senha real do banco!**
+
+4. **Adicionar Variáveis de Ambiente:**
+   - Na mesma tela (Configuration), vá em **"Application settings"**
+   - Adicione:
+     ```
+     ASPNETCORE_ENVIRONMENT = Production
+     JWT_SECRET_KEY = [gere uma chave secreta forte - 32+ caracteres]
+     ```
+   - Clique em **"Save"** → **"Continue"**
+   - O app será reiniciado automaticamente
+
+5. **Verificar se funcionou:**
+   - Abra: `https://petshop-backend-aspnet.azurewebsites.net/health`
+   - Deve retornar: `{"status":"Healthy"}`
+
+**📋 Guia detalhado:** Veja `.github/AZURE_SQL_FIREWALL.md` para instruções passo a passo com screenshots.
+
+---
+
 ### Workflow falha: "Login failed"
 **Solução:** Verifique se o secret `AZURE_CREDENTIALS` está correto (JSON completo).
 
@@ -609,17 +663,22 @@ git push origin main
 ### CORS Error
 **Solução:** Adicione URL do frontend em `FRONTEND_URL` (pode ser múltiplas separadas por vírgula)
 
-### Erro ao converter connection string (ASP.NET Core)
-**Solução:** Use formato ADO.NET, não JDBC:
-```
-Host=servidor.postgres.database.azure.com;Port=5432;Database=dbname;Username=user;Password=pass;SSL Mode=Require
-```
+### Erro de conexão com Azure SQL Database
+**Solução:** 
+1. Certifique-se que o firewall permite "Azure services"
+2. Use o formato correto de connection string para SQL Server:
+   ```
+   Server=tcp:SEU_SERVIDOR.database.windows.net,1433;Initial Catalog=SEU_DB;...
+   ```
+3. Verifique usuário e senha
+4. Para ASP.NET Core, adicione na seção "Connection strings" (não "Application settings")
 
 ### ASP.NET Core não inicia
 **Solução:**
 1. Verifique se criou `appsettings.Production.json`
-2. Verifique se adicionou pacote `Npgsql.EntityFrameworkCore.PostgreSQL`
-3. Veja logs: App Service → Log stream
+2. Verifique se adicionou pacote `Microsoft.EntityFrameworkCore.SqlServer`
+3. Verifique se a connection string está em "Connection strings" (não em "Application settings")
+4. Veja logs: App Service → Log stream
 
 ---
 
