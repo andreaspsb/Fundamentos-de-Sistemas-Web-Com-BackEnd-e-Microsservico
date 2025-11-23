@@ -2,8 +2,32 @@
 // Configuração da API - Pet Shop Backend
 // ========================================
 
+// Definir backends disponíveis
+const BACKENDS = {
+  SPRINGBOOT: {
+    name: 'Spring Boot',
+    url: 'http://localhost:8080/api',
+    port: 8080
+  },
+  ASPNET: {
+    name: 'ASP.NET Core',
+    url: 'http://localhost:5000/api',
+    port: 5000
+  }
+};
+
+// Carregar backend selecionado do localStorage ou usar Spring Boot como padrão
+const getBackendAtual = () => {
+  const backendSalvo = localStorage.getItem('backend-selecionado');
+  return backendSalvo || 'SPRINGBOOT';
+};
+
 const API_CONFIG = {
-  BASE_URL: 'http://localhost:8080/api',
+  // BASE_URL será atualizado dinamicamente
+  get BASE_URL() {
+    const backendAtual = getBackendAtual();
+    return BACKENDS[backendAtual].url;
+  },
   ENDPOINTS: {
     // Autenticação
     LOGIN: '/auth/login',
@@ -237,7 +261,9 @@ function mostrarErroAPI(error, mensagemPadrao = 'Ocorreu um erro. Tente novament
   
   // Verificar se o backend está rodando
   if (error.message && error.message.includes('Failed to fetch')) {
-    mensagem = '⚠️ Não foi possível conectar ao servidor. Verifique se o backend está rodando em http://localhost:8080';
+    const backendAtual = getBackendAtual();
+    const backend = BACKENDS[backendAtual];
+    mensagem = `⚠️ Não foi possível conectar ao servidor ${backend.name}. Verifique se o backend está rodando em ${backend.url}`;
   }
   
   alert(mensagem);
@@ -326,7 +352,51 @@ function limparLocalStorage(chave) {
   }
 }
 
+/**
+ * Alterna o backend entre Spring Boot e ASP.NET Core
+ */
+function alternarBackend(novoBackend) {
+  if (!BACKENDS[novoBackend]) {
+    console.error(`❌ Backend inválido: ${novoBackend}`);
+    return false;
+  }
+  
+  localStorage.setItem('backend-selecionado', novoBackend);
+  const backend = BACKENDS[novoBackend];
+  console.log(`🔄 Backend alterado para: ${backend.name} (${backend.url})`);
+  
+  // Atualizar indicador visual se existir
+  atualizarIndicadorBackend();
+  
+  return true;
+}
+
+/**
+ * Obtém informações do backend atual
+ */
+function getBackendInfo() {
+  const backendAtual = getBackendAtual();
+  return {
+    key: backendAtual,
+    ...BACKENDS[backendAtual]
+  };
+}
+
+/**
+ * Atualiza o indicador visual do backend (se existir na página)
+ */
+function atualizarIndicadorBackend() {
+  const indicador = document.getElementById('backend-status');
+  if (indicador) {
+    const backend = getBackendInfo();
+    indicador.textContent = `Backend: ${backend.name}`;
+    indicador.className = 'backend-status';
+    indicador.dataset.backend = backend.key;
+  }
+}
+
 // Exportar para uso global
+window.BACKENDS = BACKENDS;
 window.API_CONFIG = API_CONFIG;
 window.ApiService = ApiService;
 window.mostrarErroAPI = mostrarErroAPI;
@@ -338,5 +408,9 @@ window.formatarDataParaBackend = formatarDataParaBackend;
 window.salvarLocalStorage = salvarLocalStorage;
 window.carregarLocalStorage = carregarLocalStorage;
 window.limparLocalStorage = limparLocalStorage;
+window.alternarBackend = alternarBackend;
+window.getBackendInfo = getBackendInfo;
+window.getBackendAtual = getBackendAtual;
 
 console.log('✅ API Config carregado!');
+console.log(`🎯 Backend atual: ${getBackendInfo().name} (${getBackendInfo().url})`);

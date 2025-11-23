@@ -7,13 +7,13 @@ import com.petshop.model.Cliente;
 import com.petshop.model.Usuario;
 import com.petshop.repository.ClienteRepository;
 import com.petshop.repository.UsuarioRepository;
+import com.petshop.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.Optional;
 
 @Service
@@ -24,6 +24,9 @@ public class AuthService {
 
     @Autowired
     private ClienteRepository clienteRepository;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -42,8 +45,8 @@ public class AuthService {
         usuario.setUltimoAcesso(LocalDateTime.now());
         usuarioRepository.save(usuario);
 
-        // Gerar token simples (Base64 do username + timestamp)
-        String token = gerarToken(usuario);
+        // Gerar token JWT
+        String token = jwtUtil.generateToken(usuario.getUsername(), usuario.getRole());
 
         // Retornar resposta
         Long clienteId = usuario.getCliente() != null ? usuario.getCliente().getId() : null;
@@ -88,38 +91,13 @@ public class AuthService {
         return usuarioRepository.save(usuario);
     }
 
-    private String gerarToken(Usuario usuario) {
-        // Token simples: Base64 de "username:timestamp"
-        String payload = usuario.getUsername() + ":" + System.currentTimeMillis();
-        return Base64.getEncoder().encodeToString(payload.getBytes());
-    }
-
     public boolean validarToken(String token) {
-        try {
-            String decoded = new String(Base64.getDecoder().decode(token));
-            String[] parts = decoded.split(":");
-            
-            if (parts.length != 2) return false;
-            
-            // Verificar se usuário existe
-            Optional<Usuario> usuario = usuarioRepository.findByUsername(parts[0]);
-            
-            // Token válido por 24 horas
-            long timestamp = Long.parseLong(parts[1]);
-            long now = System.currentTimeMillis();
-            long diff = now - timestamp;
-            long hours = diff / (1000 * 60 * 60);
-            
-            return usuario.isPresent() && hours < 24;
-        } catch (Exception e) {
-            return false;
-        }
+        return jwtUtil.validateToken(token);
     }
 
     public Optional<Usuario> getUsuarioFromToken(String token) {
         try {
-            String decoded = new String(Base64.getDecoder().decode(token));
-            String username = decoded.split(":")[0];
+            String username = jwtUtil.extractUsername(token);
             return usuarioRepository.findByUsername(username);
         } catch (Exception e) {
             return Optional.empty();

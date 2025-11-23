@@ -1,6 +1,6 @@
 # Fundamentos de Sistemas Web - Pet Shop (Full Stack)
 
-Sistema completo de e-commerce e gerenciamento para Pet Shop, desenvolvido com **Spring Boot (Backend)** e **HTML5, CSS3, Bootstrap 5, JavaScript (Frontend)**.
+Sistema completo de e-commerce e gerenciamento para Pet Shop, desenvolvido com **dois backends alternativos** (Spring Boot + ASP.NET Core) e **HTML5, CSS3, Bootstrap 5, JavaScript (Frontend)** com sistema de toggle para alternar entre backends dinamicamente.
 
 ## 📋 Descrição do Projeto
 
@@ -10,8 +10,9 @@ Este projeto consiste em um **sistema full-stack** completo para Pet Shop, inclu
 - 👤 **Autenticação** - Login/logout com BCrypt e tokens
 - 🔐 **Autorização** - Sistema de roles (ADMIN, CLIENTE)
 - 🛠️ **Painel Admin** - CRUD completo de produtos, clientes, agendamentos e pedidos
-- 📦 **API REST** - Backend Spring Boot com Swagger/OpenAPI
-- 💾 **Banco H2** - Banco de dados em memória com dados iniciais
+- 📦 **Dual Backend** - Spring Boot (Java) e ASP.NET Core (C#/.NET)
+- 🔄 **Backend Toggle** - Sistema de alternância dinâmica entre backends
+- 💾 **Banco de Dados** - H2 (Spring Boot) e SQLite (ASP.NET Core)
 
 ## 🎯 Funcionalidades
 
@@ -289,11 +290,20 @@ O sistema cria automaticamente ao iniciar:
 
 ### Pré-requisitos
 
+**Para Backend Spring Boot:**
 - **Java 21** (OpenJDK ou Oracle JDK)
 - **Maven 3.8+**
-- **Navegador moderno** (Chrome, Firefox, Edge)
 
-### 1. Iniciar o Backend (Spring Boot)
+**Para Backend ASP.NET Core:**
+- **.NET SDK 8.0+**
+
+**Para Frontend:**
+- **Navegador moderno** (Chrome, Firefox, Edge)
+- **Live Server** (VS Code) ou servidor HTTP local
+
+### 1. Iniciar um dos Backends
+
+#### Opção A: Backend Spring Boot (Recomendado - Mais Completo)
 
 ```bash
 # Navegar para o diretório do backend
@@ -306,9 +316,27 @@ mvn clean compile
 mvn spring-boot:run
 ```
 
-O backend estará disponível em: **http://localhost:8080**
+**Disponível em:** http://localhost:8080  
+**Swagger UI:** http://localhost:8080/swagger-ui.html  
+**H2 Console:** http://localhost:8080/h2-console
 
-Documentação da API (Swagger): **http://localhost:8080/swagger-ui.html**
+#### Opção B: Backend ASP.NET Core
+
+```bash
+# Navegar para o diretório do projeto ASP.NET
+cd backend-aspnet/PetshopApi
+
+# Restaurar dependências (primeira vez)
+dotnet restore
+
+# Executar o servidor ASP.NET Core
+dotnet run
+```
+
+**Disponível em:** http://localhost:5000  
+**Swagger UI:** http://localhost:5000
+
+> **💡 Dica:** Você pode executar **ambos os backends simultaneamente** e usar o sistema de toggle no frontend para alternar entre eles!
 
 ### 2. Iniciar o Frontend
 
@@ -333,14 +361,35 @@ Acesse: **http://localhost:5500**
 ### 3. Acessar o Sistema
 
 **Frontend:** http://localhost:5500 (Live Server) ou http://localhost:5500 (Python)  
-**Backend API:** http://localhost:8080  
-**Swagger UI:** http://localhost:8080/swagger-ui.html  
-**H2 Console:** http://localhost:8080/h2-console  
-- JDBC URL: `jdbc:h2:mem:petshopdb`
-- Username: `sa`
-- Password: (deixar em branco)
 
-### 4. Credenciais Padrão
+**Backend Spring Boot:**
+- API: http://localhost:8080  
+- Swagger UI: http://localhost:8080/swagger-ui.html  
+- H2 Console: http://localhost:8080/h2-console
+  - JDBC URL: `jdbc:h2:mem:petshopdb`
+  - Username: `sa`
+  - Password: (deixar em branco)
+
+**Backend ASP.NET Core:**
+- API: http://localhost:5000
+- Swagger UI: http://localhost:5000
+
+### 4. Sistema de Toggle entre Backends
+
+O frontend possui um **toggle visual** no canto superior direito que permite alternar entre os backends:
+
+- 🟢 **Spring Boot** (http://localhost:8080/api) - Mais completo
+- 🟣 **ASP.NET Core** (http://localhost:5000/api) - Parcialmente implementado
+
+**Como usar:**
+1. Inicie um ou ambos os backends
+2. Abra o frontend no navegador
+3. Clique no botão do backend desejado no toggle
+4. A escolha é salva automaticamente no localStorage
+
+**Documentação completa:** Veja [BACKEND_TOGGLE_README.md](frontend/BACKEND_TOGGLE_README.md)
+
+### 5. Credenciais Padrão
 
 **Admin:**
 - Username: `admin`
@@ -350,7 +399,7 @@ Acesse: **http://localhost:5500**
 
 ## 🛠️ Tecnologias Utilizadas
 
-### Backend
+### Backend Spring Boot
 - **Java 21** - Linguagem de programação
 - **Spring Boot 3.2.0** - Framework Java
 - **Spring Data JPA** - Persistência de dados
@@ -359,6 +408,14 @@ Acesse: **http://localhost:5500**
 - **Swagger/OpenAPI** - Documentação automática da API
 - **Maven** - Gerenciamento de dependências
 - **Lombok** - Redução de boilerplate
+
+### Backend ASP.NET Core
+- **.NET 8.0** - Framework multiplataforma da Microsoft
+- **ASP.NET Core Web API** - Framework para criar APIs REST
+- **Entity Framework Core** - ORM para acesso ao banco de dados
+- **SQLite** - Banco de dados baseado em arquivo
+- **BCrypt.NET** - Biblioteca para hash de senhas
+- **Swagger/OpenAPI** - Documentação interativa da API
 
 ### Frontend
 - **HTML5** - Estrutura semântica das páginas

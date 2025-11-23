@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/pets")
-@CrossOrigin(origins = "*")
 @Tag(name = "Pets", description = "Gerenciamento de pets cadastrados")
 public class PetController {
 

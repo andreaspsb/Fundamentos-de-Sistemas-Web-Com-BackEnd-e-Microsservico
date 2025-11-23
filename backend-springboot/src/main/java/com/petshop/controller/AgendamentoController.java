@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/agendamentos")
-@CrossOrigin(origins = "*")
 @Tag(name = "Agendamentos", description = "Agendamento de serviços (Banho e Tosa)")
 public class AgendamentoController {
 

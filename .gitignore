@@ -6,6 +6,15 @@ backend-springboot/mvnw.cmd
 **/target/
 *.class
 
+# .NET / ASP.NET
+backend-aspnet/bin/
+backend-aspnet/obj/
+backend-aspnet/[Dd]ebug/
+backend-aspnet/[Rr]elease/
+*.dll
+*.exe
+*.pdb
+
 # Logs
 *.log
 logs/
@@ -42,15 +51,20 @@ bin/
 .DS_Store
 Thumbs.db
 
-# H2 Database
+# Databases
 *.db
+*.db-shm
+*.db-wal
 *.trace.db
+*.sqlite
+*.sqlite3
+petshop.db
 
 # Spring Boot
 HELP.md
 spring-boot-starter-*/
 
-# Node (caso adicione frontend com Node futuramente)
+# Node (Frontend/Testes)
 node_modules/
 npm-debug.log
 yarn-error.log
@@ -68,3 +82,19 @@ local.settings.json
 test-results/
 playwright-report/
 playwright/.cache/
+
+# Docker
+.env
+docker-compose.override.yml
+*.sql
+backup-*.sql
+get-docker.sh
+
+# Build artifacts
+dist/
+build/
+*.tmp
+*.temp
+*.bak
+*.old
+*~

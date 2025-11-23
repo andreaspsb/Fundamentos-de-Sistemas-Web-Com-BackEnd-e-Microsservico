@@ -1,0 +1,140 @@
+/* ========================================
+   Backend Toggle - Seletor de Backend
+   ======================================== */
+
+.backend-selector {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.backend-selector-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.backend-toggle-wrapper {
+  display: flex;
+  background: #f0f0f0;
+  border-radius: 8px;
+  padding: 3px;
+  position: relative;
+}
+
+.backend-option {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  color: #666;
+  position: relative;
+  z-index: 2;
+}
+
+.backend-option:hover {
+  color: #333;
+}
+
+.backend-option.active {
+  color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.backend-option.active.springboot {
+  background: linear-gradient(135deg, #6db33f 0%, #5a9e34 100%);
+  box-shadow: 0 2px 8px rgba(109, 179, 63, 0.3);
+}
+
+.backend-option.active.aspnet {
+  background: linear-gradient(135deg, #512bd4 0%, #3e1fa8 100%);
+  box-shadow: 0 2px 8px rgba(81, 43, 212, 0.3);
+}
+
+.backend-status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  animation: pulse 2s ease-in-out infinite;
+  margin-right: 8px;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.backend-info {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  color: #666;
+  padding-left: 15px;
+  border-left: 1px solid #e0e0e0;
+}
+
+.backend-port {
+  font-family: monospace;
+  background: #f8f8f8;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  margin-left: 5px;
+}
+
+/* Versão mobile */
+@media (max-width: 768px) {
+  .backend-selector {
+    top: 10px;
+    right: 10px;
+    padding: 10px 15px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .backend-info {
+    padding-left: 0;
+    padding-top: 10px;
+    border-left: none;
+    border-top: 1px solid #e0e0e0;
+  }
+}
+
+/* Versão compacta para impressão */
+@media print {
+  .backend-selector {
+    display: none;
+  }
+}

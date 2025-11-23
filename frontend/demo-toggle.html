@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo - Backend Toggle</title>
+    
+    <!-- Backend Toggle CSS -->
+    <link rel="stylesheet" href="css/backend-toggle.css">
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 18px;
+            margin-bottom: 40px;
+        }
+        
+        .demo-section {
+            margin-bottom: 40px;
+        }
+        
+        .demo-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 15px 0;
+        }
+        
+        .code-block .comment {
+            color: #75715e;
+        }
+        
+        .code-block .string {
+            color: #e6db74;
+        }
+        
+        .code-block .keyword {
+            color: #f92672;
+        }
+        
+        .code-block .function {
+            color: #66d9ef;
+        }
+        
+        .button-demo {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 10px 10px 0;
+            transition: all 0.2s;
+        }
+        
+        .button-demo:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .info-box {
+            background: #f0f7ff;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        
+        .info-box strong {
+            color: #667eea;
+        }
+        
+        .status-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .status-item:last-child {
+            border-bottom: none;
+        }
+        
+        .status-label {
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .status-value {
+            font-family: monospace;
+            color: #666;
+            background: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+        }
+        
+        .success {
+            color: #22c55e;
+        }
+        
+        .warning {
+            color: #f59e0b;
+        }
+        
+        #console-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin-top: 15px;
+        }
+        
+        .console-line {
+            margin: 5px 0;
+        }
+        
+        .console-success {
+            color: #4ade80;
+        }
+        
+        .console-error {
+            color: #ef4444;
+        }
+        
+        .console-info {
+            color: #60a5fa;
+        }
+        
+        .console-warning {
+            color: #fbbf24;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1>🔄 Backend Toggle - Demonstração Interativa</h1>
+        <p class="subtitle">Alternância dinâmica entre Spring Boot e ASP.NET Core</p>
+        
+        <div class="info-box">
+            <strong>👀 Olhe no canto superior direito!</strong><br>
+            Você verá o componente de toggle que permite alternar entre os backends.
+        </div>
+        
+        <!-- Status Atual -->
+        <div class="demo-section">
+            <h2>📊 Status Atual</h2>
+            <div class="status-box">
+                <div class="status-item">
+                    <span class="status-label">Backend Ativo:</span>
+                    <span class="status-value" id="backend-name">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">URL Base:</span>
+                    <span class="status-value" id="backend-url">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Porta:</span>
+                    <span class="status-value" id="backend-port">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">LocalStorage:</span>
+                    <span class="status-value" id="backend-storage">-</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Testes Interativos -->
+        <div class="demo-section">
+            <h2>🧪 Testes Interativos</h2>
+            <p>Clique nos botões abaixo para testar as funcionalidades:</p>
+            
+            <button class="button-demo" onclick="testarBackendInfo()">
+                📋 Ver Info do Backend
+            </button>
+            <button class="button-demo" onclick="testarAlternarSpring()">
+                🟢 Alternar para Spring Boot
+            </button>
+            <button class="button-demo" onclick="testarAlternarAspNet()">
+                🟣 Alternar para ASP.NET
+            </button>
+            <button class="button-demo" onclick="testarRequisicao()">
+                🌐 Fazer Requisição
+            </button>
+            <button class="button-demo" onclick="limparConsole()">
+                🗑️ Limpar Console
+            </button>
+            
+            <div id="console-output">
+                <div class="console-line console-info">💡 Clique nos botões acima para testar...</div>
+            </div>
+        </div>
+        
+        <!-- Exemplos de Código -->
+        <div class="demo-section">
+            <h2>💻 Exemplos de Código</h2>
+            
+            <h3>Ver informações do backend atual:</h3>
+            <div class="code-block">
+<span class="keyword">const</span> info = <span class="function">getBackendInfo</span>();
+<span class="function">console</span>.<span class="function">log</span>(info);
+<span class="comment">// { key: 'SPRINGBOOT', name: 'Spring Boot', url: 'http://localhost:8080/api', port: 8080 }</span>
+            </div>
+            
+            <h3>Alternar backend programaticamente:</h3>
+            <div class="code-block">
+<span class="comment">// Alternar para ASP.NET Core</span>
+<span class="function">alternarBackend</span>(<span class="string">'ASPNET'</span>);
+
+<span class="comment">// Alternar para Spring Boot</span>
+<span class="function">alternarBackend</span>(<span class="string">'SPRINGBOOT'</span>);
+            </div>
+            
+            <h3>Fazer requisição com o backend atual:</h3>
+            <div class="code-block">
+<span class="comment">// Requisição GET</span>
+ApiService.<span class="function">get</span>(<span class="string">'/produtos'</span>)
+  .<span class="function">then</span>(produtos => {
+    <span class="function">console</span>.<span class="function">log</span>(<span class="string">'Produtos:'</span>, produtos);
+  })
+  .<span class="function">catch</span>(error => {
+    <span class="function">console</span>.<span class="function">error</span>(<span class="string">'Erro:'</span>, error);
+  });
+            </div>
+        </div>
+        
+        <!-- Informações Técnicas -->
+        <div class="demo-section">
+            <h2>🔧 Informações Técnicas</h2>
+            
+            <h3>Backends Disponíveis:</h3>
+            <ul>
+                <li><strong>Spring Boot (Java)</strong>
+                    <ul>
+                        <li>URL: <code>http://localhost:8080/api</code></li>
+                        <li>Framework: Spring Boot 3.x</li>
+                        <li>Banco: H2 / SQLite</li>
+                    </ul>
+                </li>
+                <li><strong>ASP.NET Core (C#/.NET)</strong>
+                    <ul>
+                        <li>URL: <code>http://localhost:5000/api</code></li>
+                        <li>Framework: ASP.NET Core 8.0</li>
+                        <li>Banco: SQLite</li>
+                    </ul>
+                </li>
+            </ul>
+            
+            <h3>Endpoints Disponíveis:</h3>
+            <ul>
+                <li><code>GET /produtos</code> - Listar todos os produtos</li>
+                <li><code>GET /categorias</code> - Listar categorias</li>
+                <li><code>GET /servicos</code> - Listar serviços</li>
+                <li><code>POST /auth/login</code> - Fazer login</li>
+                <li><code>GET /clientes</code> - Listar clientes</li>
+                <li><code>GET /pets</code> - Listar pets</li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="js/api-config.js"></script>
+    <script src="js/backend-toggle.js"></script>
+    
+    <script>
+        // Atualizar status a cada segundo
+        function atualizarStatus() {
+            const info = getBackendInfo();
+            document.getElementById('backend-name').textContent = info.name;
+            document.getElementById('backend-url').textContent = info.url;
+            document.getElementById('backend-port').textContent = info.port;
+            document.getElementById('backend-storage').textContent = getBackendAtual();
+        }
+        
+        // Atualizar status inicial e depois a cada segundo
+        atualizarStatus();
+        setInterval(atualizarStatus, 1000);
+        
+        // Funções de teste
+        function adicionarLog(mensagem, tipo = 'info') {
+            const console = document.getElementById('console-output');
+            const line = document.createElement('div');
+            line.className = `console-line console-${tipo}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ${mensagem}`;
+            console.appendChild(line);
+            console.scrollTop = console.scrollHeight;
+        }
+        
+        function testarBackendInfo() {
+            const info = getBackendInfo();
+            adicionarLog(`📋 Backend: ${info.name} (${info.url})`, 'info');
+            adicionarLog(`   Porta: ${info.port}`, 'info');
+        }
+        
+        function testarAlternarSpring() {
+            alternarBackend('SPRINGBOOT');
+            adicionarLog('🟢 Alternado para Spring Boot', 'success');
+        }
+        
+        function testarAlternarAspNet() {
+            alternarBackend('ASPNET');
+            adicionarLog('🟣 Alternado para ASP.NET Core', 'success');
+        }
+        
+        async function testarRequisicao() {
+            const backend = getBackendInfo();
+            adicionarLog(`🌐 Fazendo requisição para ${backend.name}...`, 'info');
+            
+            try {
+                const produtos = await ApiService.get('/produtos');
+                adicionarLog(`✅ Sucesso! Recebidos ${produtos.length} produtos`, 'success');
+            } catch (error) {
+                adicionarLog(`❌ Erro: ${error.message}`, 'error');
+            }
+        }
+        
+        function limparConsole() {
+            document.getElementById('console-output').innerHTML = 
+                '<div class="console-line console-info">💡 Console limpo. Clique nos botões para testar...</div>';
+        }
+        
+        // Log inicial
+        adicionarLog('✅ Demo carregada com sucesso!', 'success');
+        adicionarLog(`🎯 Backend atual: ${getBackendInfo().name}`, 'info');
+    </script>
+</body>
+</html>

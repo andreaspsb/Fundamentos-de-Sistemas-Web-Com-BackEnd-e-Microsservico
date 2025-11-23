@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/servicos")
-@CrossOrigin(origins = "*")
 @Tag(name = "Serviços", description = "Gerenciamento de serviços disponíveis (Banho, Tosa, etc)")
 public class ServicoController {
 

@@ -7,7 +7,6 @@ import com.petshop.dto.PedidoResponseDTO;
 import com.petshop.model.Pedido;
 import com.petshop.model.Pedido.StatusPedido;
 import com.petshop.service.PedidoService;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/pedidos")
-@CrossOrigin(origins = "*")
 @Tag(name = "Pedidos (Carrinho)", description = "Gerenciamento de pedidos e carrinho de compras")
 public class PedidoController {
 

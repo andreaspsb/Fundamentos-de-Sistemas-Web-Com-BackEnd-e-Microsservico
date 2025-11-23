@@ -18,7 +18,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*")
 @Tag(name = "Autenticação", description = "Endpoints de autenticação e registro")
 public class AuthController {
 
@@ -59,8 +58,15 @@ public class AuthController {
 
     @GetMapping("/validar")
     @Operation(summary = "Validar token", description = "Verifica se o token ainda é válido")
-    public ResponseEntity<?> validarToken(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> validarToken(
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
+            if (authHeader == null || authHeader.isEmpty()) {
+                Map<String, Boolean> response = new HashMap<>();
+                response.put("valido", false);
+                return ResponseEntity.ok(response);
+            }
+            
             String token = authHeader.replace("Bearer ", "");
             boolean valido = authService.validarToken(token);
             

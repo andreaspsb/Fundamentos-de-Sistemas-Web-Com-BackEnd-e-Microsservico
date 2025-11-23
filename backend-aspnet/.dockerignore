@@ -1,0 +1,40 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+.vs/
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Tests
+PetshopApi.Tests/
+
+# Documentação
+README.md

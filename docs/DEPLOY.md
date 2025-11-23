@@ -5,7 +5,12 @@ Guia completo para fazer deploy do sistema Pet Shop em produção.
 ## 📋 Índice
 
 - [Pré-requisitos](#pré-requisitos)
-- [Deploy do Backend](#deploy-do-backend)
+- [Deploy com Docker](#deploy-com-docker) 🐳 **NOVO**
+  - [VPS (DigitalOcean, Linode, etc)](#vps-digitalocean-linode-etc)
+  - [AWS EC2](#aws-ec2)
+  - [Google Cloud VM](#google-cloud-vm)
+  - [Azure VM](#azure-vm)
+- [Deploy do Backend (PaaS)](#deploy-do-backend-paas)
   - [Heroku](#heroku)
   - [Railway](#railway)
   - [AWS Elastic Beanstalk](#aws-elastic-beanstalk)
@@ -29,7 +34,354 @@ Guia completo para fazer deploy do sistema Pet Shop em produção.
 - Código no GitHub/GitLab
 - Variáveis de ambiente configuradas
 
-## ☕ Deploy do Backend
+---
+
+## 🐳 Deploy com Docker
+
+**Recomendado para:** Maior controle, escalabilidade, portabilidade  
+**Custo:** Variável ($5-50/mês dependendo do provedor)  
+**Complexidade:** Média  
+
+### Por que usar Docker em produção?
+
+- ✅ **Portabilidade:** Funciona em qualquer servidor
+- ✅ **Consistência:** Mesmo ambiente dev/staging/prod
+- ✅ **Isolamento:** Containers separados por serviço
+- ✅ **Escalabilidade:** Fácil adicionar instâncias
+- ✅ **Rollback:** Reverter para versão anterior rapidamente
+
+---
+
+### 1. VPS (DigitalOcean, Linode, etc)
+
+**Custo estimado:** $6-12/mês (2GB RAM, 1 vCPU)  
+**Recomendado:** DigitalOcean, Linode, Vultr, Hetzner
+
+#### Passo a Passo:
+
+**1. Criar Droplet/VPS:**
+- OS: Ubuntu 24.04 LTS
+- RAM: Mínimo 2GB (recomendado 4GB)
+- Storage: 50GB
+
+**2. Acessar via SSH:**
+```bash
+ssh root@seu-ip
+```
+
+**3. Instalar Docker e Docker Compose:**
+```bash
+# Atualizar sistema
+apt update && apt upgrade -y
+
+# Instalar Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+
+# Instalar Docker Compose
+apt install docker-compose-plugin -y
+
+# Verificar instalação
+docker --version
+docker compose version
+```
+
+**4. Configurar Firewall:**
+```bash
+# Instalar UFW
+apt install ufw -y
+
+# Permitir portas
+ufw allow 22/tcp    # SSH
+ufw allow 80/tcp    # HTTP
+ufw allow 443/tcp   # HTTPS
+
+# Ativar
+ufw enable
+ufw status
+```
+
+**5. Clonar repositório:**
+```bash
+# Criar usuário para deploy (mais seguro que root)
+adduser deploy
+usermod -aG sudo deploy
+usermod -aG docker deploy
+
+# Mudar para usuário deploy
+su - deploy
+
+# Clonar projeto
+cd /opt
+sudo mkdir petshop && sudo chown deploy:deploy petshop
+cd petshop
+git clone https://github.com/andreaspsb/Fundamentos-de-Sistemas-Web-Com-BackEnd.git .
+```
+
+**6. Configurar variáveis de ambiente:**
+```bash
+# Copiar exemplo
+cp .env.example .env
+
+# Editar com valores de produção
+nano .env
+```
+
+```env
+# Banco de Dados
+POSTGRES_DB=petshop
+POSTGRES_USER=petshop
+POSTGRES_PASSWORD=SuaSenhaForte123!@#
+
+# Spring Boot
+SPRING_PROFILES_ACTIVE=prod
+SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/petshop
+JAVA_OPTS=-Xms512m -Xmx1024m
+
+# ASP.NET Core
+ASPNETCORE_ENVIRONMENT=Production
+CONNECTION_STRING=Host=postgres;Port=5432;Database=petshop;Username=petshop;Password=SuaSenhaForte123!@#
+
+# CORS (seu domínio)
+CORS_ALLOWED_ORIGINS=https://seudominio.com,https://www.seudominio.com
+```
+
+**7. Iniciar containers:**
+```bash
+# Build e start
+docker compose up -d
+
+# Verificar logs
+docker compose logs -f
+
+# Verificar status
+docker compose ps
+```
+
+**8. Configurar Nginx reverso proxy (opcional mas recomendado):**
+
+Se quiser usar domínio próprio com SSL:
+
+```bash
+# Instalar Nginx no host
+sudo apt install nginx certbot python3-certbot-nginx -y
+
+# Criar configuração
+sudo nano /etc/nginx/sites-available/petshop
+```
+
+```nginx
+server {
+    listen 80;
+    server_name seudominio.com www.seudominio.com;
+
+    location / {
+        proxy_pass http://localhost:80;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+```bash
+# Ativar site
+sudo ln -s /etc/nginx/sites-available/petshop /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+
+# Configurar SSL (Let's Encrypt)
+sudo certbot --nginx -d seudominio.com -d www.seudominio.com
+```
+
+**9. Deploy automático com GitHub Actions:**
+
+Criar workflow `.github/workflows/deploy-vps.yml`:
+
+```yaml
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.VPS_HOST }}
+        username: ${{ secrets.VPS_USER }}
+        key: ${{ secrets.VPS_SSH_KEY }}
+        script: |
+          cd /opt/petshop
+          git pull origin main
+          docker compose down
+          docker compose build --no-cache
+          docker compose up -d
+          docker compose ps
+```
+
+**Adicionar secrets no GitHub:**
+- Settings → Secrets → Actions
+- `VPS_HOST`: IP do servidor
+- `VPS_USER`: deploy
+- `VPS_SSH_KEY`: Chave privada SSH
+
+---
+
+### 2. AWS EC2
+
+**Custo estimado:** $8-15/mês (t3.small)
+
+#### Passo a Passo:
+
+**1. Criar instância EC2:**
+- AMI: Ubuntu Server 24.04 LTS
+- Instance type: t3.small (2 vCPU, 2GB RAM)
+- Storage: 30GB GP3
+- Security Group: Portas 22, 80, 443
+
+**2. Conectar via SSH:**
+```bash
+chmod 400 sua-chave.pem
+ssh -i sua-chave.pem ubuntu@ec2-xx-xx-xx-xx.compute.amazonaws.com
+```
+
+**3. Seguir passos 3-7 do VPS acima**
+
+**4. Configurar RDS (opcional):**
+
+Para banco gerenciado:
+- Criar RDS PostgreSQL
+- Atualizar `DATABASE_URL` no `.env`
+- Security Group: Permitir conexão do EC2
+
+**5. Elastic IP:**
+```bash
+# Alocar IP fixo no console AWS
+# Associar ao EC2
+```
+
+---
+
+### 3. Google Cloud VM
+
+**Custo estimado:** $7-14/mês (e2-small)
+
+#### Passo a Passo:
+
+**1. Criar VM Instance:**
+```bash
+gcloud compute instances create petshop-vm \
+  --zone=us-central1-a \
+  --machine-type=e2-small \
+  --image-family=ubuntu-2404-lts \
+  --image-project=ubuntu-os-cloud \
+  --boot-disk-size=30GB
+```
+
+**2. Conectar:**
+```bash
+gcloud compute ssh petshop-vm --zone=us-central1-a
+```
+
+**3. Seguir passos 3-7 do VPS**
+
+**4. Configurar Firewall:**
+```bash
+gcloud compute firewall-rules create allow-http \
+  --allow tcp:80 \
+  --target-tags http-server
+
+gcloud compute firewall-rules create allow-https \
+  --allow tcp:443 \
+  --target-tags https-server
+```
+
+---
+
+### 4. Azure VM
+
+**Custo estimado:** $10-20/mês (B2s)
+
+#### Passo a Passo:
+
+**1. Criar VM:**
+```bash
+az vm create \
+  --resource-group petshop-rg \
+  --name petshop-vm \
+  --image Ubuntu2404 \
+  --size Standard_B2s \
+  --admin-username azureuser \
+  --generate-ssh-keys
+```
+
+**2. Abrir portas:**
+```bash
+az vm open-port --port 80 --resource-group petshop-rg --name petshop-vm
+az vm open-port --port 443 --resource-group petshop-rg --name petshop-vm
+```
+
+**3. Conectar:**
+```bash
+ssh azureuser@<public-ip>
+```
+
+**4. Seguir passos 3-7 do VPS**
+
+---
+
+### Manutenção e Monitoramento
+
+**Backup do banco:**
+```bash
+# Criar backup
+docker compose exec postgres pg_dump -U petshop petshop > backup-$(date +%Y%m%d).sql
+
+# Backup automático (cron)
+crontab -e
+# Adicionar:
+0 2 * * * cd /opt/petshop && docker compose exec -T postgres pg_dump -U petshop petshop > /opt/backups/backup-$(date +\%Y\%m\%d).sql
+```
+
+**Ver logs:**
+```bash
+# Todos os serviços
+docker compose logs -f
+
+# Serviço específico
+docker compose logs -f petshop-springboot
+```
+
+**Atualizar aplicação:**
+```bash
+cd /opt/petshop
+git pull
+docker compose down
+docker compose build --no-cache
+docker compose up -d
+```
+
+**Limpar recursos:**
+```bash
+# Remover containers parados
+docker container prune -f
+
+# Remover imagens não usadas
+docker image prune -a -f
+
+# Liberar espaço
+docker system prune -a --volumes -f
+```
+
+---
+
+## ☕ Deploy do Backend (PaaS)
 
 ### 1. Heroku
 
