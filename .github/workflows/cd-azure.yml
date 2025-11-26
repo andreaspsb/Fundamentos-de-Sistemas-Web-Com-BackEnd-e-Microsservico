@@ -296,48 +296,48 @@ jobs:
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-  # Job 7: Smoke Tests em Produção - DESABILITADO
-  # smoke-tests:
-  #   name: Testes de Fumaça
-  #   needs: [deploy-backend-spring, deploy-frontend]
-  #   runs-on: ubuntu-latest
-  #   if: always()  # Roda mesmo se algum job falhar
-  #   
-  #   steps:
-  #   - name: Verificar Backend Spring Boot
-  #     run: |
-  #       echo "🔍 Verificando backend Spring Boot..."
-  #       curl -f https://${{ env.AZURE_WEBAPP_NAME_SPRING }}.azurewebsites.net/actuator/health || echo "❌ Spring Boot não respondeu"
-  #       curl -f https://${{ env.AZURE_WEBAPP_NAME_SPRING }}.azurewebsites.net/api/produtos || echo "❌ API Spring Boot falhou"
-  #
-  #   - name: Verificar Backend ASP.NET Core
-  #     continue-on-error: true  # Não falha se ASP.NET não existir
-  #     run: |
-  #       echo "🔍 Verificando backend ASP.NET Core..."
-  #       curl -f https://${{ env.AZURE_WEBAPP_NAME_ASPNET }}.azurewebsites.net/health || echo "⚠️ ASP.NET Core não disponível (pode não estar deployado)"
-  #       curl -f https://${{ env.AZURE_WEBAPP_NAME_ASPNET }}.azurewebsites.net/api/produtos || echo "⚠️ API ASP.NET não disponível"
-  #
-  #   - name: Verificar Frontend
-  #     run: |
-  #       echo "🔍 Verificando frontend..."
-  #       curl -f https://${{ env.AZURE_STATIC_WEB_APP_NAME }}.azurestaticapps.net || echo "❌ Frontend não respondeu"
-  #
-  #   - name: Notificar sucesso 🎉
-  #     run: |
-  #       echo "✅ Deploy realizado com sucesso!"
-  #       echo ""
-  #       echo "🌐 URLs do Projeto:"
-  #       echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-  #       echo "Frontend:"
-  #       echo "  🎨 https://${{ env.AZURE_STATIC_WEB_APP_NAME }}.azurestaticapps.net"
-  #       echo ""
-  #       echo "Backend Spring Boot:"
-  #       echo "  ☕ https://${{ env.AZURE_WEBAPP_NAME_SPRING }}.azurewebsites.net"
-  #       echo "  📚 https://${{ env.AZURE_WEBAPP_NAME_SPRING }}.azurewebsites.net/swagger-ui.html"
-  #       echo "  🔌 https://${{ env.AZURE_WEBAPP_NAME_SPRING }}.azurewebsites.net/api/produtos"
-  #       echo ""
-  #       echo "Backend ASP.NET Core (se deployado):"
-  #       echo "  🟣 https://${{ env.AZURE_WEBAPP_NAME_ASPNET }}.azurewebsites.net"
-  #       echo "  📚 https://${{ env.AZURE_WEBAPP_NAME_ASPNET }}.azurewebsites.net/swagger"
-  #       echo "  🔌 https://${{ env.AZURE_WEBAPP_NAME_ASPNET }}.azurewebsites.net/api/produtos"
-  #       echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+  # Job 7: Smoke Tests em Produção
+  smoke-tests:
+    name: Testes de Fumaça
+    needs: [deploy-backend-spring, deploy-backend-aspnet, deploy-frontend]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: Verificar Backend Spring Boot
+      if: needs.deploy-backend-spring.result == 'success'
+      run: |
+        echo "🔍 Verificando backend Spring Boot..."
+        curl -f https://${{ env.AZURE_WEBAPP_NAME_SPRING }}.azurewebsites.net/actuator/health || echo "❌ Spring Boot não respondeu"
+        curl -f https://${{ env.AZURE_WEBAPP_NAME_SPRING }}.azurewebsites.net/api/produtos || echo "❌ API Spring Boot falhou"
+
+    - name: Verificar Backend ASP.NET Core
+      if: needs.deploy-backend-aspnet.result == 'success'
+      run: |
+        echo "🔍 Verificando backend ASP.NET Core..."
+        curl -f https://${{ env.AZURE_WEBAPP_NAME_ASPNET }}.azurewebsites.net/health || echo "⚠️ ASP.NET Core não disponível"
+        curl -f https://${{ env.AZURE_WEBAPP_NAME_ASPNET }}.azurewebsites.net/api/produtos || echo "⚠️ API ASP.NET não disponível"
+
+    - name: Verificar Frontend
+      if: needs.deploy-frontend.result == 'success'
+      run: |
+        echo "🔍 Verificando frontend..."
+        curl -f https://yellow-field-047215b0f.4.azurestaticapps.net || echo "❌ Frontend não respondeu"
+
+    - name: Notificar sucesso 🎉
+      run: |
+        echo "✅ Deploy realizado com sucesso!"
+        echo ""
+        echo "🌐 URLs do Projeto:"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "Frontend:"
+        echo "  🎨 https://yellow-field-047215b0f.4.azurestaticapps.net"
+        echo ""
+        echo "Backend Spring Boot:"
+        echo "  ☕ https://${{ env.AZURE_WEBAPP_NAME_SPRING }}.azurewebsites.net"
+        echo "  📚 https://${{ env.AZURE_WEBAPP_NAME_SPRING }}.azurewebsites.net/swagger-ui.html"
+        echo ""
+        echo "Backend ASP.NET Core:"
+        echo "  🟣 https://${{ env.AZURE_WEBAPP_NAME_ASPNET }}.azurewebsites.net"
+        echo "  📚 https://${{ env.AZURE_WEBAPP_NAME_ASPNET }}.azurewebsites.net/swagger"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

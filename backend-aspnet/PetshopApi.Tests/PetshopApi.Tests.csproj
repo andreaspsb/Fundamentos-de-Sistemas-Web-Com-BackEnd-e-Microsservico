@@ -7,6 +7,15 @@
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    
+    <!-- Coverlet Coverage Configuration -->
+    <CollectCoverage>true</CollectCoverage>
+    <CoverletOutputFormat>opencover</CoverletOutputFormat>
+    <Threshold>50</Threshold>
+    <ThresholdType>line</ThresholdType>
+    <ThresholdStat>total</ThresholdStat>
+    <ExcludeByFile>**/Migrations/**,**/Program.cs</ExcludeByFile>
+    <Exclude>[PetshopApi]PetshopApi.DTOs.*,[PetshopApi]PetshopApi.Middleware.*</Exclude>
   </PropertyGroup>
 
   <ItemGroup>

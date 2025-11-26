@@ -158,89 +158,99 @@ jobs:
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-  # Job 1: Backend Tests (Spring Boot) - DESABILITADO
-  # backend-springboot-tests:
-  #   name: Backend - Java 21 + Spring Boot
-  #   runs-on: ubuntu-latest
-  #   
-  #   steps:
-  #   - name: Checkout código
-  #     uses: actions/checkout@v4
-  #
-  #   - name: Setup Java 21
-  #     uses: actions/setup-java@v4
-  #     with:
-  #       distribution: 'temurin'
-  #       java-version: '21'
-  #       cache: 'maven'
-  #
-  #   - name: Cache Maven dependencies
-  #     uses: actions/cache@v4
-  #     with:
-  #       path: ~/.m2/repository
-  #       key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-  #       restore-keys: |
-  #         ${{ runner.os }}-maven-
-  #
-  #   - name: Build e Test Backend
-  #     working-directory: ./backend-springboot
-  #     run: |
-  #       mvn clean verify
-  #       mvn test
-  #
-  #   - name: Gerar relatório de cobertura
-  #     working-directory: ./backend-springboot
-  #     run: mvn jacoco:report
-  #
-  #   - name: Upload cobertura para Codecov
-  #     uses: codecov/codecov-action@v4
-  #     with:
-  #       files: ./backend-springboot/target/site/jacoco/jacoco.xml
-  #       flags: springboot-backend
-  #       name: springboot-coverage
+  # Job 1: Backend Tests (Spring Boot)
+  backend-springboot-tests:
+    name: Backend - Java 21 + Spring Boot Tests
+    needs: changes
+    if: needs.changes.outputs.backend-spring == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
 
-  # Job 2: Backend Tests (ASP.NET Core) - DESABILITADO
-  # backend-aspnet-tests:
-  #   name: Backend - .NET 8 + ASP.NET Core
-  #   runs-on: ubuntu-latest
-  #   
-  #   steps:
-  #   - name: Checkout código
-  #     uses: actions/checkout@v4
-  #
-  #   - name: Setup .NET 8
-  #     uses: actions/setup-dotnet@v4
-  #     with:
-  #       dotnet-version: '8.0.x'
-  #
-  #   - name: Cache NuGet packages
-  #     uses: actions/cache@v4
-  #     with:
-  #       path: ~/.nuget/packages
-  #       key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-  #       restore-keys: |
-  #         ${{ runner.os }}-nuget-
-  #
-  #   - name: Restore dependencies
-  #     working-directory: ./backend-aspnet/PetshopApi.Tests
-  #     run: dotnet restore
-  #
-  #   - name: Build projeto
-  #     working-directory: ./backend-aspnet/PetshopApi.Tests
-  #     run: dotnet build --no-restore
-  #
-  #   - name: Run tests with coverage
-  #     working-directory: ./backend-aspnet/PetshopApi.Tests
-  #     run: dotnet test --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
-  #
-  #   - name: Upload cobertura para Codecov
-  #     uses: codecov/codecov-action@v4
-  #     with:
-  #       files: ./backend-aspnet/PetshopApi.Tests/coverage.opencover.xml
-  #       flags: aspnet-backend
-  #       name: aspnet-coverage
+    - name: Setup Java 21
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+        cache: 'maven'
 
-  # Job 3: Frontend Tests (Playwright) - DESABILITADO
+    - name: Cache Maven dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+          ${{ runner.os }}-maven-
+
+    - name: Build e Test Backend
+      working-directory: ./backend-springboot
+      run: mvn clean verify
+
+    - name: Gerar relatório de cobertura
+      working-directory: ./backend-springboot
+      run: mvn jacoco:report
+
+    - name: Verificar threshold de cobertura (50%)
+      working-directory: ./backend-springboot
+      run: mvn jacoco:check
+
+    - name: Upload cobertura para Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./backend-springboot/target/site/jacoco/jacoco.xml
+        flags: springboot-backend
+        name: springboot-coverage
+        token: ${{ secrets.CODECOV_TOKEN }}
+      continue-on-error: true
+
+  # Job 2: Backend Tests (ASP.NET Core)
+  backend-aspnet-tests:
+    name: Backend - .NET 8 + ASP.NET Core Tests
+    needs: changes
+    if: needs.changes.outputs.backend-aspnet == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Setup .NET 8
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore dependencies
+      working-directory: ./backend-aspnet/PetshopApi.Tests
+      run: dotnet restore
+
+    - name: Build projeto
+      working-directory: ./backend-aspnet/PetshopApi.Tests
+      run: dotnet build --no-restore
+
+    - name: Run tests with coverage (threshold 50%)
+      working-directory: ./backend-aspnet/PetshopApi.Tests
+      run: dotnet test --no-build --verbosity normal
+
+    - name: Upload cobertura para Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        files: ./backend-aspnet/PetshopApi.Tests/coverage.opencover.xml
+        flags: aspnet-backend
+        name: aspnet-coverage
+        token: ${{ secrets.CODECOV_TOKEN }}
+      continue-on-error: true
+
+  # Job 3: Frontend Tests (Playwright) - DESABILITADO (requer backend rodando)
   # frontend-tests:
   #   name: Frontend - Playwright E2E
   #   runs-on: ubuntu-latest
