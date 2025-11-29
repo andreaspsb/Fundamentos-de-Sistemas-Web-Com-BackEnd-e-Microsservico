@@ -33,11 +33,14 @@ class BackendToggle {
     container.innerHTML = `
       <p class="backend-selector-label">Backend:</p>
       <div class="backend-toggle-wrapper">
-        <button class="backend-option" data-backend="SPRINGBOOT">
-          Spring Boot
+        <button class="backend-option" data-backend="SPRINGBOOT" title="Monolito Java">
+          <span class="backend-icon">☕</span> Spring Boot
         </button>
-        <button class="backend-option" data-backend="ASPNET">
-          ASP.NET Core
+        <button class="backend-option" data-backend="ASPNET" title="Monolito .NET">
+          <span class="backend-icon">🔷</span> ASP.NET Core
+        </button>
+        <button class="backend-option" data-backend="FUNCTIONS" title="Microsserviços Azure">
+          <span class="backend-icon">⚡</span> Azure Functions
         </button>
       </div>
       <div class="backend-info">
@@ -89,7 +92,7 @@ class BackendToggle {
         botao.classList.add('active');
         botao.classList.add(backendInfo.key.toLowerCase());
       } else {
-        botao.classList.remove('active', 'springboot', 'aspnet');
+        botao.classList.remove('active', 'springboot', 'aspnet', 'functions');
       }
     });
     
@@ -105,12 +108,24 @@ class BackendToggle {
    */
   mostrarNotificacao(backend) {
     const backendInfo = BACKENDS[backend];
+    const tipoTexto = backendInfo.type === 'microservices' ? '⚡ Microsserviços' : '📦 Monolito';
+    
+    let servicosHtml = '';
+    if (backendInfo.type === 'microservices' && backendInfo.services) {
+      servicosHtml = `
+        <div style="margin-top: 8px; font-size: 11px; opacity: 0.9;">
+          <strong>Serviços:</strong> Auth, Customers, Pets, Catalog, Scheduling, Orders
+        </div>
+      `;
+    }
+    
     const notificacao = document.createElement('div');
     notificacao.className = 'backend-notification';
     notificacao.innerHTML = `
       <strong>Backend alterado!</strong><br>
       Agora usando: ${backendInfo.name}<br>
-      <small>${backendInfo.url}</small>
+      <small>${tipoTexto} - Porta ${backendInfo.port}</small>
+      ${servicosHtml}
     `;
     notificacao.style.cssText = `
       position: fixed;

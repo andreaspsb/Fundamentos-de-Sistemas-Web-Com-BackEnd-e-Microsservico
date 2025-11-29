@@ -1,0 +1,338 @@
+[
+  {
+    "name": "SendAgendamentoReminders",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "Petshop.Functions.Scheduling.SchedulingTriggers.SendAgendamentoReminders",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "timer",
+        "direction": "In",
+        "type": "timerTrigger",
+        "schedule": "0 0 21 * * *",
+        "properties": {}
+      }
+    ]
+  },
+  {
+    "name": "CheckMissedAppointments",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "Petshop.Functions.Scheduling.SchedulingTriggers.CheckMissedAppointments",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "timer",
+        "direction": "In",
+        "type": "timerTrigger",
+        "schedule": "0 0 * * * *",
+        "properties": {}
+      }
+    ]
+  },
+  {
+    "name": "AutoStartAppointments",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "Petshop.Functions.Scheduling.SchedulingTriggers.AutoStartAppointments",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "timer",
+        "direction": "In",
+        "type": "timerTrigger",
+        "schedule": "0 */15 * * * *",
+        "properties": {}
+      }
+    ]
+  },
+  {
+    "name": "GenerateDailySchedulingReport",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "Petshop.Functions.Scheduling.SchedulingTriggers.GenerateDailySchedulingReport",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "timer",
+        "direction": "In",
+        "type": "timerTrigger",
+        "schedule": "0 0 2 * * *",
+        "properties": {}
+      }
+    ]
+  },
+  {
+    "name": "ProcessSchedulingConfirmation",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "Petshop.Functions.Scheduling.SchedulingTriggers.ProcessSchedulingConfirmation",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "messageBody",
+        "direction": "In",
+        "type": "serviceBusTrigger",
+        "dataType": "String",
+        "queueName": "scheduling-confirmation",
+        "connection": "ServiceBusConnection",
+        "cardinality": "One",
+        "properties": {}
+      }
+    ]
+  },
+  {
+    "name": "GetAgendamentos",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "FuncPetshopScheduling.Functions.AgendamentoFunctions.GetAgendamentos",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "req",
+        "direction": "In",
+        "type": "httpTrigger",
+        "authLevel": "Anonymous",
+        "methods": [
+          "get"
+        ],
+        "route": "agendamentos",
+        "properties": {}
+      },
+      {
+        "name": "$return",
+        "type": "http",
+        "direction": "Out"
+      }
+    ]
+  },
+  {
+    "name": "GetAgendamento",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "FuncPetshopScheduling.Functions.AgendamentoFunctions.GetAgendamento",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "req",
+        "direction": "In",
+        "type": "httpTrigger",
+        "authLevel": "Anonymous",
+        "methods": [
+          "get"
+        ],
+        "route": "agendamentos/{id:long}",
+        "properties": {}
+      },
+      {
+        "name": "$return",
+        "type": "http",
+        "direction": "Out"
+      }
+    ]
+  },
+  {
+    "name": "GetAgendamentosByCliente",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "FuncPetshopScheduling.Functions.AgendamentoFunctions.GetAgendamentosByCliente",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "req",
+        "direction": "In",
+        "type": "httpTrigger",
+        "authLevel": "Anonymous",
+        "methods": [
+          "get"
+        ],
+        "route": "agendamentos/cliente/{clienteId:long}",
+        "properties": {}
+      },
+      {
+        "name": "$return",
+        "type": "http",
+        "direction": "Out"
+      }
+    ]
+  },
+  {
+    "name": "GetMeusAgendamentos",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "FuncPetshopScheduling.Functions.AgendamentoFunctions.GetMeusAgendamentos",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "req",
+        "direction": "In",
+        "type": "httpTrigger",
+        "authLevel": "Anonymous",
+        "methods": [
+          "get"
+        ],
+        "route": "agendamentos/meus",
+        "properties": {}
+      },
+      {
+        "name": "$return",
+        "type": "http",
+        "direction": "Out"
+      }
+    ]
+  },
+  {
+    "name": "CreateAgendamento",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "FuncPetshopScheduling.Functions.AgendamentoFunctions.CreateAgendamento",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "req",
+        "direction": "In",
+        "type": "httpTrigger",
+        "authLevel": "Anonymous",
+        "methods": [
+          "post"
+        ],
+        "route": "agendamentos",
+        "properties": {}
+      },
+      {
+        "name": "$return",
+        "type": "http",
+        "direction": "Out"
+      }
+    ]
+  },
+  {
+    "name": "UpdateAgendamento",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "FuncPetshopScheduling.Functions.AgendamentoFunctions.UpdateAgendamento",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "req",
+        "direction": "In",
+        "type": "httpTrigger",
+        "authLevel": "Anonymous",
+        "methods": [
+          "put"
+        ],
+        "route": "agendamentos/{id:long}",
+        "properties": {}
+      },
+      {
+        "name": "$return",
+        "type": "http",
+        "direction": "Out"
+      }
+    ]
+  },
+  {
+    "name": "UpdateAgendamentoStatus",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "FuncPetshopScheduling.Functions.AgendamentoFunctions.UpdateAgendamentoStatus",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "req",
+        "direction": "In",
+        "type": "httpTrigger",
+        "authLevel": "Anonymous",
+        "methods": [
+          "patch"
+        ],
+        "route": "agendamentos/{id:long}/status",
+        "properties": {}
+      },
+      {
+        "name": "$return",
+        "type": "http",
+        "direction": "Out"
+      }
+    ]
+  },
+  {
+    "name": "DeleteAgendamento",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "FuncPetshopScheduling.Functions.AgendamentoFunctions.DeleteAgendamento",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "req",
+        "direction": "In",
+        "type": "httpTrigger",
+        "authLevel": "Anonymous",
+        "methods": [
+          "delete"
+        ],
+        "route": "agendamentos/{id:long}",
+        "properties": {}
+      },
+      {
+        "name": "$return",
+        "type": "http",
+        "direction": "Out"
+      }
+    ]
+  },
+  {
+    "name": "GetHorariosDisponiveis",
+    "scriptFile": "func-petshop-scheduling.dll",
+    "entryPoint": "FuncPetshopScheduling.Functions.AgendamentoFunctions.GetHorariosDisponiveis",
+    "language": "dotnet-isolated",
+    "properties": {
+      "IsCodeless": false
+    },
+    "bindings": [
+      {
+        "name": "req",
+        "direction": "In",
+        "type": "httpTrigger",
+        "authLevel": "Anonymous",
+        "methods": [
+          "get"
+        ],
+        "route": "agendamentos/horarios/{data}",
+        "properties": {}
+      },
+      {
+        "name": "$return",
+        "type": "http",
+        "direction": "Out"
+      }
+    ]
+  }
+]

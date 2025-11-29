@@ -1,0 +1,30 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    
+    "SqlConnection": "Server=localhost;Database=PetshopDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;",
+    
+    "ServiceBusConnection": "Endpoint=sb://localhost;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=SAS_KEY_VALUE;UseDevelopmentEmulator=true;",
+    
+    "Jwt:SecretKey": "petshop-secret-key-must-be-at-least-256-bits-long-for-HS256-algorithm",
+    "Jwt:Issuer": "PetshopApi",
+    "Jwt:Audience": "PetshopFrontend",
+    "Jwt:ExpirationMinutes": "1440",
+    
+    "Services:Auth": "http://localhost:7070/api/",
+    "Services:Customers": "http://localhost:7071/api/",
+    "Services:Pets": "http://localhost:7072/api/",
+    "Services:Catalog": "http://localhost:7073/api/",
+    "Services:Scheduling": "http://localhost:7074/api/",
+    "Services:Orders": "http://localhost:7075/api/"
+  },
+  "Host": {
+    "CORS": "*",
+    "CORSCredentials": false
+  },
+  "ConnectionStrings": {
+    "SqlConnection": "Server=localhost;Database=PetshopDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
+  }
+}

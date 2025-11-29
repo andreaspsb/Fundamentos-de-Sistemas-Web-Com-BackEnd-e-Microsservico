@@ -15,7 +15,7 @@ NC='\033[0m' # No Color
 # URLs dos serviços (ajuste conforme necessário)
 BACKEND_SPRING="https://petshop-backend-spring.azurewebsites.net"
 BACKEND_ASPNET="https://petshop-backend-aspnet.azurewebsites.net"
-FRONTEND="https://petshop-frontend.azurestaticapps.net"
+FRONTEND="https://yellow-field-047215b0f.3.azurestaticapps.net"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

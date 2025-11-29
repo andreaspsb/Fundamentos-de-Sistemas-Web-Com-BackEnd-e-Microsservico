@@ -1,0 +1,13 @@
+/home/andreas/repositoriosgit/Fundamentos-de-Sistemas-Web-Com-BackEnd-e-Microsservico/functions/Petshop.Shared/obj/Debug/net8.0/Petshop.Shared.csproj.AssemblyReference.cache
+/home/andreas/repositoriosgit/Fundamentos-de-Sistemas-Web-Com-BackEnd-e-Microsservico/functions/Petshop.Shared/obj/Debug/net8.0/Petshop.Shared.GeneratedMSBuildEditorConfig.editorconfig
+/home/andreas/repositoriosgit/Fundamentos-de-Sistemas-Web-Com-BackEnd-e-Microsservico/functions/Petshop.Shared/obj/Debug/net8.0/Petshop.Shared.AssemblyInfoInputs.cache
+/home/andreas/repositoriosgit/Fundamentos-de-Sistemas-Web-Com-BackEnd-e-Microsservico/functions/Petshop.Shared/obj/Debug/net8.0/Petshop.Shared.AssemblyInfo.cs
+/home/andreas/repositoriosgit/Fundamentos-de-Sistemas-Web-Com-BackEnd-e-Microsservico/functions/Petshop.Shared/obj/Debug/net8.0/Petshop.Shared.csproj.CoreCompileInputs.cache
+/home/andreas/repositoriosgit/Fundamentos-de-Sistemas-Web-Com-BackEnd-e-Microsservico/functions/Petshop.Shared/obj/Debug/net8.0/Petshop.Shared.sourcelink.json
+/home/andreas/repositoriosgit/Fundamentos-de-Sistemas-Web-Com-BackEnd-e-Microsservico/functions/Petshop.Shared/bin/Debug/net8.0/Petshop.Shared.deps.json
+/home/andreas/repositoriosgit/Fundamentos-de-Sistemas-Web-Com-BackEnd-e-Microsservico/functions/Petshop.Shared/bin/Debug/net8.0/Petshop.Shared.dll
+/home/andreas/repositoriosgit/Fundamentos-de-Sistemas-Web-Com-BackEnd-e-Microsservico/functions/Petshop.Shared/bin/Debug/net8.0/Petshop.Shared.pdb
+/home/andreas/repositoriosgit/Fundamentos-de-Sistemas-Web-Com-BackEnd-e-Microsservico/functions/Petshop.Shared/obj/Debug/net8.0/Petshop.Shared.dll
+/home/andreas/repositoriosgit/Fundamentos-de-Sistemas-Web-Com-BackEnd-e-Microsservico/functions/Petshop.Shared/obj/Debug/net8.0/refint/Petshop.Shared.dll
+/home/andreas/repositoriosgit/Fundamentos-de-Sistemas-Web-Com-BackEnd-e-Microsservico/functions/Petshop.Shared/obj/Debug/net8.0/Petshop.Shared.pdb
+/home/andreas/repositoriosgit/Fundamentos-de-Sistemas-Web-Com-BackEnd-e-Microsservico/functions/Petshop.Shared/obj/Debug/net8.0/ref/Petshop.Shared.dll

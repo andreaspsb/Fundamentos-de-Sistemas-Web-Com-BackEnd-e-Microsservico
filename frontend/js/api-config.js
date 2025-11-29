@@ -2,17 +2,48 @@
 // Configuração da API - Pet Shop Backend
 // ========================================
 
+// Detectar se está em produção (Azure Static Web Apps)
+const isProduction = window.location.hostname.includes('azurestaticapps.net') || 
+                     window.location.hostname.includes('azure') ||
+                     window.location.protocol === 'https:' && !window.location.hostname.includes('localhost');
+
+// URLs de produção no Azure
+const AZURE_URLS = {
+  SPRINGBOOT: 'https://petshop-backend-spring.azurewebsites.net/api',
+  ASPNET: 'https://petshop-backend-aspnet.azurewebsites.net/api'
+};
+
 // Definir backends disponíveis
 const BACKENDS = {
   SPRINGBOOT: {
     name: 'Spring Boot',
-    url: 'http://localhost:8080/api',
-    port: 8080
+    url: isProduction ? AZURE_URLS.SPRINGBOOT : 'http://localhost:8080/api',
+    port: 8080,
+    type: 'monolith',
+    color: '#6DB33F'
   },
   ASPNET: {
     name: 'ASP.NET Core',
-    url: 'http://localhost:5000/api',
-    port: 5000
+    url: isProduction ? AZURE_URLS.ASPNET : 'http://localhost:5000/api',
+    port: 5000,
+    type: 'monolith',
+    color: '#512BD4'
+  },
+  FUNCTIONS: {
+    name: 'Azure Functions',
+    url: 'http://localhost:7071/api',
+    port: 7071,
+    type: 'microservices',
+    color: '#0078D4',
+    // URLs dos microsserviços individuais
+    services: {
+      auth: 'http://localhost:7071/api',
+      customers: 'http://localhost:7072/api',
+      pets: 'http://localhost:7073/api',
+      catalog: 'http://localhost:7074/api',
+      scheduling: 'http://localhost:7075/api',
+      orders: 'http://localhost:7076/api'
+    }
   }
 };
 
@@ -27,6 +58,20 @@ const API_CONFIG = {
   get BASE_URL() {
     const backendAtual = getBackendAtual();
     return BACKENDS[backendAtual].url;
+  },
+  
+  // Para microsserviços, retorna a URL do serviço específico
+  getServiceUrl(service) {
+    const backendAtual = getBackendAtual();
+    const backend = BACKENDS[backendAtual];
+    
+    // Se for microsserviços, retorna URL do serviço específico
+    if (backend.type === 'microservices' && backend.services && backend.services[service]) {
+      return backend.services[service];
+    }
+    
+    // Caso contrário, retorna URL base (monolito)
+    return backend.url;
   },
   ENDPOINTS: {
     // Autenticação

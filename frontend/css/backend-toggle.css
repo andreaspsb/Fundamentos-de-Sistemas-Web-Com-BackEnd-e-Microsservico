@@ -78,6 +78,28 @@
   box-shadow: 0 2px 8px rgba(81, 43, 212, 0.3);
 }
 
+.backend-option.active.functions {
+  background: linear-gradient(135deg, #0078D4 0%, #106EBE 100%);
+  box-shadow: 0 2px 8px rgba(0, 120, 212, 0.3);
+}
+
+/* Ícones dos backends */
+.backend-icon {
+  margin-right: 4px;
+  font-size: 12px;
+}
+
+/* Badge de tipo (monolito/microsserviços) */
+.backend-type-badge {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.2);
+  margin-left: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .backend-status-indicator {
   width: 8px;
   height: 8px;
