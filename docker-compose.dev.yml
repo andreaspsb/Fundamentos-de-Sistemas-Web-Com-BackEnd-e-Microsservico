@@ -1,0 +1,139 @@
+# =============================================================================
+# PetShop - Docker Compose para Desenvolvimento Local
+# =============================================================================
+# Serviços de infraestrutura para desenvolvimento local:
+# - Azurite: Emulador Azure Storage (Blobs, Queues, Tables)
+# - RabbitMQ: Alternativa local ao Azure Service Bus
+# - Azure SQL Edge: SQL Server para Linux/ARM
+#
+# Uso:
+#   docker-compose -f docker-compose.dev.yml up -d
+#
+# =============================================================================
+
+services:
+  # ===========================================================================
+  # AZURITE - Azure Storage Emulator
+  # ===========================================================================
+  # Emula Azure Blob Storage, Queue Storage e Table Storage
+  # Documentação: https://learn.microsoft.com/azure/storage/common/storage-use-azurite
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: petshop-azurite
+    restart: unless-stopped
+    ports:
+      - "10000:10000"  # Blob service
+      - "10001:10001"  # Queue service
+      - "10002:10002"  # Table service
+    volumes:
+      - azurite-data:/data
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data --debug /data/debug.log"
+    environment:
+      - AZURITE_ACCOUNTS=devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==
+    networks:
+      - petshop-dev-network
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "10000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # RABBITMQ - Message Broker (alternativa local ao Service Bus)
+  # ===========================================================================
+  # Pode ser usado como alternativa ao Azure Service Bus em desenvolvimento
+  # Management UI: http://localhost:15672 (guest/guest)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: petshop-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"    # AMQP protocol
+      - "15672:15672"  # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: petshop
+      RABBITMQ_DEFAULT_PASS: petshop123
+      RABBITMQ_DEFAULT_VHOST: petshop
+    networks:
+      - petshop-dev-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # AZURE SQL EDGE - SQL Server para desenvolvimento
+  # ===========================================================================
+  # Versão leve do SQL Server para Linux/ARM64
+  # Conexão: localhost,1433 | User: sa | Password: definido abaixo
+  sqlserver:
+    image: mcr.microsoft.com/azure-sql-edge:latest
+    container_name: petshop-sqlserver
+    restart: unless-stopped
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "PetShop@2024!"
+      MSSQL_PID: "Developer"
+    networks:
+      - petshop-dev-network
+    healthcheck:
+      test: ["/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "PetShop@2024!", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ===========================================================================
+  # REDIS - Cache distribuído (opcional)
+  # ===========================================================================
+  redis:
+    image: redis:alpine
+    container_name: petshop-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - petshop-dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # MAILHOG - Servidor de email para testes
+  # ===========================================================================
+  # SMTP: localhost:1025
+  # Web UI: http://localhost:8025
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: petshop-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    networks:
+      - petshop-dev-network
+
+networks:
+  petshop-dev-network:
+    driver: bridge
+
+volumes:
+  azurite-data:
+    driver: local
+  rabbitmq-data:
+    driver: local
+  sqlserver-data:
+    driver: local
+  redis-data:
+    driver: local
