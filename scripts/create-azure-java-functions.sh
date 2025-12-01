@@ -6,11 +6,11 @@
 # Este script cria todos os recursos necessários no Azure para
 # hospedar os 6 microsserviços Java do Petshop como Azure Functions.
 #
-# Recursos criados:
-#   - Resource Group
-#   - Storage Account (para WebJobs)
-#   - App Service Plan (Consumption/Premium)
-#   - 6 Function Apps (uma para cada microsserviço)
+# Recursos utilizados:
+#   - Resource Group: petshop-rg (existente)
+#   - Storage Account: petshopfuncsstorage (existente)
+#   - Consumption Plan: Windows (gratuito até 1M execuções/mês)
+#   - 6 Function Apps Java 17 (uma para cada microsserviço)
 #
 # Uso:
 #   ./create-azure-java-functions.sh              # Criar recursos
@@ -134,22 +134,8 @@ create_storage_account() {
 }
 
 create_java_plan() {
-    echo -e "${YELLOW}📋 Criando App Service Plan Linux para Java: ${JAVA_PLAN}...${NC}"
-    
-    if az appservice plan show --name "$JAVA_PLAN" --resource-group "$RESOURCE_GROUP" &>/dev/null; then
-        echo -e "${GREEN}   App Service Plan já existe${NC}"
-    else
-        # B1 = Basic tier, mais barato que Consumption para múltiplas funções
-        # EP1 = Elastic Premium (melhor para Functions, mas mais caro)
-        az appservice plan create \
-            --name "$JAVA_PLAN" \
-            --resource-group "$RESOURCE_GROUP" \
-            --location "$LOCATION" \
-            --sku B1 \
-            --is-linux \
-            --output none
-        echo -e "${GREEN}   ✅ App Service Plan criado (B1 Linux)${NC}"
-    fi
+    # Não precisa criar plano - usamos Consumption Plan Windows automaticamente
+    echo -e "${GREEN}📋 Usando Consumption Plan Windows (gratuito)${NC}"
 }
 
 create_function_app() {
@@ -165,14 +151,13 @@ create_function_app() {
             --name "$func_name" \
             --resource-group "$RESOURCE_GROUP" \
             --storage-account "$STORAGE_ACCOUNT" \
-            --plan "$JAVA_PLAN" \
+            --consumption-plan-location "$LOCATION" \
             --runtime java \
-            --runtime-version 21.0 \
-            --os-type Linux \
+            --runtime-version 17 \
             --functions-version 4 \
             --output none
         
-        echo -e "${GREEN}   ✅ Function App criado${NC}"
+        echo -e "${GREEN}   ✅ Function App criado (Java 17, Consumption Plan)${NC}"
     fi
     
     # Obter FQDN do SQL Server

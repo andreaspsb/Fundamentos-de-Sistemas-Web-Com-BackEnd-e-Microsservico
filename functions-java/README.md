@@ -6,11 +6,11 @@ Backend em microsserviços usando Azure Functions com Spring Boot e Spring Cloud
 
 Este projeto implementa a quarta versão do backend da Petshop, usando:
 
-- **Java 21** com **Spring Boot 3.2.12**
+- **Java 17** com **Spring Boot 3.2.12**
 - **Spring Cloud Function** com adaptador Azure
-- **Azure Functions** para hospedagem serverless
+- **Azure Functions** para hospedagem serverless (Consumption Plan Windows)
 - **H2 Database** em modo TCP (desenvolvimento) para compartilhamento entre microsserviços
-- **PostgreSQL/SQL Server** para produção
+- **Azure SQL Database** para produção
 - **JWT** para autenticação
 - **Resilience4j** para circuit breaker e retry em comunicação entre serviços
 
@@ -40,7 +40,7 @@ functions-java/
 
 ## Pré-requisitos
 
-1. **Java 21** ou superior
+1. **Java 17** ou superior
 2. **Maven 3.9+**
 3. **Azure Functions Core Tools v4**
    ```bash
@@ -228,7 +228,7 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.SQLServerDialect
 
 ## Tecnologias Utilizadas
 
-- Java 21
+- Java 17
 - Spring Boot 3.2.12
 - Spring Cloud Function 4.1.3
 - Spring Data JPA
