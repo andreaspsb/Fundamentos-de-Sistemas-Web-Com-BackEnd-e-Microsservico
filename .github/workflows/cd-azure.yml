@@ -12,6 +12,7 @@ env:
   AZURE_RESOURCE_GROUP: petshop-rg
   AZURE_APP_SERVICE_PLAN: petshop-plan
   JAVA_VERSION: '21'
+  JAVA_VERSION_FUNCTIONS: '17'
   DOTNET_VERSION: '8.0.x'
   NODE_VERSION: '18'
 
@@ -26,6 +27,7 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       mobile: ${{ steps.filter.outputs.mobile }}
       functions: ${{ steps.filter.outputs.functions }}
+      functions-java: ${{ steps.filter.outputs.functions-java }}
       any-backend: ${{ steps.check-backend.outputs.any-backend }}
     steps:
       - uses: actions/checkout@v4
@@ -43,6 +45,8 @@ jobs:
               - 'mobile/**'
             functions:
               - 'functions/**'
+            functions-java:
+              - 'functions-java/**'
       
       - name: Verificar se algum backend mudou
         id: check-backend
@@ -257,6 +261,50 @@ jobs:
         path: functions/publish/
         retention-days: 1
 
+  # Job: Build Azure Functions Java
+  build-functions-java:
+    name: Build Azure Functions Java
+    needs: changes
+    if: needs.changes.outputs.functions-java == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Setup Java ${{ env.JAVA_VERSION_FUNCTIONS }}
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: ${{ env.JAVA_VERSION_FUNCTIONS }}
+        cache: 'maven'
+
+    - name: Build com Maven
+      working-directory: ./functions-java
+      run: |
+        mvn clean package -DskipTests
+        echo "📦 Artifacts gerados:"
+        find . -path "*/target/azure-functions/*" -type d | head -10
+
+    - name: Preparar artifacts para upload
+      working-directory: ./functions-java
+      run: |
+        mkdir -p ./publish
+        for func in func-petshop-auth-java func-petshop-customers-java func-petshop-pets-java func-petshop-catalog-java func-petshop-scheduling-java func-petshop-orders-java; do
+          if [ -d "$func/target/azure-functions/$func" ]; then
+            echo "📦 Copiando $func..."
+            cp -r "$func/target/azure-functions/$func" ./publish/
+          fi
+        done
+        ls -la ./publish/
+
+    - name: Upload Functions Java artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: functions-java-publish
+        path: functions-java/publish/
+        retention-days: 1
+
   # Job: Deploy Azure Functions (em paralelo)
   deploy-functions:
     name: Deploy Functions → Azure
@@ -290,6 +338,40 @@ jobs:
         echo "🔍 Verificando func-petshop-${{ matrix.function }}..."
         sleep 15
         curl -s https://func-petshop-${{ matrix.function }}.azurewebsites.net/api/health || echo "⚠️ Health check não disponível"
+
+  # Job: Deploy Azure Functions Java (em paralelo)
+  deploy-functions-java:
+    name: Deploy Functions Java → Azure
+    needs: [changes, build-functions-java]
+    if: needs.changes.outputs.functions-java == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        function: [auth, customers, pets, catalog, scheduling, orders]
+    
+    steps:
+    - name: Download Functions Java artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: functions-java-publish
+        path: ./publish
+
+    - name: Login no Azure
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy func-petshop-${{ matrix.function }}-java
+      uses: Azure/functions-action@v1
+      with:
+        app-name: func-petshop-${{ matrix.function }}-java
+        package: ./publish/func-petshop-${{ matrix.function }}-java
+
+    - name: Verificar Function Java
+      run: |
+        echo "🔍 Verificando func-petshop-${{ matrix.function }}-java..."
+        sleep 15
+        curl -s https://func-petshop-${{ matrix.function }}-java.azurewebsites.net/api/health || echo "⚠️ Health check não disponível"
 
   # Job 5: Deploy Backend Spring Boot para Azure
   deploy-backend-spring:
@@ -453,7 +535,7 @@ jobs:
   # Job 8: Resumo do Deploy
   deploy-summary:
     name: Resumo do Deploy
-    needs: [changes, deploy-backend-spring, deploy-backend-aspnet, deploy-frontend, build-mobile, deploy-functions, downgrade-plan]
+    needs: [changes, deploy-backend-spring, deploy-backend-aspnet, deploy-frontend, build-mobile, deploy-functions, deploy-functions-java, downgrade-plan]
     if: always()
     runs-on: ubuntu-latest
     
@@ -478,7 +560,7 @@ jobs:
           echo "  📱 Mobile APK:          https://expo.dev/accounts/andreaspsb/projects/petshop-mobile/builds"
         fi
         if [ "${{ needs.changes.outputs.functions }}" == "true" ]; then
-          echo "  ⚡ Azure Functions:"
+          echo "  ⚡ Azure Functions C#:"
           echo "     - https://func-petshop-auth.azurewebsites.net"
           echo "     - https://func-petshop-customers.azurewebsites.net"
           echo "     - https://func-petshop-pets.azurewebsites.net"
@@ -486,13 +568,22 @@ jobs:
           echo "     - https://func-petshop-scheduling.azurewebsites.net"
           echo "     - https://func-petshop-orders.azurewebsites.net"
         fi
+        if [ "${{ needs.changes.outputs.functions-java }}" == "true" ]; then
+          echo "  ☕ Azure Functions Java:"
+          echo "     - https://func-petshop-auth-java.azurewebsites.net"
+          echo "     - https://func-petshop-customers-java.azurewebsites.net"
+          echo "     - https://func-petshop-pets-java.azurewebsites.net"
+          echo "     - https://func-petshop-catalog-java.azurewebsites.net"
+          echo "     - https://func-petshop-scheduling-java.azurewebsites.net"
+          echo "     - https://func-petshop-orders-java.azurewebsites.net"
+        fi
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   # Smoke Tests em Produção
   smoke-tests:
     name: Testes de Fumaça
-    needs: [deploy-backend-spring, deploy-backend-aspnet, deploy-frontend, deploy-functions, downgrade-plan]
+    needs: [deploy-backend-spring, deploy-backend-aspnet, deploy-frontend, deploy-functions, deploy-functions-java, downgrade-plan]
     runs-on: ubuntu-latest
     if: always()
     
