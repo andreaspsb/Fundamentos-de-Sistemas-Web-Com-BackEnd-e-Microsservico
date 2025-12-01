@@ -65,13 +65,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- PostgreSQL Driver (for Docker/Production) -->
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
         <!-- SQL Server Driver (for Azure Production) -->
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
