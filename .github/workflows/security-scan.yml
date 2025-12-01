@@ -45,7 +45,13 @@ jobs:
     
     strategy:
       matrix:
-        language: [ 'java', 'javascript' ]
+        include:
+          - language: java
+            build-dir: backend-springboot
+            build-cmd: mvn clean compile -DskipTests
+          - language: javascript
+            build-dir: frontend
+            build-cmd: echo "No build needed for JS"
     
     steps:
     - name: Checkout código
@@ -62,9 +68,12 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
+        cache: 'maven'
 
-    - name: Autobuild
-      uses: github/codeql-action/autobuild@v3
+    - name: Build Java (manual)
+      if: matrix.language == 'java'
+      working-directory: ./${{ matrix.build-dir }}
+      run: ${{ matrix.build-cmd }}
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v3
