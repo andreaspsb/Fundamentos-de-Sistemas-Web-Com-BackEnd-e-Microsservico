@@ -138,3 +138,4 @@ logs/
 
 # Azurite local storage
 .azurite/
+.azure-java-functions.env
