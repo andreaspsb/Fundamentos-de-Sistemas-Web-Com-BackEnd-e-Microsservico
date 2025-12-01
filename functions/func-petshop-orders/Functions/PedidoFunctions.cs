@@ -778,6 +778,13 @@ public class PedidoFunctions
 
     private async Task SendStockDeductionMessage(Pedido pedido)
     {
+        // Verificar se ServiceBus está configurado
+        if (_serviceBusClient == null)
+        {
+            _logger.LogWarning("ServiceBus não configurado. Mensagem de dedução de estoque não enviada para pedido {PedidoId}", pedido.Id);
+            return;
+        }
+
         try
         {
             var message = new StockDeductionMessage
@@ -805,6 +812,13 @@ public class PedidoFunctions
 
     private async Task SendStockRestoreMessage(Pedido pedido)
     {
+        // Verificar se ServiceBus está configurado
+        if (_serviceBusClient == null)
+        {
+            _logger.LogWarning("ServiceBus não configurado. Mensagem de restauração de estoque não enviada para pedido {PedidoId}", pedido.Id);
+            return;
+        }
+
         try
         {
             var message = new StockRestoreMessage

@@ -37,10 +37,13 @@ class BackendToggle {
           <span class="backend-icon">☕</span> Spring Boot
         </button>
         <button class="backend-option" data-backend="ASPNET" title="Monolito .NET">
-          <span class="backend-icon">🔷</span> ASP.NET Core
+          <span class="backend-icon">🔷</span> ASP.NET
         </button>
-        <button class="backend-option" data-backend="FUNCTIONS" title="Microsserviços Azure">
-          <span class="backend-icon">⚡</span> Azure Functions
+        <button class="backend-option" data-backend="FUNCTIONS" title="Microsserviços C# (Azure Functions)">
+          <span class="backend-icon">⚡</span> C# Funcs
+        </button>
+        <button class="backend-option" data-backend="FUNCTIONS_JAVA" title="Microsserviços Java (Azure Functions)">
+          <span class="backend-icon">☕</span> Java Funcs
         </button>
       </div>
       <div class="backend-info">
@@ -90,9 +93,9 @@ class BackendToggle {
       
       if (isAtivo) {
         botao.classList.add('active');
-        botao.classList.add(backendInfo.key.toLowerCase());
+        botao.classList.add(backendInfo.key.toLowerCase().replace('_', '-'));
       } else {
-        botao.classList.remove('active', 'springboot', 'aspnet', 'functions');
+        botao.classList.remove('active', 'springboot', 'aspnet', 'functions', 'functions-java');
       }
     });
     

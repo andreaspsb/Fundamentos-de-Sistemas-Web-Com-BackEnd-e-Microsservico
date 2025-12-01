@@ -31,7 +31,7 @@ const BACKENDS = {
     color: '#512BD4'
   },
   FUNCTIONS: {
-    name: 'Azure Functions',
+    name: 'C# Functions',
     url: 'http://localhost:7071/api',
     port: 7071,
     type: 'microservices',
@@ -44,6 +44,22 @@ const BACKENDS = {
       catalog: 'http://localhost:7074/api',
       scheduling: 'http://localhost:7075/api',
       orders: 'http://localhost:7076/api'
+    }
+  },
+  FUNCTIONS_JAVA: {
+    name: 'Java Functions',
+    url: 'http://localhost:7081/api',
+    port: 7081,
+    type: 'microservices',
+    color: '#ED8B00',
+    // URLs dos microsserviços individuais em Java
+    services: {
+      auth: 'http://localhost:7081/api',
+      customers: 'http://localhost:7082/api',
+      pets: 'http://localhost:7083/api',
+      catalog: 'http://localhost:7084/api',
+      scheduling: 'http://localhost:7085/api',
+      orders: 'http://localhost:7086/api'
     }
   }
 };

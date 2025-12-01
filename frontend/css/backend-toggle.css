@@ -38,15 +38,17 @@
 
 .backend-toggle-wrapper {
   display: flex;
+  flex-wrap: wrap;
   background: #f0f0f0;
   border-radius: 8px;
   padding: 3px;
   position: relative;
+  gap: 2px;
 }
 
 .backend-option {
-  padding: 8px 16px;
-  font-size: 13px;
+  padding: 8px 12px;
+  font-size: 12px;
   font-weight: 500;
   border: none;
   background: transparent;
@@ -56,6 +58,7 @@
   color: #666;
   position: relative;
   z-index: 2;
+  white-space: nowrap;
 }
 
 .backend-option:hover {
@@ -81,6 +84,11 @@
 .backend-option.active.functions {
   background: linear-gradient(135deg, #0078D4 0%, #106EBE 100%);
   box-shadow: 0 2px 8px rgba(0, 120, 212, 0.3);
+}
+
+.backend-option.active.functions-java {
+  background: linear-gradient(135deg, #ED8B00 0%, #D77C00 100%);
+  box-shadow: 0 2px 8px rgba(237, 139, 0, 0.3);
 }
 
 /* Ícones dos backends */

@@ -16,6 +16,12 @@
         "autoComplete": true,
         "maxConcurrentCalls": 16
       }
+    },
+    "timers": {
+      "schedule": {
+        "adjustForDST": true
+      }
     }
-  }
+  },
+  "functionTimeout": "00:10:00"
 }

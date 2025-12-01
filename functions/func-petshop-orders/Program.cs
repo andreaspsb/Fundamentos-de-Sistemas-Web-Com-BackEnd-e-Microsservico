@@ -45,31 +45,60 @@ var host = new HostBuilder()
             );
         });
 
-        // Service Bus Client para enviar mensagens
-        services.AddSingleton(provider =>
+        // Service Bus Client para enviar mensagens (opcional em desenvolvimento)
+        var serviceBusConnectionString = context.Configuration["ServiceBusConnection"];
+        if (!string.IsNullOrEmpty(serviceBusConnectionString) && 
+            !serviceBusConnectionString.Equals("UseDevelopmentStorage=true", StringComparison.OrdinalIgnoreCase) &&
+            serviceBusConnectionString.Contains("Endpoint=") &&
+            serviceBusConnectionString.Contains("SharedAccessKey="))
         {
-            var configuration = provider.GetRequiredService<IConfiguration>();
-            var connectionString = configuration["ServiceBusConnection"];
-            return new ServiceBusClient(connectionString);
-        });
+            try
+            {
+                services.AddSingleton(new ServiceBusClient(serviceBusConnectionString));
+            }
+            catch (Exception)
+            {
+                // Em caso de erro na conexão, registra null
+                services.AddSingleton<ServiceBusClient>(sp => null!);
+            }
+        }
+        else
+        {
+            // Em desenvolvimento local sem Service Bus configurado
+            services.AddSingleton<ServiceBusClient>(sp => null!);
+        }
 
         // HTTP Clients com Resilience para comunicação entre microsserviços
-        var customerServiceUrl = context.Configuration["CustomerServiceBaseUrl"] ?? "http://localhost:7072";
-        var catalogServiceUrl = context.Configuration["CatalogServiceBaseUrl"] ?? "http://localhost:7074";
+        var customerServiceUrl = context.Configuration["Services:Customers"] ?? "http://localhost:7072/api";
+        var catalogServiceUrl = context.Configuration["Services:Catalog"] ?? "http://localhost:7074/api";
 
         services.AddHttpClient<ICustomerServiceClient, CustomerServiceClient>(client =>
         {
             client.BaseAddress = new Uri(customerServiceUrl);
             client.Timeout = TimeSpan.FromSeconds(30);
         })
-        .AddStandardResilienceHandler();
+        .AddStandardResilienceHandler(options =>
+        {
+            options.Retry.MaxRetryAttempts = 2;
+            options.Retry.Delay = TimeSpan.FromMilliseconds(200);
+            options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(5);
+            options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(60);
+            options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(20);
+        });
 
         services.AddHttpClient<ICatalogServiceClient, CatalogServiceClient>(client =>
         {
             client.BaseAddress = new Uri(catalogServiceUrl);
             client.Timeout = TimeSpan.FromSeconds(30);
         })
-        .AddStandardResilienceHandler();
+        .AddStandardResilienceHandler(options =>
+        {
+            options.Retry.MaxRetryAttempts = 2;
+            options.Retry.Delay = TimeSpan.FromMilliseconds(200);
+            options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(5);
+            options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(60);
+            options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(20);
+        });
     })
     .Build();
 

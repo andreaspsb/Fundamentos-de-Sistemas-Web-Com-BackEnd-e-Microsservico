@@ -12,17 +12,18 @@ public static class ResilienceExtensions
         {
             // Retry: 3 tentativas com exponential backoff
             options.Retry.MaxRetryAttempts = 3;
-            options.Retry.Delay = TimeSpan.FromMilliseconds(500);
+            options.Retry.Delay = TimeSpan.FromMilliseconds(200);
             options.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
 
-            // Circuit Breaker: Abre após 50% de falhas em 10 segundos
-            options.CircuitBreaker.FailureRatio = 0.5;
-            options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(10);
-            options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(30);
-            options.CircuitBreaker.MinimumThroughput = 3;
+            // Timeout: 5 segundos por requisição individual
+            options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(5);
 
-            // Timeout: 10 segundos por requisição
-            options.AttemptTimeout.Timeout = TimeSpan.FromSeconds(10);
+            // Circuit Breaker: Abre após 50% de falhas
+            // SamplingDuration deve ser > tempo máximo de retry (3 retries x 5s = 15s, usar 60s para segurança)
+            options.CircuitBreaker.FailureRatio = 0.5;
+            options.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(60);
+            options.CircuitBreaker.BreakDuration = TimeSpan.FromSeconds(15);
+            options.CircuitBreaker.MinimumThroughput = 2;
 
             // Timeout total (incluindo retries): 30 segundos
             options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(30);

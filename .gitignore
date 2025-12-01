@@ -135,3 +135,6 @@ functions/logs/
 # Logs
 *.log
 logs/
+
+# Azurite local storage
+.azurite/
