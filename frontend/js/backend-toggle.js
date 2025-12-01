@@ -45,7 +45,7 @@ class BackendToggle {
       </div>
       <div class="backend-info">
         <span class="backend-status-indicator"></span>
-        <span class="backend-info-text">localhost:<span class="backend-port">8080</span></span>
+        <span class="backend-info-text"><span class="backend-url"></span></span>
       </div>
     `;
     
@@ -96,10 +96,13 @@ class BackendToggle {
       }
     });
     
-    // Atualizar informações de porta
-    const portaElement = this.elemento.querySelector('.backend-port');
-    if (portaElement) {
-      portaElement.textContent = backendInfo.port;
+    // Atualizar informações de URL
+    const urlElement = this.elemento.querySelector('.backend-url');
+    if (urlElement) {
+      // Mostrar URL resumida (sem /api)
+      const urlCompleta = backendInfo.url;
+      const urlResumida = urlCompleta.replace('/api', '').replace('https://', '').replace('http://', '');
+      urlElement.textContent = urlResumida;
     }
   }
   
@@ -109,6 +112,7 @@ class BackendToggle {
   mostrarNotificacao(backend) {
     const backendInfo = BACKENDS[backend];
     const tipoTexto = backendInfo.type === 'microservices' ? '⚡ Microsserviços' : '📦 Monolito';
+    const urlResumida = backendInfo.url.replace('/api', '').replace('https://', '').replace('http://', '');
     
     let servicosHtml = '';
     if (backendInfo.type === 'microservices' && backendInfo.services) {
@@ -124,7 +128,7 @@ class BackendToggle {
     notificacao.innerHTML = `
       <strong>Backend alterado!</strong><br>
       Agora usando: ${backendInfo.name}<br>
-      <small>${tipoTexto} - Porta ${backendInfo.port}</small>
+      <small>${tipoTexto} - ${urlResumida}</small>
       ${servicosHtml}
     `;
     notificacao.style.cssText = `
