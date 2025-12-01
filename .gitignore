@@ -97,3 +97,8 @@ build/
 *.bak
 *.old
 *~
+
+# Build artifacts
+backend-aspnet/PetshopApi/publish/
+backend-springboot/deploy.zip
+backend-aspnet/PetshopApi/deploy.zip
