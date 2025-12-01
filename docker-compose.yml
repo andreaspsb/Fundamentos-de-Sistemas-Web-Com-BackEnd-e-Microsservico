@@ -1,48 +1,42 @@
-version: '3.8'
+# =============================================================================
+# PetShop - Docker Compose Completo
+# =============================================================================
+# Este arquivo inicia TODOS os serviços containerizados:
+# - 3 Backends: Spring Boot (8080), ASP.NET Core (5000), Java Functions (7081-7086)
+# - 2 Frontends: Web Nginx (80), Mobile Expo Web (8081)
+#
+# NOTA: O backend Azure Functions C# NÃO está containerizado.
+#       Use ./functions/start-all.sh para iniciá-lo (portas 7071-7076)
+#
+# BANCO DE DADOS: Azure SQL Database (configurar em .env)
+# =============================================================================
 
 services:
-  # Banco de Dados PostgreSQL
-  postgres:
-    image: postgres:16-alpine
-    container_name: petshop-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: petshop
-      POSTGRES_USER: petshop
-      POSTGRES_PASSWORD: petshop123
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
-    networks:
-      - petshop-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U petshop"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # ===========================================================================
+  # BACKENDS
+  # ===========================================================================
 
-  # Backend Spring Boot
+  # Backend Spring Boot (Monolítico)
   petshop-springboot:
     build:
       context: ./backend-springboot
       dockerfile: Dockerfile
     container_name: petshop-springboot
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
-      # Database
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/petshop
-      SPRING_DATASOURCE_USERNAME: petshop
-      SPRING_DATASOURCE_PASSWORD: petshop123
+      # Azure SQL Database
+      SPRING_DATASOURCE_URL: ${AZURE_SQL_JDBC_URL:-jdbc:h2:mem:petshop;DB_CLOSE_DELAY=-1}
+      SPRING_DATASOURCE_USERNAME: ${AZURE_SQL_USERNAME:-sa}
+      SPRING_DATASOURCE_PASSWORD: ${AZURE_SQL_PASSWORD:-}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${AZURE_SQL_DRIVER:-org.h2.Driver}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      SPRING_JPA_DATABASE_PLATFORM: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_DATABASE_PLATFORM: ${AZURE_SQL_DIALECT:-org.hibernate.dialect.H2Dialect}
       
       # Profile
-      SPRING_PROFILES_ACTIVE: prod
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
+      
+      # JWT
+      JWT_SECRET: ${JWT_SECRET:-petshop-jwt-secret-key-desenvolvimento-local-2024}
       
       # CORS
       CORS_ALLOWED_ORIGINS: http://localhost,http://localhost:80,http://localhost:8081
@@ -60,23 +54,23 @@ services:
       retries: 3
       start_period: 60s
 
-  # Backend ASP.NET Core
+  # Backend ASP.NET Core (Monolítico)
   petshop-aspnet:
     build:
       context: ./backend-aspnet
       dockerfile: Dockerfile
     container_name: petshop-aspnet
     restart: unless-stopped
-    depends_on:
-      postgres:
-        condition: service_healthy
     environment:
-      # Database
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=petshop;Username=petshop;Password=petshop123"
+      # Azure SQL Database
+      ConnectionStrings__DefaultConnection: ${AZURE_SQL_CONNECTION_STRING:-Data Source=petshop.db}
       
       # Environment
       ASPNETCORE_ENVIRONMENT: Production
       ASPNETCORE_URLS: http://+:5000
+      
+      # JWT
+      Jwt__Secret: ${JWT_SECRET:-petshop-jwt-secret-key-desenvolvimento-local-2024}
       
       # CORS
       CORS_ALLOWED_ORIGINS: http://localhost,http://localhost:80,http://localhost:8081
@@ -90,6 +84,184 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  # ---------------------------------------------------------------------------
+  # Java Functions Microservices (6 serviços)
+  # ---------------------------------------------------------------------------
+
+  # Auth Service - Autenticação e JWT
+  func-auth-java:
+    build:
+      context: ./functions-java/func-auth
+      dockerfile: Dockerfile
+    container_name: func-auth-java
+    restart: unless-stopped
+    environment:
+      # Azure SQL Database
+      SPRING_DATASOURCE_URL: ${AZURE_SQL_JDBC_URL:-jdbc:h2:mem:auth;DB_CLOSE_DELAY=-1}
+      SPRING_DATASOURCE_USERNAME: ${AZURE_SQL_USERNAME:-sa}
+      SPRING_DATASOURCE_PASSWORD: ${AZURE_SQL_PASSWORD:-}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${AZURE_SQL_DRIVER:-org.h2.Driver}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DATABASE_PLATFORM: ${AZURE_SQL_DIALECT:-org.hibernate.dialect.H2Dialect}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
+      JWT_SECRET: ${JWT_SECRET:-petshop-jwt-secret-key-desenvolvimento-local-2024}
+      JWT_EXPIRATION: 86400000
+      SERVER_PORT: 8080
+    ports:
+      - "7081:8080"
+    networks:
+      - petshop-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/auth/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+
+  # Catalog Service - Produtos e Serviços
+  func-catalog-java:
+    build:
+      context: ./functions-java/func-catalog
+      dockerfile: Dockerfile
+    container_name: func-catalog-java
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: ${AZURE_SQL_JDBC_URL:-jdbc:h2:mem:catalog;DB_CLOSE_DELAY=-1}
+      SPRING_DATASOURCE_USERNAME: ${AZURE_SQL_USERNAME:-sa}
+      SPRING_DATASOURCE_PASSWORD: ${AZURE_SQL_PASSWORD:-}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${AZURE_SQL_DRIVER:-org.h2.Driver}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DATABASE_PLATFORM: ${AZURE_SQL_DIALECT:-org.hibernate.dialect.H2Dialect}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
+      JWT_SECRET: ${JWT_SECRET:-petshop-jwt-secret-key-desenvolvimento-local-2024}
+      SERVER_PORT: 8080
+    ports:
+      - "7082:8080"
+    networks:
+      - petshop-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/produtos/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+
+  # Customers Service - Clientes
+  func-customers-java:
+    build:
+      context: ./functions-java/func-customers
+      dockerfile: Dockerfile
+    container_name: func-customers-java
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: ${AZURE_SQL_JDBC_URL:-jdbc:h2:mem:customers;DB_CLOSE_DELAY=-1}
+      SPRING_DATASOURCE_USERNAME: ${AZURE_SQL_USERNAME:-sa}
+      SPRING_DATASOURCE_PASSWORD: ${AZURE_SQL_PASSWORD:-}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${AZURE_SQL_DRIVER:-org.h2.Driver}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DATABASE_PLATFORM: ${AZURE_SQL_DIALECT:-org.hibernate.dialect.H2Dialect}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
+      JWT_SECRET: ${JWT_SECRET:-petshop-jwt-secret-key-desenvolvimento-local-2024}
+      SERVER_PORT: 8080
+    ports:
+      - "7083:8080"
+    networks:
+      - petshop-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/clientes/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+
+  # Orders Service - Pedidos
+  func-orders-java:
+    build:
+      context: ./functions-java/func-orders
+      dockerfile: Dockerfile
+    container_name: func-orders-java
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: ${AZURE_SQL_JDBC_URL:-jdbc:h2:mem:orders;DB_CLOSE_DELAY=-1}
+      SPRING_DATASOURCE_USERNAME: ${AZURE_SQL_USERNAME:-sa}
+      SPRING_DATASOURCE_PASSWORD: ${AZURE_SQL_PASSWORD:-}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${AZURE_SQL_DRIVER:-org.h2.Driver}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DATABASE_PLATFORM: ${AZURE_SQL_DIALECT:-org.hibernate.dialect.H2Dialect}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
+      JWT_SECRET: ${JWT_SECRET:-petshop-jwt-secret-key-desenvolvimento-local-2024}
+      SERVER_PORT: 8080
+    ports:
+      - "7084:8080"
+    networks:
+      - petshop-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/pedidos/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+
+  # Pets Service - Pets
+  func-pets-java:
+    build:
+      context: ./functions-java/func-pets
+      dockerfile: Dockerfile
+    container_name: func-pets-java
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: ${AZURE_SQL_JDBC_URL:-jdbc:h2:mem:pets;DB_CLOSE_DELAY=-1}
+      SPRING_DATASOURCE_USERNAME: ${AZURE_SQL_USERNAME:-sa}
+      SPRING_DATASOURCE_PASSWORD: ${AZURE_SQL_PASSWORD:-}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${AZURE_SQL_DRIVER:-org.h2.Driver}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DATABASE_PLATFORM: ${AZURE_SQL_DIALECT:-org.hibernate.dialect.H2Dialect}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
+      JWT_SECRET: ${JWT_SECRET:-petshop-jwt-secret-key-desenvolvimento-local-2024}
+      SERVER_PORT: 8080
+    ports:
+      - "7085:8080"
+    networks:
+      - petshop-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/pets/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+
+  # Scheduling Service - Agendamentos
+  func-scheduling-java:
+    build:
+      context: ./functions-java/func-scheduling
+      dockerfile: Dockerfile
+    container_name: func-scheduling-java
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: ${AZURE_SQL_JDBC_URL:-jdbc:h2:mem:scheduling;DB_CLOSE_DELAY=-1}
+      SPRING_DATASOURCE_USERNAME: ${AZURE_SQL_USERNAME:-sa}
+      SPRING_DATASOURCE_PASSWORD: ${AZURE_SQL_PASSWORD:-}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${AZURE_SQL_DRIVER:-org.h2.Driver}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_DATABASE_PLATFORM: ${AZURE_SQL_DIALECT:-org.hibernate.dialect.H2Dialect}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-prod}
+      JWT_SECRET: ${JWT_SECRET:-petshop-jwt-secret-key-desenvolvimento-local-2024}
+      SERVER_PORT: 8080
+    ports:
+      - "7086:8080"
+    networks:
+      - petshop-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/agendamentos/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+
+  # ===========================================================================
+  # FRONTENDS
+  # ===========================================================================
 
   # Frontend Web (Nginx)
   petshop-frontend:
@@ -132,10 +304,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
-volumes:
-  postgres-data:
-    driver: local
 
 networks:
   petshop-network:

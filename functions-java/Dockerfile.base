@@ -1,0 +1,22 @@
+# Base image for all Java Functions microservices
+# Multi-stage build for optimized image size
+
+FROM eclipse-temurin:21-jdk-alpine AS build
+
+# Install Maven
+RUN apk add --no-cache maven
+
+WORKDIR /app
+
+# Copy parent pom and all modules
+COPY pom.xml .
+COPY petshop-functions-shared ./petshop-functions-shared
+COPY func-petshop-auth-java ./func-petshop-auth-java
+COPY func-petshop-catalog-java ./func-petshop-catalog-java
+COPY func-petshop-customers-java ./func-petshop-customers-java
+COPY func-petshop-pets-java ./func-petshop-pets-java
+COPY func-petshop-scheduling-java ./func-petshop-scheduling-java
+COPY func-petshop-orders-java ./func-petshop-orders-java
+
+# Build all modules
+RUN mvn clean package -DskipTests

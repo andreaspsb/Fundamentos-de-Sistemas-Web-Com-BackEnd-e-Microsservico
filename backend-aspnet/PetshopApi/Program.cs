@@ -17,25 +17,34 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
     });
 
-// Configure Database (SQL Server/Azure SQL em produção, SQLite em desenvolvimento)
+// Configure Database (SQL Server/Azure SQL em produção, SQLite em desenvolvimento/Docker)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Sobrescrever com variável de ambiente se disponível (Azure App Service)
+// Sobrescrever com variável de ambiente se disponível (Azure App Service ou Docker)
 connectionString = Environment.GetEnvironmentVariable("SQLAZURECONNSTR_DefaultConnection") 
     ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
     ?? connectionString;
 
-if (builder.Environment.IsProduction() || connectionString.Contains("database.windows.net"))
+// Detectar tipo de banco pelo connection string
+var isAzureSql = connectionString != null && 
+    (connectionString.Contains("database.windows.net") || 
+     connectionString.Contains("Server=tcp:") ||
+     connectionString.Contains("sqlserver"));
+
+if (isAzureSql)
 {
     // Azure SQL Database
+    Console.WriteLine("📦 Usando Azure SQL Database");
     builder.Services.AddDbContext<PetshopContext>(options =>
         options.UseSqlServer(connectionString));
 }
 else
 {
-    // SQLite para desenvolvimento local
+    // SQLite para desenvolvimento local e Docker (padrão)
+    var sqliteConnection = connectionString ?? "Data Source=petshop.db";
+    Console.WriteLine($"📦 Usando SQLite: {sqliteConnection}");
     builder.Services.AddDbContext<PetshopContext>(options =>
-        options.UseSqlite(connectionString ?? "Data Source=petshop.db"));
+        options.UseSqlite(sqliteConnection));
 }
 
 // Register JWT Service

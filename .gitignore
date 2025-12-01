@@ -102,3 +102,36 @@ build/
 backend-aspnet/PetshopApi/publish/
 backend-springboot/deploy.zip
 backend-aspnet/PetshopApi/deploy.zip
+
+# Runtime files
+functions/pids/
+functions-java/.pids/
+functions/logs/
+*.pid
+
+# Runtime files
+functions/pids/
+functions-java/.pids/
+functions/logs/
+*.pid
+
+# .NET Build artifacts
+**/obj/
+**/bin/
+*.dll
+*.pdb
+*.cache
+
+# Java Build artifacts
+**/target/
+*.class
+*.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/settings.json
+
+# Logs
+*.log
+logs/
