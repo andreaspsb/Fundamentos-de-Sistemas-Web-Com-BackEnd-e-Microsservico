@@ -9,6 +9,8 @@ env:
   AZURE_WEBAPP_NAME_SPRING: petshop-backend-spring
   AZURE_WEBAPP_NAME_ASPNET: petshop-backend-aspnet
   AZURE_STATIC_WEB_APP_NAME: petshop-frontend
+  AZURE_RESOURCE_GROUP: petshop-rg
+  AZURE_APP_SERVICE_PLAN: petshop-plan
   JAVA_VERSION: '21'
   DOTNET_VERSION: '8.0.x'
   NODE_VERSION: '18'
@@ -23,6 +25,7 @@ jobs:
       backend-aspnet: ${{ steps.filter.outputs.backend-aspnet }}
       frontend: ${{ steps.filter.outputs.frontend }}
       mobile: ${{ steps.filter.outputs.mobile }}
+      any-backend: ${{ steps.check-backend.outputs.any-backend }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -37,6 +40,46 @@ jobs:
               - 'frontend/**'
             mobile:
               - 'mobile/**'
+      
+      - name: Verificar se algum backend mudou
+        id: check-backend
+        run: |
+          if [ "${{ steps.filter.outputs.backend-spring }}" == "true" ] || [ "${{ steps.filter.outputs.backend-aspnet }}" == "true" ]; then
+            echo "any-backend=true" >> $GITHUB_OUTPUT
+          else
+            echo "any-backend=false" >> $GITHUB_OUTPUT
+          fi
+
+  # Upgrade do App Service Plan para B1 (permite deploy quando quota F1 esgotada)
+  upgrade-plan:
+    name: ⬆️ Upgrade para B1
+    needs: changes
+    if: needs.changes.outputs.any-backend == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      upgraded: ${{ steps.upgrade.outputs.upgraded }}
+      start-time: ${{ steps.upgrade.outputs.start-time }}
+    
+    steps:
+    - name: Login no Azure
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Upgrade App Service Plan para B1
+      id: upgrade
+      run: |
+        echo "⬆️ Fazendo upgrade do plano para B1..."
+        START_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        echo "start-time=$START_TIME" >> $GITHUB_OUTPUT
+        
+        az appservice plan update \
+          --name ${{ env.AZURE_APP_SERVICE_PLAN }} \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --sku B1
+        
+        echo "upgraded=true" >> $GITHUB_OUTPUT
+        echo "✅ Upgrade concluído às $START_TIME"
 
   # Job 1: Build Backend Spring Boot
   build-backend:
@@ -174,7 +217,7 @@ jobs:
   # Job 5: Deploy Backend Spring Boot para Azure
   deploy-backend-spring:
     name: Deploy Spring Boot → Azure
-    needs: [changes, build-backend]
+    needs: [changes, build-backend, upgrade-plan]
     if: needs.changes.outputs.backend-spring == 'true'
     runs-on: ubuntu-latest
     environment:
@@ -207,7 +250,7 @@ jobs:
   # Job 6: Deploy Backend ASP.NET Core para Azure
   deploy-backend-aspnet:
     name: Deploy ASP.NET Core → Azure
-    needs: [changes, build-backend-aspnet]
+    needs: [changes, build-backend-aspnet, upgrade-plan]
     if: needs.changes.outputs.backend-aspnet == 'true'
     runs-on: ubuntu-latest
     environment:
@@ -265,11 +308,75 @@ jobs:
         app_location: "/frontend"
         output_location: ""
         skip_app_build: true
+        skip_deploy_on_missing_secrets: true
+
+  # Downgrade do App Service Plan para F1 (SEMPRE executar após deploys)
+  downgrade-plan:
+    name: ⬇️ Downgrade para F1
+    needs: [changes, upgrade-plan, deploy-backend-spring, deploy-backend-aspnet]
+    if: always() && needs.upgrade-plan.outputs.upgraded == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Login no Azure
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Desabilitar AlwaysOn nos backends
+      run: |
+        echo "🔧 Desabilitando AlwaysOn..."
+        az webapp config set \
+          --name ${{ env.AZURE_WEBAPP_NAME_SPRING }} \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --always-on false || true
+        
+        az webapp config set \
+          --name ${{ env.AZURE_WEBAPP_NAME_ASPNET }} \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --always-on false || true
+        
+        echo "✅ AlwaysOn desabilitado"
+
+    - name: Downgrade App Service Plan para F1
+      run: |
+        echo "⬇️ Fazendo downgrade do plano para F1..."
+        az appservice plan update \
+          --name ${{ env.AZURE_APP_SERVICE_PLAN }} \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --sku F1
+        
+        echo "✅ Downgrade concluído"
+
+    - name: Calcular tempo no plano B1
+      run: |
+        START_TIME="${{ needs.upgrade-plan.outputs.start-time }}"
+        END_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        
+        START_SECONDS=$(date -d "$START_TIME" +%s)
+        END_SECONDS=$(date -d "$END_TIME" +%s)
+        DURATION=$((END_SECONDS - START_SECONDS))
+        MINUTES=$((DURATION / 60))
+        SECONDS=$((DURATION % 60))
+        
+        # Calcular custo (B1 Linux Brazil South ≈ $0.018/hora)
+        HOURS=$(echo "scale=4; $DURATION / 3600" | bc)
+        COST=$(echo "scale=4; $HOURS * 0.018" | bc)
+        
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "💰 RELATÓRIO DE CUSTOS - PLANO B1"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "⏱️  Tempo no plano B1: ${MINUTES}m ${SECONDS}s"
+        echo "📅 Início: $START_TIME"
+        echo "📅 Fim: $END_TIME"
+        echo "💵 Custo estimado: ~\$${COST} USD"
+        echo "   (B1 Linux Brazil South ≈ \$0.018/hora)"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   # Job 8: Resumo do Deploy
   deploy-summary:
     name: Resumo do Deploy
-    needs: [changes, deploy-backend-spring, deploy-backend-aspnet, deploy-frontend, build-mobile]
+    needs: [changes, deploy-backend-spring, deploy-backend-aspnet, deploy-frontend, build-mobile, downgrade-plan]
     if: always()
     runs-on: ubuntu-latest
     
@@ -288,7 +395,7 @@ jobs:
           echo "  🟣 Backend ASP.NET:     https://petshop-backend-aspnet.azurewebsites.net"
         fi
         if [ "${{ needs.changes.outputs.frontend }}" == "true" ]; then
-          echo "  🌐 Frontend Web:        https://petshop-frontend.azurestaticapps.net"
+          echo "  🌐 Frontend Web:        https://yellow-field-047215b0f.3.azurestaticapps.net"
         fi
         if [ "${{ needs.changes.outputs.mobile }}" == "true" ]; then
           echo "  📱 Mobile APK:          https://expo.dev/accounts/andreaspsb/projects/petshop-mobile/builds"
@@ -296,10 +403,10 @@ jobs:
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-  # Job 7: Smoke Tests em Produção
+  # Smoke Tests em Produção
   smoke-tests:
     name: Testes de Fumaça
-    needs: [deploy-backend-spring, deploy-backend-aspnet, deploy-frontend]
+    needs: [deploy-backend-spring, deploy-backend-aspnet, deploy-frontend, downgrade-plan]
     runs-on: ubuntu-latest
     if: always()
     
@@ -322,7 +429,7 @@ jobs:
       if: needs.deploy-frontend.result == 'success'
       run: |
         echo "🔍 Verificando frontend..."
-        curl -f https://yellow-field-047215b0f.4.azurestaticapps.net || echo "❌ Frontend não respondeu"
+        curl -f https://yellow-field-047215b0f.3.azurestaticapps.net || echo "❌ Frontend não respondeu"
 
     - name: Notificar sucesso 🎉
       run: |
@@ -331,7 +438,7 @@ jobs:
         echo "🌐 URLs do Projeto:"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo "Frontend:"
-        echo "  🎨 https://yellow-field-047215b0f.4.azurestaticapps.net"
+        echo "  🎨 https://yellow-field-047215b0f.3.azurestaticapps.net"
         echo ""
         echo "Backend Spring Boot:"
         echo "  ☕ https://${{ env.AZURE_WEBAPP_NAME_SPRING }}.azurewebsites.net"
