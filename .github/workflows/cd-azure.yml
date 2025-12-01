@@ -265,7 +265,6 @@ jobs:
         app_location: "/frontend"
         output_location: ""
         skip_app_build: true
-        skip_deploy_on_missing_secrets: true
 
   # Job 8: Resumo do Deploy
   deploy-summary:

@@ -1,5 +1,6 @@
 // ========================================
 // Configuração da API - Pet Shop Backend
+// Atualizado em: 01/12/2025 - Deploy Azure
 // ========================================
 
 // Detectar se está em produção (Azure Static Web Apps)
