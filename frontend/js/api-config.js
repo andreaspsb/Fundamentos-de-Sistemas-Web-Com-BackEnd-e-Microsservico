@@ -11,7 +11,25 @@ const isProduction = window.location.hostname.includes('azurestaticapps.net') ||
 // URLs de produção no Azure
 const AZURE_URLS = {
   SPRINGBOOT: 'https://petshop-backend-spring.azurewebsites.net/api',
-  ASPNET: 'https://petshop-backend-aspnet.azurewebsites.net/api'
+  ASPNET: 'https://petshop-backend-aspnet.azurewebsites.net/api',
+  // C# Functions
+  FUNCTIONS: {
+    auth: 'https://func-petshop-auth.azurewebsites.net/api',
+    customers: 'https://func-petshop-customers.azurewebsites.net/api',
+    pets: 'https://func-petshop-pets.azurewebsites.net/api',
+    catalog: 'https://func-petshop-catalog.azurewebsites.net/api',
+    scheduling: 'https://func-petshop-scheduling.azurewebsites.net/api',
+    orders: 'https://func-petshop-orders.azurewebsites.net/api'
+  },
+  // Java Functions
+  FUNCTIONS_JAVA: {
+    auth: 'https://func-petshop-auth-java.azurewebsites.net/api',
+    customers: 'https://func-petshop-customers-java.azurewebsites.net/api',
+    pets: 'https://func-petshop-pets-java.azurewebsites.net/api',
+    catalog: 'https://func-petshop-catalog-java.azurewebsites.net/api',
+    scheduling: 'https://func-petshop-scheduling-java.azurewebsites.net/api',
+    orders: 'https://func-petshop-orders-java.azurewebsites.net/api'
+  }
 };
 
 // Definir backends disponíveis
@@ -32,12 +50,12 @@ const BACKENDS = {
   },
   FUNCTIONS: {
     name: 'C# Functions',
-    url: 'http://localhost:7071/api',
+    url: isProduction ? AZURE_URLS.FUNCTIONS.auth : 'http://localhost:7071/api',
     port: 7071,
     type: 'microservices',
     color: '#0078D4',
     // URLs dos microsserviços individuais
-    services: {
+    services: isProduction ? AZURE_URLS.FUNCTIONS : {
       auth: 'http://localhost:7071/api',
       customers: 'http://localhost:7072/api',
       pets: 'http://localhost:7073/api',
@@ -48,12 +66,12 @@ const BACKENDS = {
   },
   FUNCTIONS_JAVA: {
     name: 'Java Functions',
-    url: 'http://localhost:7081/api',
+    url: isProduction ? AZURE_URLS.FUNCTIONS_JAVA.auth : 'http://localhost:7081/api',
     port: 7081,
     type: 'microservices',
     color: '#ED8B00',
     // URLs dos microsserviços individuais em Java
-    services: {
+    services: isProduction ? AZURE_URLS.FUNCTIONS_JAVA : {
       auth: 'http://localhost:7081/api',
       customers: 'http://localhost:7082/api',
       pets: 'http://localhost:7083/api',
