@@ -57,25 +57,27 @@ public class AuthFunctions {
 
         context.getLogger().info("Processing login request");
 
-        Optional<LoginRequestDTO> bodyOpt = request.getBody();
-        if (bodyOpt.isEmpty()) {
-            return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
-                    .header("Content-Type", "application/json")
-                    .body(Map.of("error", "Request body is required"))
-                    .build();
-        }
+        try {
+            Optional<LoginRequestDTO> bodyOpt = request.getBody();
+            if (bodyOpt.isEmpty()) {
+                return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
+                        .header("Content-Type", "application/json")
+                        .body(Map.of("error", "Request body is required"))
+                        .build();
+            }
 
-        LoginRequestDTO loginRequest = bodyOpt.get();
-        
-        if (loginRequest.getUsername() == null || loginRequest.getSenha() == null) {
-            return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
-                    .header("Content-Type", "application/json")
-                    .body(Map.of("error", "Username and password are required"))
-                    .build();
-        }
+            LoginRequestDTO loginRequest = bodyOpt.get();
+            
+            if (loginRequest.getUsername() == null || loginRequest.getSenha() == null) {
+                return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
+                        .header("Content-Type", "application/json")
+                        .body(Map.of("error", "Username and password are required"))
+                        .build();
+            }
 
-        // Find user
-        Optional<Usuario> usuarioOpt = usuarioRepository.findByUsernameAndAtivo(loginRequest.getUsername(), true);
+            // Find user
+            context.getLogger().info("Looking for user: " + loginRequest.getUsername());
+            Optional<Usuario> usuarioOpt = usuarioRepository.findByUsernameAndAtivo(loginRequest.getUsername(), true);
         
         if (usuarioOpt.isEmpty()) {
             return request.createResponseBuilder(HttpStatus.UNAUTHORIZED)
@@ -123,6 +125,14 @@ public class AuthFunctions {
                 .header("Content-Type", "application/json")
                 .body(response)
                 .build();
+        } catch (Exception e) {
+            context.getLogger().severe("Login error: " + e.getMessage());
+            e.printStackTrace();
+            return request.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .header("Content-Type", "application/json")
+                    .body(Map.of("error", "Internal server error", "message", e.getMessage() != null ? e.getMessage() : "Unknown error"))
+                    .build();
+        }
     }
 
     /**
