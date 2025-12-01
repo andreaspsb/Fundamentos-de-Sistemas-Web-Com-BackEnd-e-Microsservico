@@ -72,6 +72,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- SQL Server Driver (for Azure Production) -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Spring Boot Web (for Docker REST API) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
