@@ -25,6 +25,7 @@ jobs:
       backend-aspnet: ${{ steps.filter.outputs.backend-aspnet }}
       frontend: ${{ steps.filter.outputs.frontend }}
       mobile: ${{ steps.filter.outputs.mobile }}
+      functions: ${{ steps.filter.outputs.functions }}
       any-backend: ${{ steps.check-backend.outputs.any-backend }}
     steps:
       - uses: actions/checkout@v4
@@ -40,6 +41,8 @@ jobs:
               - 'frontend/**'
             mobile:
               - 'mobile/**'
+            functions:
+              - 'functions/**'
       
       - name: Verificar se algum backend mudou
         id: check-backend
@@ -214,6 +217,80 @@ jobs:
         echo "📱 Acesse https://expo.dev/accounts/andreaspsb/projects/petshop-mobile/builds"
         echo "   para acompanhar o progresso e baixar o APK"
 
+  # Job: Build Azure Functions
+  build-functions:
+    name: Build Azure Functions
+    needs: changes
+    if: needs.changes.outputs.functions == 'true'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Setup .NET ${{ env.DOTNET_VERSION }}
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      working-directory: ./functions
+      run: dotnet restore Petshop.Functions.sln
+
+    - name: Build solution
+      working-directory: ./functions
+      run: dotnet build Petshop.Functions.sln --configuration Release --no-restore
+
+    - name: Publish Functions
+      working-directory: ./functions
+      run: |
+        for func in func-petshop-auth func-petshop-customers func-petshop-pets func-petshop-catalog func-petshop-scheduling func-petshop-orders; do
+          echo "📦 Publicando $func..."
+          dotnet publish $func/$func.csproj -c Release -o ./publish/$func
+        done
+        ls -la ./publish/
+
+    - name: Upload Functions artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: functions-publish
+        path: functions/publish/
+        retention-days: 1
+
+  # Job: Deploy Azure Functions (em paralelo)
+  deploy-functions:
+    name: Deploy Functions → Azure
+    needs: [changes, build-functions]
+    if: needs.changes.outputs.functions == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        function: [auth, customers, pets, catalog, scheduling, orders]
+    
+    steps:
+    - name: Download Functions artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: functions-publish
+        path: ./publish
+
+    - name: Login no Azure
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy func-petshop-${{ matrix.function }}
+      uses: Azure/functions-action@v1
+      with:
+        app-name: func-petshop-${{ matrix.function }}
+        package: ./publish/func-petshop-${{ matrix.function }}
+
+    - name: Verificar Function
+      run: |
+        echo "🔍 Verificando func-petshop-${{ matrix.function }}..."
+        sleep 15
+        curl -s https://func-petshop-${{ matrix.function }}.azurewebsites.net/api/health || echo "⚠️ Health check não disponível"
+
   # Job 5: Deploy Backend Spring Boot para Azure
   deploy-backend-spring:
     name: Deploy Spring Boot → Azure
@@ -376,7 +453,7 @@ jobs:
   # Job 8: Resumo do Deploy
   deploy-summary:
     name: Resumo do Deploy
-    needs: [changes, deploy-backend-spring, deploy-backend-aspnet, deploy-frontend, build-mobile, downgrade-plan]
+    needs: [changes, deploy-backend-spring, deploy-backend-aspnet, deploy-frontend, build-mobile, deploy-functions, downgrade-plan]
     if: always()
     runs-on: ubuntu-latest
     
@@ -400,13 +477,22 @@ jobs:
         if [ "${{ needs.changes.outputs.mobile }}" == "true" ]; then
           echo "  📱 Mobile APK:          https://expo.dev/accounts/andreaspsb/projects/petshop-mobile/builds"
         fi
+        if [ "${{ needs.changes.outputs.functions }}" == "true" ]; then
+          echo "  ⚡ Azure Functions:"
+          echo "     - https://func-petshop-auth.azurewebsites.net"
+          echo "     - https://func-petshop-customers.azurewebsites.net"
+          echo "     - https://func-petshop-pets.azurewebsites.net"
+          echo "     - https://func-petshop-catalog.azurewebsites.net"
+          echo "     - https://func-petshop-scheduling.azurewebsites.net"
+          echo "     - https://func-petshop-orders.azurewebsites.net"
+        fi
         echo ""
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
   # Smoke Tests em Produção
   smoke-tests:
     name: Testes de Fumaça
-    needs: [deploy-backend-spring, deploy-backend-aspnet, deploy-frontend, downgrade-plan]
+    needs: [deploy-backend-spring, deploy-backend-aspnet, deploy-frontend, deploy-functions, downgrade-plan]
     runs-on: ubuntu-latest
     if: always()
     
