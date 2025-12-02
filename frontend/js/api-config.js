@@ -165,7 +165,9 @@ class ApiService {
    */
   static async get(endpoint, params = {}) {
     try {
-      const url = new URL(`${API_CONFIG.BASE_URL}${endpoint}`);
+      // Determinar URL base correta para microsserviços
+      const baseUrl = this.getBaseUrlForEndpoint(endpoint);
+      const url = new URL(`${baseUrl}${endpoint}`);
       
       // Adicionar parâmetros de query string
       Object.keys(params).forEach(key => {
@@ -196,7 +198,9 @@ class ApiService {
    */
   static async post(endpoint, data) {
     try {
-      const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+      // Determinar URL base correta para microsserviços
+      const baseUrl = this.getBaseUrlForEndpoint(endpoint);
+      const url = `${baseUrl}${endpoint}`;
       console.log(`🌐 POST: ${url}`, data);
       
       const response = await fetch(url, {
@@ -214,13 +218,46 @@ class ApiService {
       throw error;
     }
   }
+
+  /**
+   * Determina a URL base correta baseada no endpoint (para microsserviços)
+   */
+  static getBaseUrlForEndpoint(endpoint) {
+    const backendAtual = getBackendAtual();
+    const backend = BACKENDS[backendAtual];
+    
+    // Se não for microsserviços, usar URL base padrão
+    if (backend.type !== 'microservices' || !backend.services) {
+      return backend.url;
+    }
+    
+    // Mapear endpoint para serviço correto
+    if (endpoint.startsWith('/auth')) {
+      return backend.services.auth;
+    } else if (endpoint.startsWith('/clientes')) {
+      return backend.services.customers;
+    } else if (endpoint.startsWith('/pets')) {
+      return backend.services.pets;
+    } else if (endpoint.startsWith('/produtos') || endpoint.startsWith('/categorias') || endpoint.startsWith('/servicos')) {
+      return backend.services.catalog;
+    } else if (endpoint.startsWith('/agendamentos')) {
+      return backend.services.scheduling;
+    } else if (endpoint.startsWith('/pedidos')) {
+      return backend.services.orders;
+    }
+    
+    // Fallback para URL base
+    return backend.url;
+  }
   
   /**
    * Faz requisição PUT
    */
   static async put(endpoint, data) {
     try {
-      const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+      // Determinar URL base correta para microsserviços
+      const baseUrl = this.getBaseUrlForEndpoint(endpoint);
+      const url = `${baseUrl}${endpoint}`;
       console.log(`🌐 PUT: ${url}`, data);
       
       const response = await fetch(url, {
@@ -244,7 +281,9 @@ class ApiService {
    */
   static async delete(endpoint) {
     try {
-      const url = `${API_CONFIG.BASE_URL}${endpoint}`;
+      // Determinar URL base correta para microsserviços
+      const baseUrl = this.getBaseUrlForEndpoint(endpoint);
+      const url = `${baseUrl}${endpoint}`;
       console.log(`🌐 DELETE: ${url}`);
       
       const response = await fetch(url, {
