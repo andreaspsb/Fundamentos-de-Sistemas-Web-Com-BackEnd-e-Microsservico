@@ -288,28 +288,32 @@
     async function carregarEstatisticas() {
       try {
         // Buscar clientes
-        const resClientes = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLIENTES}`);
+        const baseUrlClientes = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.CLIENTES);
+        const resClientes = await fetch(`${baseUrlClientes}${API_CONFIG.ENDPOINTS.CLIENTES}`);
         if (resClientes.ok) {
           const clientes = await resClientes.json();
           document.getElementById('totalClientes').textContent = clientes.length;
         }
         
         // Buscar pets
-        const resPets = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PETS}`);
+        const baseUrlPets = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PETS);
+        const resPets = await fetch(`${baseUrlPets}${API_CONFIG.ENDPOINTS.PETS}`);
         if (resPets.ok) {
           const pets = await resPets.json();
           document.getElementById('totalPets').textContent = pets.length;
         }
         
         // Buscar agendamentos
-        const resAgendamentos = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AGENDAMENTOS}`);
+        const baseUrlAgendamentos = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.AGENDAMENTOS);
+        const resAgendamentos = await fetch(`${baseUrlAgendamentos}${API_CONFIG.ENDPOINTS.AGENDAMENTOS}`);
         if (resAgendamentos.ok) {
           const agendamentos = await resAgendamentos.json();
           document.getElementById('totalAgendamentos').textContent = agendamentos.length;
         }
         
         // Buscar pedidos
-        const resPedidos = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PEDIDOS}`);
+        const baseUrlPedidos = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PEDIDOS);
+        const resPedidos = await fetch(`${baseUrlPedidos}${API_CONFIG.ENDPOINTS.PEDIDOS}`);
         if (resPedidos.ok) {
           const pedidos = await resPedidos.json();
           document.getElementById('totalPedidos').textContent = pedidos.length;

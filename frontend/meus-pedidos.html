@@ -194,7 +194,8 @@
           throw new Error('Dados do cliente não encontrados');
         }
 
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PEDIDOS}/cliente/${userData.clienteId}`);
+        const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PEDIDOS);
+        const response = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PEDIDOS}/cliente/${userData.clienteId}`);
         
         if (!response.ok) {
           throw new Error('Erro ao carregar pedidos');
@@ -280,7 +281,8 @@
      */
     async function verDetalhes(pedidoId) {
       try {
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PEDIDOS}/${pedidoId}`);
+        const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PEDIDOS);
+        const response = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PEDIDOS}/${pedidoId}`);
         
         if (!response.ok) {
           throw new Error('Erro ao carregar detalhes do pedido');

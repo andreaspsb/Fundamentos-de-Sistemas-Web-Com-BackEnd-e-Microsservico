@@ -109,7 +109,8 @@
       const select = document.getElementById('produtoCategoria');
       select.innerHTML = '';
       try {
-        const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CATEGORIAS}`);
+        const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.CATEGORIAS);
+        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.CATEGORIAS}`);
         const rawCategorias = await resp.json();
         const categorias = normalizeResponse(rawCategorias);
         categorias.forEach(cat => {
@@ -127,7 +128,8 @@
       const lista = document.getElementById('produtos-lista');
       lista.innerHTML = '<div class="text-center my-5"><span class="spinner-border"></span> Carregando...</div>';
       try {
-        const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUTOS}`);
+        const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PRODUTOS);
+        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PRODUTOS}`);
         const rawProdutos = await resp.json();
         const produtos = normalizeResponse(rawProdutos);
         let html = `<table class="table table-striped align-middle">
@@ -155,7 +157,8 @@
 
     window.editarProduto = async function(id) {
       try {
-        const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUTOS}/${id}`);
+        const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PRODUTOS);
+        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PRODUTOS}/${id}`);
         const rawProd = await resp.json();
         const prod = normalizeResponse(rawProd);
         document.getElementById('produtoId').value = prod.id;
@@ -175,7 +178,8 @@
     window.excluirProduto = async function(id) {
       if (!confirm('Confirma excluir este produto?')) return;
       try {
-        const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUTOS}/${id}`, { method: 'DELETE' });
+        const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PRODUTOS);
+        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PRODUTOS}/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error();
         mostrarToast('Produto excluído!', 'success');
         carregarProdutos();
@@ -196,15 +200,16 @@
       const ativo = document.getElementById('produtoAtivo').checked;
       const produto = { nome, descricao, preco, quantidadeEstoque, urlImagem, categoriaId, ativo };
       try {
+        const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PRODUTOS);
         let resp;
         if (id) {
-          resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUTOS}/${id}`, {
+          resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PRODUTOS}/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(produto)
           });
         } else {
-          resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUTOS}`, {
+          resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PRODUTOS}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(produto)

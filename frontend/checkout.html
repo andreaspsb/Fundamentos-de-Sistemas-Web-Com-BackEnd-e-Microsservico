@@ -240,7 +240,8 @@
           return;
         }
 
-        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLIENTES}/${userData.clienteId}`);
+        const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.CLIENTES);
+        const response = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.CLIENTES}/${userData.clienteId}`);
         if (response.ok) {
           const rawCliente = await response.json();
           const cliente = normalizeResponse(rawCliente);
@@ -331,7 +332,8 @@
 
         try {
           // 1. Criar pedido vazio
-          const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PEDIDOS}`, {
+          const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PEDIDOS);
+          const response = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PEDIDOS}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -353,7 +355,7 @@
               produtoId: item.id,
               quantidade: item.quantidade
             };
-            const itemResp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PEDIDOS}/${pedido.id}/itens`, {
+            const itemResp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PEDIDOS}/${pedido.id}/itens`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -366,7 +368,7 @@
           }
 
           // 3. (Opcional) Confirmar pedido
-          // await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PEDIDOS}/${pedido.id}/confirmar`, { method: 'POST' });
+          // await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PEDIDOS}/${pedido.id}/confirmar`, { method: 'POST' });
 
           // Limpar carrinho
           CarrinhoManager.limparCarrinho();

@@ -54,7 +54,8 @@
       const lista = document.getElementById('pedidos-lista');
       lista.innerHTML = '<div class="text-center my-5"><span class="spinner-border"></span> Carregando...</div>';
       try {
-        const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PEDIDOS}`);
+        const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PEDIDOS);
+        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PEDIDOS}`);
         const rawPedidos = await resp.json();
         const pedidos = normalizeResponse(rawPedidos);
         let html = `<table class="table table-striped align-middle">
@@ -81,7 +82,8 @@
     window.excluirPedido = async function(id) {
       if (!confirm('Confirma excluir este pedido?')) return;
       try {
-        const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PEDIDOS}/${id}`, { method: 'DELETE' });
+        const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PEDIDOS);
+        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PEDIDOS}/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error();
         mostrarToast('Pedido excluído!', 'success');
         carregarPedidos();

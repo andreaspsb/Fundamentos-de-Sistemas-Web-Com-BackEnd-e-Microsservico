@@ -52,7 +52,8 @@
       const lista = document.getElementById('clientes-lista');
       lista.innerHTML = '<div class="text-center my-5"><span class="spinner-border"></span> Carregando...</div>';
       try {
-        const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLIENTES}`);
+        const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.CLIENTES);
+        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.CLIENTES}`);
         const rawClientes = await resp.json();
         const clientes = normalizeResponse(rawClientes);
         let html = `<table class="table table-striped align-middle">
@@ -79,7 +80,8 @@
     window.excluirCliente = async function(id) {
       if (!confirm('Confirma excluir este cliente?')) return;
       try {
-        const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLIENTES}/${id}`, { method: 'DELETE' });
+        const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.CLIENTES);
+        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.CLIENTES}/${id}`, { method: 'DELETE' });
         if (!resp.ok) throw new Error();
         mostrarToast('Cliente excluído!', 'success');
         carregarClientes();
