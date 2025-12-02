@@ -216,7 +216,7 @@ public class AuthFunctions {
     }
 
     /**
-     * GET /api/auth/validate
+     * GET /api/auth/validar
      * Validates JWT token
      */
     @FunctionName("validateToken")
@@ -225,7 +225,7 @@ public class AuthFunctions {
                 name = "req",
                 methods = {HttpMethod.GET},
                 authLevel = AuthorizationLevel.ANONYMOUS,
-                route = "auth/validate"
+                route = "auth/validar"
             ) HttpRequestMessage<Optional<String>> request,
             final ExecutionContext context) {
 

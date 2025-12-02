@@ -102,6 +102,8 @@ build/
 backend-aspnet/PetshopApi/publish/
 backend-springboot/deploy.zip
 backend-aspnet/PetshopApi/deploy.zip
+functions/publish/
+functions-java/publish/
 
 # Runtime files
 functions/pids/

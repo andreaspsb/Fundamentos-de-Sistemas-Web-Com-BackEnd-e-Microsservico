@@ -132,7 +132,9 @@ class AuthManager {
       const token = this.getToken();
       if (!token) return false;
 
-      const response = await fetch(API_CONFIG.BASE_URL + API_CONFIG.ENDPOINTS.VALIDAR_TOKEN, {
+      // Usar a URL correta para microsserviços
+      const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.VALIDAR_TOKEN);
+      const response = await fetch(baseUrl + API_CONFIG.ENDPOINTS.VALIDAR_TOKEN, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -140,7 +142,8 @@ class AuthManager {
       });
 
       const data = await response.json();
-      return data.valido;
+      // Suportar PascalCase (C#) e camelCase (Java)
+      return data.valido || data.Valid || data.valid;
     } catch (error) {
       console.error('❌ Erro ao validar token:', error);
       return false;
