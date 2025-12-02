@@ -40,14 +40,15 @@ class AuthManager {
         senha
       });
 
-      // Normalizar resposta (APIs podem retornar PascalCase ou camelCase)
+      // A resposta já é normalizada pelo ApiService.handleResponse()
+      // Garantir que campos essenciais existam
       const normalizedResponse = {
-        token: response.token || response.Token,
-        username: response.username || response.Username,
-        email: response.email || response.Email,
-        role: response.role || response.Role,
-        clienteId: response.clienteId || response.ClienteId,
-        clienteNome: response.clienteNome || response.ClienteNome
+        token: response.token,
+        username: response.username,
+        email: response.email,
+        role: response.role,
+        clienteId: response.clienteId,
+        clienteNome: response.clienteNome
       };
 
       // Salvar token e dados do usuário
@@ -141,9 +142,11 @@ class AuthManager {
         }
       });
 
-      const data = await response.json();
-      // Suportar PascalCase (C#) e camelCase (Java)
-      return data.valido || data.Valid || data.valid;
+      const rawData = await response.json();
+      // Normalizar resposta usando a função global
+      const data = normalizeResponse(rawData);
+      // Spring Boot retorna "valido", C# Functions retorna "valid" -> normalizado para "valid"
+      return data.valido || data.valid;
     } catch (error) {
       console.error('❌ Erro ao validar token:', error);
       return false;

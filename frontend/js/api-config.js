@@ -157,6 +157,40 @@ const API_CONFIG = {
 };
 
 /**
+ * Normaliza objeto de resposta para usar camelCase consistentemente.
+ * Backends C# (.NET) retornam PascalCase, Java (Spring Boot/Functions) retorna camelCase.
+ * Esta função converte todas as propriedades para camelCase para uso consistente no frontend.
+ */
+function normalizeResponse(data) {
+  if (data === null || data === undefined) {
+    return data;
+  }
+  
+  // Se for array, normalizar cada item
+  if (Array.isArray(data)) {
+    return data.map(item => normalizeResponse(item));
+  }
+  
+  // Se não for objeto, retornar como está
+  if (typeof data !== 'object') {
+    return data;
+  }
+  
+  // Criar novo objeto com propriedades normalizadas
+  const normalized = {};
+  
+  for (const key of Object.keys(data)) {
+    // Converter primeira letra para minúscula (PascalCase -> camelCase)
+    const camelKey = key.charAt(0).toLowerCase() + key.slice(1);
+    
+    // Recursivamente normalizar valores que são objetos/arrays
+    normalized[camelKey] = normalizeResponse(data[key]);
+  }
+  
+  return normalized;
+}
+
+/**
  * Classe para fazer requisições à API
  */
 class ApiService {
@@ -331,15 +365,21 @@ class ApiService {
       console.log('🔍 Tipo do data:', typeof data);
       console.log('🔍 Data completo:', JSON.stringify(data, null, 2));
       
+      // Normalizar dados de erro também
+      const normalizedData = normalizeResponse(data);
+      
       // Criar erro customizado
-      const error = new Error(data.message || data.error || 'Erro na requisição');
+      const error = new Error(normalizedData.message || normalizedData.error || data.Message || data.Error || 'Erro na requisição');
       error.status = response.status;
-      error.data = data;
+      error.data = normalizedData;
       throw error;
     }
     
-    console.log('✅ Resposta:', data);
-    return data;
+    // Normalizar resposta para camelCase consistente
+    const normalizedData = normalizeResponse(data);
+    
+    console.log('✅ Resposta (normalizada):', normalizedData);
+    return normalizedData;
   }
 }
 
@@ -518,6 +558,7 @@ function atualizarIndicadorBackend() {
 window.BACKENDS = BACKENDS;
 window.API_CONFIG = API_CONFIG;
 window.ApiService = ApiService;
+window.normalizeResponse = normalizeResponse;
 window.mostrarErroAPI = mostrarErroAPI;
 window.formatarData = formatarData;
 window.formatarMoeda = formatarMoeda;

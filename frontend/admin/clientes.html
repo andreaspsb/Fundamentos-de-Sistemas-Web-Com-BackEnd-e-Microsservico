@@ -53,7 +53,8 @@
       lista.innerHTML = '<div class="text-center my-5"><span class="spinner-border"></span> Carregando...</div>';
       try {
         const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLIENTES}`);
-        const clientes = await resp.json();
+        const rawClientes = await resp.json();
+        const clientes = normalizeResponse(rawClientes);
         let html = `<table class="table table-striped align-middle">
           <thead><tr><th>ID</th><th>Nome</th><th>Email</th><th>Telefone</th><th>CPF</th><th>Ações</th></tr></thead><tbody>`;
         clientes.forEach(cli => {

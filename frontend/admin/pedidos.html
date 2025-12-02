@@ -55,7 +55,8 @@
       lista.innerHTML = '<div class="text-center my-5"><span class="spinner-border"></span> Carregando...</div>';
       try {
         const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PEDIDOS}`);
-        const pedidos = await resp.json();
+        const rawPedidos = await resp.json();
+        const pedidos = normalizeResponse(rawPedidos);
         let html = `<table class="table table-striped align-middle">
           <thead><tr><th>ID</th><th>Cliente</th><th>Data</th><th>Status</th><th>Total</th><th>Ações</th></tr></thead><tbody>`;
         pedidos.forEach(ped => {

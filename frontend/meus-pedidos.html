@@ -200,7 +200,8 @@
           throw new Error('Erro ao carregar pedidos');
         }
 
-        const pedidos = await response.json();
+        const rawPedidos = await response.json();
+        const pedidos = normalizeResponse(rawPedidos);
         console.log('📦 Pedidos carregados:', pedidos);
 
         loading.classList.add('d-none');
@@ -285,7 +286,8 @@
           throw new Error('Erro ao carregar detalhes do pedido');
         }
 
-        const pedido = await response.json();
+        const rawPedido = await response.json();
+        const pedido = normalizeResponse(rawPedido);
         console.log('📋 Detalhes do pedido:', pedido);
 
         // Preencher modal

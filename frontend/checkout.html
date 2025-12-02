@@ -242,7 +242,8 @@
 
         const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CLIENTES}/${userData.clienteId}`);
         if (response.ok) {
-          const cliente = await response.json();
+          const rawCliente = await response.json();
+          const cliente = normalizeResponse(rawCliente);
           
           // Preencher campos do formulário
           if (cliente.endereco) {
@@ -342,7 +343,8 @@
             throw new Error('Erro ao criar pedido');
           }
 
-          const pedido = await response.json();
+          const rawPedido = await response.json();
+          const pedido = normalizeResponse(rawPedido);
           console.log('✅ Pedido criado:', pedido);
 
           // 2. Adicionar itens ao pedido

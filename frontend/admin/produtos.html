@@ -110,7 +110,8 @@
       select.innerHTML = '';
       try {
         const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CATEGORIAS}`);
-        const categorias = await resp.json();
+        const rawCategorias = await resp.json();
+        const categorias = normalizeResponse(rawCategorias);
         categorias.forEach(cat => {
           const opt = document.createElement('option');
           opt.value = cat.id;
@@ -127,7 +128,8 @@
       lista.innerHTML = '<div class="text-center my-5"><span class="spinner-border"></span> Carregando...</div>';
       try {
         const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUTOS}`);
-        const produtos = await resp.json();
+        const rawProdutos = await resp.json();
+        const produtos = normalizeResponse(rawProdutos);
         let html = `<table class="table table-striped align-middle">
           <thead><tr><th>ID</th><th>Nome</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Ativo</th><th>Ações</th></tr></thead><tbody>`;
         produtos.forEach(prod => {
@@ -154,7 +156,8 @@
     window.editarProduto = async function(id) {
       try {
         const resp = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PRODUTOS}/${id}`);
-        const prod = await resp.json();
+        const rawProd = await resp.json();
+        const prod = normalizeResponse(rawProd);
         document.getElementById('produtoId').value = prod.id;
         document.getElementById('produtoNome').value = prod.nome;
         document.getElementById('produtoDescricao').value = prod.descricao;
