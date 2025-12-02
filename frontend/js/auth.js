@@ -40,12 +40,22 @@ class AuthManager {
         senha
       });
 
-      // Salvar token e dados do usuário
-      this.saveToken(response.token);
-      this.saveUserData(response);
+      // Normalizar resposta (APIs podem retornar PascalCase ou camelCase)
+      const normalizedResponse = {
+        token: response.token || response.Token,
+        username: response.username || response.Username,
+        email: response.email || response.Email,
+        role: response.role || response.Role,
+        clienteId: response.clienteId || response.ClienteId,
+        clienteNome: response.clienteNome || response.ClienteNome
+      };
 
-      console.log('✅ Login realizado com sucesso:', response.username);
-      return response;
+      // Salvar token e dados do usuário
+      this.saveToken(normalizedResponse.token);
+      this.saveUserData(normalizedResponse);
+
+      console.log('✅ Login realizado com sucesso:', normalizedResponse.username);
+      return normalizedResponse;
     } catch (error) {
       console.error('❌ Erro no login:', error);
       throw error;
