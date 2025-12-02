@@ -284,12 +284,23 @@
       document.getElementById('adminName').textContent = userData.username;
     }
     
+    // Headers de autenticação
+    function getAuthHeaders() {
+      const token = AuthManager.getToken();
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      };
+    }
+
     // Carregar estatísticas
     async function carregarEstatisticas() {
       try {
         // Buscar clientes
         const baseUrlClientes = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.CLIENTES);
-        const resClientes = await fetch(`${baseUrlClientes}${API_CONFIG.ENDPOINTS.CLIENTES}`);
+        const resClientes = await fetch(`${baseUrlClientes}${API_CONFIG.ENDPOINTS.CLIENTES}`, {
+          headers: getAuthHeaders()
+        });
         if (resClientes.ok) {
           const clientes = await resClientes.json();
           document.getElementById('totalClientes').textContent = clientes.length;
@@ -297,7 +308,9 @@
         
         // Buscar pets
         const baseUrlPets = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PETS);
-        const resPets = await fetch(`${baseUrlPets}${API_CONFIG.ENDPOINTS.PETS}`);
+        const resPets = await fetch(`${baseUrlPets}${API_CONFIG.ENDPOINTS.PETS}`, {
+          headers: getAuthHeaders()
+        });
         if (resPets.ok) {
           const pets = await resPets.json();
           document.getElementById('totalPets').textContent = pets.length;
@@ -305,7 +318,9 @@
         
         // Buscar agendamentos
         const baseUrlAgendamentos = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.AGENDAMENTOS);
-        const resAgendamentos = await fetch(`${baseUrlAgendamentos}${API_CONFIG.ENDPOINTS.AGENDAMENTOS}`);
+        const resAgendamentos = await fetch(`${baseUrlAgendamentos}${API_CONFIG.ENDPOINTS.AGENDAMENTOS}`, {
+          headers: getAuthHeaders()
+        });
         if (resAgendamentos.ok) {
           const agendamentos = await resAgendamentos.json();
           document.getElementById('totalAgendamentos').textContent = agendamentos.length;
@@ -313,7 +328,9 @@
         
         // Buscar pedidos
         const baseUrlPedidos = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PEDIDOS);
-        const resPedidos = await fetch(`${baseUrlPedidos}${API_CONFIG.ENDPOINTS.PEDIDOS}`);
+        const resPedidos = await fetch(`${baseUrlPedidos}${API_CONFIG.ENDPOINTS.PEDIDOS}`, {
+          headers: getAuthHeaders()
+        });
         if (resPedidos.ok) {
           const pedidos = await resPedidos.json();
           document.getElementById('totalPedidos').textContent = pedidos.length;

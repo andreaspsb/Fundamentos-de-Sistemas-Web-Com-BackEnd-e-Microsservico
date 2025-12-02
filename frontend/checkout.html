@@ -230,6 +230,17 @@
     });
 
     /**
+     * Retorna headers de autenticação
+     */
+    function getAuthHeaders() {
+      const token = AuthManager.getToken();
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      };
+    }
+
+    /**
      * Carrega dados do cliente para preencher formulário
      */
     async function carregarDadosCliente() {
@@ -241,7 +252,9 @@
         }
 
         const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.CLIENTES);
-        const response = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.CLIENTES}/${userData.clienteId}`);
+        const response = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.CLIENTES}/${userData.clienteId}`, {
+          headers: getAuthHeaders()
+        });
         if (response.ok) {
           const rawCliente = await response.json();
           const cliente = normalizeResponse(rawCliente);
@@ -335,9 +348,7 @@
           const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PEDIDOS);
           const response = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PEDIDOS}`, {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
+            headers: getAuthHeaders(),
             body: JSON.stringify(pedidoData)
           });
 
@@ -357,9 +368,7 @@
             };
             const itemResp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PEDIDOS}/${pedido.id}/itens`, {
               method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
+              headers: getAuthHeaders(),
               body: JSON.stringify(itemData)
             });
             if (!itemResp.ok) {

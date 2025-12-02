@@ -48,12 +48,22 @@
       carregarClientes();
     });
 
+    function getAuthHeaders() {
+      const token = AuthManager.getToken();
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      };
+    }
+
     async function carregarClientes() {
       const lista = document.getElementById('clientes-lista');
       lista.innerHTML = '<div class="text-center my-5"><span class="spinner-border"></span> Carregando...</div>';
       try {
         const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.CLIENTES);
-        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.CLIENTES}`);
+        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.CLIENTES}`, {
+          headers: getAuthHeaders()
+        });
         const rawClientes = await resp.json();
         const clientes = normalizeResponse(rawClientes);
         let html = `<table class="table table-striped align-middle">
@@ -81,7 +91,10 @@
       if (!confirm('Confirma excluir este cliente?')) return;
       try {
         const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.CLIENTES);
-        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.CLIENTES}/${id}`, { method: 'DELETE' });
+        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.CLIENTES}/${id}`, { 
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        });
         if (!resp.ok) throw new Error();
         mostrarToast('Cliente excluído!', 'success');
         carregarClientes();

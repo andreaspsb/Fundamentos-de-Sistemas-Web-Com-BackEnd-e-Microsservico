@@ -48,12 +48,22 @@
       carregarAgendamentos();
     });
 
+    function getAuthHeaders() {
+      const token = AuthManager.getToken();
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      };
+    }
+
     async function carregarAgendamentos() {
       const lista = document.getElementById('agendamentos-lista');
       lista.innerHTML = '<div class="text-center my-5"><span class="spinner-border"></span> Carregando...</div>';
       try {
         const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.AGENDAMENTOS);
-        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.AGENDAMENTOS}`);
+        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.AGENDAMENTOS}`, {
+          headers: getAuthHeaders()
+        });
         const rawAgendamentos = await resp.json();
         const agendamentos = normalizeResponse(rawAgendamentos);
         let html = `<table class="table table-striped align-middle">
@@ -82,7 +92,10 @@
       if (!confirm('Confirma excluir este agendamento?')) return;
       try {
         const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.AGENDAMENTOS);
-        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.AGENDAMENTOS}/${id}`, { method: 'DELETE' });
+        const resp = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.AGENDAMENTOS}/${id}`, { 
+          method: 'DELETE',
+          headers: getAuthHeaders()
+        });
         if (!resp.ok) throw new Error();
         mostrarToast('Agendamento excluído!', 'success');
         carregarAgendamentos();

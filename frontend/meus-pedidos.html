@@ -181,6 +181,17 @@
     });
 
     /**
+     * Retorna headers de autenticação
+     */
+    function getAuthHeaders() {
+      const token = AuthManager.getToken();
+      return {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      };
+    }
+
+    /**
      * Carrega pedidos do cliente
      */
     async function carregarPedidos() {
@@ -195,7 +206,9 @@
         }
 
         const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PEDIDOS);
-        const response = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PEDIDOS}/cliente/${userData.clienteId}`);
+        const response = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PEDIDOS}/cliente/${userData.clienteId}`, {
+          headers: getAuthHeaders()
+        });
         
         if (!response.ok) {
           throw new Error('Erro ao carregar pedidos');
@@ -282,7 +295,9 @@
     async function verDetalhes(pedidoId) {
       try {
         const baseUrl = ApiService.getBaseUrlForEndpoint(API_CONFIG.ENDPOINTS.PEDIDOS);
-        const response = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PEDIDOS}/${pedidoId}`);
+        const response = await fetch(`${baseUrl}${API_CONFIG.ENDPOINTS.PEDIDOS}/${pedidoId}`, {
+          headers: getAuthHeaders()
+        });
         
         if (!response.ok) {
           throw new Error('Erro ao carregar detalhes do pedido');
