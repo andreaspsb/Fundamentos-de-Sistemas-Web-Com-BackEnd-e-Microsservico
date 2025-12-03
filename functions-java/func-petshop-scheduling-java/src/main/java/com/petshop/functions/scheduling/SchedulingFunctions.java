@@ -137,6 +137,41 @@ public class SchedulingFunctions {
     }
 
     /**
+     * GET /api/agendamentos/cliente/{clienteId}
+     * Get appointments by customer ID
+     */
+    @FunctionName("getAppointmentsByCustomerId")
+    public HttpResponseMessage getAppointmentsByCustomerId(
+            @HttpTrigger(
+                name = "req",
+                methods = {HttpMethod.GET},
+                authLevel = AuthorizationLevel.ANONYMOUS,
+                route = "agendamentos/cliente/{clienteId}"
+            ) HttpRequestMessage<Optional<String>> request,
+            @BindingName("clienteId") Long clienteId,
+            final ExecutionContext context) {
+
+        context.getLogger().info("Getting appointments by customer ID: " + clienteId);
+
+        return functionAuthorization.executeProtectedWithRoles(request, Set.of("Admin", "Cliente"), authResult -> {
+            // Cliente can only see their own appointments
+            if ("Cliente".equals(authResult.role()) && !clienteId.equals(authResult.clienteId())) {
+                return functionAuthorization.createForbiddenResponse(request, "Você só pode visualizar seus próprios agendamentos");
+            }
+
+            List<Agendamento> agendamentos = agendamentoRepository.findByClienteId(clienteId);
+            List<AgendamentoResponseDTO> response = agendamentos.stream()
+                    .map(this::toResponseDTO)
+                    .collect(Collectors.toList());
+
+            return request.createResponseBuilder(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(response)
+                    .build();
+        });
+    }
+
+    /**
      * GET /api/agendamentos/data/{data}
      * Get appointments by date (Admin only)
      */

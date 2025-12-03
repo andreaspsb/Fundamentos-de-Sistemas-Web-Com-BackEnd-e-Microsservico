@@ -72,7 +72,7 @@ class ApiService {
   }
 
   async register(data: { cliente: Omit<Cliente, 'id'>; username: string; senha: string }): Promise<LoginResponse> {
-    const response = await this.api.post<LoginResponse>('/auth/registro', data);
+    const response = await this.api.post<LoginResponse>('/auth/registrar', data);
     return response.data;
   }
 
@@ -154,7 +154,7 @@ class ApiService {
   }
 
   async searchProdutos(nome: string): Promise<Produto[]> {
-    const response = await this.api.get<Produto[]>(`/produtos/buscar/${encodeURIComponent(nome)}`);
+    const response = await this.api.get<Produto[]>('/produtos/buscar', { params: { nome } });
     return response.data;
   }
 

@@ -1,61 +1,187 @@
-# Instruções para Copilot
+# Copilot Instructions - Pet Shop Full-Stack
 
-## Estrutura do Projeto
+## Architecture Overview
 
-### Backends:
-- `backend-aspnet/` - API em C# .NET (referência principal)
-- `backend-springboot/` - API em Java Spring
-- `functions/` - C# Azure Functions
-- `functions-java/` - Java Azure Functions
+This is a **multi-backend, multi-frontend** Pet Shop system with 4 interchangeable backends and 2 frontends. All backends expose identical REST APIs.
 
-### Frontends:
-- `frontend/` - Interface em JavaScript Vanilla e Bootstrap
-- `mobile/` - Interface em React Native
+### Backend Stack (pick any - same API contract)
+| Backend | Port | Type | Path |
+|---------|------|------|------|
+| **ASP.NET Core** (reference) | 5000 | Monolith | `backend-aspnet/` |
+| **Spring Boot** | 8080 | Monolith | `backend-springboot/` |
+| **C# Azure Functions** | 7071-7076 | Microservices | `functions/` |
+| **Java Azure Functions** | 7081-7086 | Microservices | `functions-java/` |
 
-### Banco de Dados
-- Servidor: `petshop-db.database.windows.net`
-- Banco: `petshop-db`
-- Scripts SQL: `scripts/`
+### Frontend Stack
+- `frontend/` - Vanilla JS + Bootstrap 5 (web)
+- `mobile/` - React Native/Expo (iOS, Android, Web)
 
-### Migrations
-- Usar **EF Core** (`backend-aspnet/`) como fonte de verdade para o schema
-- Gerar migrations com: `dotnet ef migrations add <Nome>`
-- Exportar SQL para `scripts/` com: `dotnet ef migrations script`
-- Nomear scripts: `001-descricao.sql`, `002-descricao.sql`
-- Outros backends (Spring Boot, Functions) aplicam os scripts SQL diretamente
-- **Nunca** usar migrations automáticas do Flyway/Liquibase nos outros backends
+### Entities
+Cliente → Pet (1:N), Cliente → Pedido (1:N), Pedido → ItemPedido (1:N), Produto → Categoria (N:1), Agendamento → Servico (N:1)
 
-### Entidades Principais
-- Clientes, Pets, Produtos, Serviços, Agendamentos, Pedidos
+### Shared Database Architecture
+**All 4 backends connect to the SAME database** - this is fundamental:
+- **Production**: Azure SQL Database (`petshop-db.database.windows.net`)
+- **Development**: SQLite (ASP.NET), H2 (Spring Boot/Java Functions), or shared SQL Server via Docker
 
-## Regras de Consistência
+This shared database design means:
+- Schema changes affect ALL backends simultaneously
+- Data created by one backend is immediately visible to others
+- EF Core migrations in `backend-aspnet/` define the canonical schema
+- Frontend can switch backends mid-session without data loss
 
-1. **Alterações em backend** → Verificar se aplica aos outros 3 backends
-2. **Alterações em frontend** → Verificar se aplica ao mobile também
-3. **Alterações no banco** → Deve ser compatível com todos os backends
-4. **Alterações na API** → Deve ser compatível com todos os frontends
-5. **Alterações full-stack** → Coordenar mudanças entre frontend e backend
-6. **Antes de enviar PR** → Testar em todos os backends/frontends afetados
-7. **Diferenças intencionais** → Documentar o motivo
+## Critical Consistency Rules
 
-## Padrões de Código
+**Every backend change MUST be replicated to all 4 backends.** This is non-negotiable.
 
-- URLs em kebab-case: `/api/pets`, `/api/clientes/{id}`
-- Campos JSON idênticos em todos os backends
-- Endpoints da API idênticos em todos os backends
-- Interface do usuário consistente em todos os frontends
+1. Implement in `backend-aspnet/` first (reference implementation)
+2. Replicate to `backend-springboot/` with identical endpoint/DTO structure
+3. Replicate to `functions/` (C# microservices)
+4. Replicate to `functions-java/` (Java microservices)
+5. Update `frontend/` and `mobile/` if API contract changes
 
-## Ordem de Implementação
+### JSON Serialization Contract
+- **All fields use camelCase** in JSON responses
+- ASP.NET: `JsonNamingPolicy.CamelCase` in `Program.cs`
+- Spring Boot: `spring.jackson.property-naming-strategy=LOWER_CAMEL_CASE`
+- Frontend has `normalizeResponse()` in `js/api-config.js` that converts PascalCase→camelCase
+- Dates: ISO 8601 format (`yyyy-MM-dd` or `yyyy-MM-ddTHH:mm:ss`)
 
-1. Atualizar schema do banco (se necessário)
-2. Implementar em `backend-aspnet/` (referência)
-3. Replicar para `backend-springboot/`
-4. Replicar para Azure Functions (se aplicável)
-5. Atualizar `frontend/`
-6. Atualizar `mobile/`
+## Database Migrations
 
-## Testes
+**EF Core is the source of truth for schema:**
+```bash
+cd backend-aspnet/PetshopApi
+dotnet ef migrations add <MigrationName>
+dotnet ef migrations script > ../../scripts/XXX-description.sql
+```
+- Scripts in `scripts/` folder with naming: `001-initial.sql`, `002-add-field.sql`
+- Other backends apply SQL scripts directly - **never use Flyway/Liquibase auto-migrations**
 
-- Testar alterações em todos os backends/frontends relevantes
-- Utilizar testes automatizados sempre que possível
+## Developer Workflow
+
+### Quick Start (Docker - recommended)
+```bash
+./start-all.sh              # Start all services
+./start-all.sh status       # Check status
+./start-all.sh stop         # Stop all
+./start-all.sh full         # Start with dev infrastructure (Azurite, Redis, etc.)
+```
+
+### Manual Backend Start
+```bash
+# ASP.NET (reference)
+cd backend-aspnet/PetshopApi && dotnet run
+
+# Spring Boot
+cd backend-springboot && mvn spring-boot:run
+
+# C# Functions (6 microservices)
+cd functions && ./start-all.sh
+
+# Java Functions (6 microservices)
+cd functions-java && ./start-all-java.sh
+```
+
+### Frontend Development
+```bash
+# Web (use Live Server in VS Code or)
+cd frontend && python3 -m http.server 5500
+
+# Mobile
+cd mobile && npm install && npx expo start
+```
+
+### Running Tests
+```bash
+# E2E tests (Playwright)
+npm test                    # All browsers, headless
+npm run test:ui             # Interactive UI
+npm run test:debug          # Debug mode
+
+# Backend tests
+cd backend-aspnet/PetshopApi.Tests && dotnet test
+cd backend-springboot && mvn test
+```
+
+## API Patterns
+
+### Endpoint Naming
+- URLs: kebab-case (`/api/clientes`, `/api/pets/{id}`)
+- Controllers follow pattern: `{Entity}Controller` with standard CRUD + custom actions
+
+### Authentication
+- JWT Bearer tokens with 24h expiry
+- Default admin: `admin` / `admin123`
+- Roles: `ADMIN`, `CLIENTE`
+- Token validation: `GET /api/auth/validar`
+
+### Frontend Backend Toggle
+The frontend can switch backends dynamically via `localStorage.getItem('backend-selecionado')`:
+- `SPRINGBOOT`, `ASPNET`, `FUNCTIONS`, `FUNCTIONS_JAVA`
+- Configuration in `frontend/js/api-config.js`
+
+## Microservices Port Map (Azure Functions)
+
+| Service | C# Port | Java Port | Responsibilities |
+|---------|---------|-----------|------------------|
+| Auth | 7071 | 7081 | Login, JWT, User management |
+| Customers | 7072 | 7082 | Cliente CRUD |
+| Pets | 7073 | 7083 | Pet CRUD |
+| Catalog | 7074 | 7084 | Produtos, Categorias, Serviços |
+| Scheduling | 7075 | 7085 | Agendamentos |
+| Orders | 7076 | 7086 | Pedidos, ItemPedido |
+
+## Key Files Reference
+
+- `frontend/js/api-config.js` - API client, backend toggle, response normalization
+- `frontend/js/auth.js` - AuthManager class for frontend auth
+- `backend-aspnet/PetshopApi/Program.cs` - ASP.NET DI, CORS, JWT config
+- `backend-springboot/src/.../config/` - Spring Boot configuration
+- `docker-compose.yml` - Full stack containerization
+- `start-all.sh` - Unified startup script
+
+## Documentation
+
+- `docs/QUICKSTART.md` - Getting started guide
+- `docs/JWT_AUTHENTICATION.md` - Auth implementation details
+- `docs/CORS_CONFIGURATION.md` - CORS setup
+- `docs/MICROSSERVICOS.md` - Microservices architecture
+- `tests/e2e/README.md` - E2E test documentation
+
+## Azure Deployment
+
+### Production URLs
+| Component | URL |
+|-----------|-----|
+| Frontend | `https://yellow-field-047215b0f.3.azurestaticapps.net` |
+| Spring Boot | `https://petshop-backend-spring.azurewebsites.net` |
+| ASP.NET Core | `https://petshop-backend-aspnet.azurewebsites.net` |
+| C# Functions | `https://func-petshop-{service}.azurewebsites.net` |
+| Java Functions | `https://func-petshop-{service}-java.azurewebsites.net` |
+
+### CI/CD Pipeline (`.github/workflows/cd-azure.yml`)
+- **Automatic detection**: Only deploys changed components
+- **Cost optimization**: Upgrades to B1 plan during deploy, downgrades to F1 after
+- **Parallel deployment**: Functions deploy in parallel using matrix strategy
+- **Smoke tests**: Validates endpoints after deployment
+
+### Required GitHub Secrets
+- `AZURE_CREDENTIALS` - Service principal JSON for Azure login
+- `AZURE_STATIC_WEB_APPS_API_TOKEN_*` - Static Web Apps deployment token
+- `EXPO_TOKEN` - For mobile APK builds
+
+### Manual Deployment
+```bash
+# Backend Spring Boot
+cd backend-springboot && mvn clean package
+az webapp deploy --name petshop-backend-spring ...
+
+# Backend ASP.NET Core
+cd backend-aspnet/PetshopApi && dotnet publish -c Release
+az webapp deploy --name petshop-backend-aspnet ...
+```
+
+### Database Connection (Azure SQL)
+All backends use the same Azure SQL Database via connection strings configured in Azure App Service settings. See `docs/DEPLOY.md` for full deployment guide.
 

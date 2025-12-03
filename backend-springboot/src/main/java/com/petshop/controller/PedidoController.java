@@ -107,9 +107,9 @@ public class PedidoController {
     }
 
     @PostMapping("/{id}/cancelar")
-    public ResponseEntity<Void> cancelar(@PathVariable Long id) {
-        pedidoService.cancelar(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<PedidoResponseDTO> cancelar(@PathVariable Long id) {
+        Pedido pedido = pedidoService.cancelar(id);
+        return ResponseEntity.ok(toResponseDTO(pedido));
     }
 
     @DeleteMapping("/{id}")

@@ -651,13 +651,13 @@ public class PedidoFunctions
     }
 
     /// <summary>
-    /// PATCH /api/pedidos/{id}/cancelar
+    /// POST /api/pedidos/{id}/cancelar
     /// Cancela um pedido. Requer autenticação.
     /// Envia mensagem para restaurar estoque se já foi confirmado.
     /// </summary>
     [Function("CancelarPedido")]
     public async Task<HttpResponseData> CancelarPedido(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = "pedidos/{id:long}/cancelar")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "pedidos/{id:long}/cancelar")] HttpRequestData req,
         long id)
     {
         _logger.LogInformation("Cancelando pedido: {Id}", id);

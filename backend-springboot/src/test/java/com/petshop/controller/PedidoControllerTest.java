@@ -259,11 +259,14 @@ class PedidoControllerTest {
     @Test
     void testCancelarPedido() throws Exception {
         // Arrange
-        doNothing().when(pedidoService).cancelar(1L);
+        pedido.setStatus(StatusPedido.CANCELADO);
+        when(pedidoService.cancelar(1L)).thenReturn(pedido);
 
         // Act & Assert
         mockMvc.perform(post("/api/pedidos/1/cancelar"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.status").value("CANCELADO"));
 
         verify(pedidoService, times(1)).cancelar(1L);
     }

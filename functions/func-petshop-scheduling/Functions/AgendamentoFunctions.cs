@@ -376,6 +376,60 @@ public class AgendamentoFunctions
         return httpResponse;
     }
 
+    [Function("CancelarAgendamento")]
+    public async Task<HttpResponseData> CancelarAgendamento(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = "agendamentos/{id:long}/cancelar")] HttpRequestData req,
+        long id)
+    {
+        var auth = FunctionAuthorization.Authorize(req, _jwtService);
+        if (!auth.IsAuthorized)
+        {
+            return await FunctionAuthorization.CreateUnauthorizedResponse(req, auth.ErrorMessage!);
+        }
+
+        var agendamento = await _context.Agendamentos
+            .Include(a => a.Cliente)
+            .Include(a => a.Pet)
+            .Include(a => a.Servicos)
+            .FirstOrDefaultAsync(a => a.Id == id);
+            
+        if (agendamento == null)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(new { message = "Agendamento não encontrado" });
+            return notFoundResponse;
+        }
+
+        // Verificar se o agendamento pertence ao cliente (se não for admin)
+        if (auth.Role != "ADMIN" && agendamento.ClienteId != auth.ClienteId)
+        {
+            return await FunctionAuthorization.CreateForbiddenResponse(req, "Acesso negado");
+        }
+
+        if (agendamento.Status == StatusAgendamento.CANCELADO)
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(new { message = "Agendamento já está cancelado" });
+            return badRequestResponse;
+        }
+
+        if (agendamento.Status == StatusAgendamento.CONCLUIDO)
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(new { message = "Não é possível cancelar um agendamento concluído" });
+            return badRequestResponse;
+        }
+
+        _logger.LogInformation("Cancelando agendamento {Id}", id);
+
+        agendamento.Status = StatusAgendamento.CANCELADO;
+        await _context.SaveChangesAsync();
+
+        var httpResponse = req.CreateResponse(HttpStatusCode.OK);
+        await httpResponse.WriteAsJsonAsync(MapToResponseDTO(agendamento));
+        return httpResponse;
+    }
+
     [Function("GetHorariosDisponiveis")]
     public async Task<HttpResponseData> GetHorariosDisponiveis(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "agendamentos/horarios/{data}")] HttpRequestData req,

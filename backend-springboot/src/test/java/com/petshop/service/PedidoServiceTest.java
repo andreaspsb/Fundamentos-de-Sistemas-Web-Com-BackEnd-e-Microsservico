@@ -434,10 +434,10 @@ class PedidoServiceTest {
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedido);
 
         // Act
-        pedidoService.cancelar(1L);
+        Pedido resultado = pedidoService.cancelar(1L);
 
         // Assert
-        assertEquals(StatusPedido.CANCELADO, pedido.getStatus());
+        assertEquals(StatusPedido.CANCELADO, resultado.getStatus());
         verify(pedidoRepository, times(1)).save(any(Pedido.class));
     }
 
@@ -453,10 +453,10 @@ class PedidoServiceTest {
         when(pedidoRepository.save(any(Pedido.class))).thenReturn(pedido);
 
         // Act
-        pedidoService.cancelar(1L);
+        Pedido resultado = pedidoService.cancelar(1L);
 
         // Assert
-        assertEquals(StatusPedido.CANCELADO, pedido.getStatus());
+        assertEquals(StatusPedido.CANCELADO, resultado.getStatus());
         assertEquals(50, produto.getQuantidadeEstoque()); // 48 + 2
         verify(produtoRepository, times(1)).save(any(Produto.class));
     }

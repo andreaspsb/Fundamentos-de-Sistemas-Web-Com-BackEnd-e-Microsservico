@@ -139,7 +139,7 @@ public class PedidoService {
     }
 
     @Transactional
-    public void cancelar(Long id) {
+    public Pedido cancelar(Long id) {
         Pedido pedido = pedidoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado com ID: " + id));
 
@@ -159,7 +159,7 @@ public class PedidoService {
         }
 
         pedido.setStatus(StatusPedido.CANCELADO);
-        pedidoRepository.save(pedido);
+        return pedidoRepository.save(pedido);
     }
 
     @Transactional
