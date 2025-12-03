@@ -395,7 +395,7 @@ public class PedidoFunctions
             {
                 ClienteId = pedidoRequest.ClienteId,
                 DataPedido = DateTime.UtcNow,
-                Status = StatusPedido.Pendente,
+                Status = StatusPedido.PENDENTE,
                 FormaPagamento = pedidoRequest.FormaPagamento,
                 Observacoes = pedidoRequest.Observacoes,
                 Itens = new List<ItemPedido>()
@@ -471,14 +471,14 @@ public class PedidoFunctions
                 return notFound;
             }
 
-            if (pedido.Status != StatusPedido.Pendente)
+            if (pedido.Status != StatusPedido.PENDENTE)
             {
                 var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
                 await badRequest.WriteAsJsonAsync(new { error = "Apenas pedidos pendentes podem ser confirmados" });
                 return badRequest;
             }
 
-            pedido.Status = StatusPedido.Confirmado;
+            pedido.Status = StatusPedido.CONFIRMADO;
             await _context.SaveChangesAsync();
 
             // Envia mensagem para deduzir estoque
@@ -525,14 +525,14 @@ public class PedidoFunctions
                 return notFound;
             }
 
-            if (pedido.Status != StatusPedido.Confirmado)
+            if (pedido.Status != StatusPedido.CONFIRMADO)
             {
                 var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
                 await badRequest.WriteAsJsonAsync(new { error = "Apenas pedidos confirmados podem ser processados" });
                 return badRequest;
             }
 
-            pedido.Status = StatusPedido.Processando;
+            pedido.Status = StatusPedido.PROCESSANDO;
             await _context.SaveChangesAsync();
 
             var response = req.CreateResponse(HttpStatusCode.OK);
@@ -576,14 +576,14 @@ public class PedidoFunctions
                 return notFound;
             }
 
-            if (pedido.Status != StatusPedido.Confirmado && pedido.Status != StatusPedido.Processando)
+            if (pedido.Status != StatusPedido.CONFIRMADO && pedido.Status != StatusPedido.PROCESSANDO)
             {
                 var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
                 await badRequest.WriteAsJsonAsync(new { error = "Pedido precisa estar confirmado ou em processamento para ser enviado" });
                 return badRequest;
             }
 
-            pedido.Status = StatusPedido.Enviado;
+            pedido.Status = StatusPedido.ENVIADO;
             await _context.SaveChangesAsync();
 
             var response = req.CreateResponse(HttpStatusCode.OK);
@@ -627,14 +627,14 @@ public class PedidoFunctions
                 return notFound;
             }
 
-            if (pedido.Status != StatusPedido.Enviado)
+            if (pedido.Status != StatusPedido.ENVIADO)
             {
                 var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
                 await badRequest.WriteAsJsonAsync(new { error = "Apenas pedidos enviados podem ser marcados como entregues" });
                 return badRequest;
             }
 
-            pedido.Status = StatusPedido.Entregue;
+            pedido.Status = StatusPedido.ENTREGUE;
             await _context.SaveChangesAsync();
 
             var response = req.CreateResponse(HttpStatusCode.OK);
@@ -690,18 +690,18 @@ public class PedidoFunctions
                 return forbidden;
             }
 
-            if (pedido.Status == StatusPedido.Entregue || pedido.Status == StatusPedido.Cancelado)
+            if (pedido.Status == StatusPedido.ENTREGUE || pedido.Status == StatusPedido.CANCELADO)
             {
                 var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
                 await badRequest.WriteAsJsonAsync(new { error = "Pedido já finalizado" });
                 return badRequest;
             }
 
-            var precisaRestaurarEstoque = pedido.Status == StatusPedido.Confirmado || 
-                                          pedido.Status == StatusPedido.Processando ||
-                                          pedido.Status == StatusPedido.Enviado;
+            var precisaRestaurarEstoque = pedido.Status == StatusPedido.CONFIRMADO || 
+                                          pedido.Status == StatusPedido.PROCESSANDO ||
+                                          pedido.Status == StatusPedido.ENVIADO;
 
-            pedido.Status = StatusPedido.Cancelado;
+            pedido.Status = StatusPedido.CANCELADO;
             await _context.SaveChangesAsync();
 
             // Restaura estoque se necessário
@@ -754,7 +754,7 @@ public class PedidoFunctions
             }
 
             // Apenas pedidos cancelados podem ser excluídos
-            if (pedido.Status != StatusPedido.Cancelado)
+            if (pedido.Status != StatusPedido.CANCELADO)
             {
                 var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
                 await badRequest.WriteAsJsonAsync(new { error = "Apenas pedidos cancelados podem ser excluídos" });

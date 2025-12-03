@@ -1,11 +1,14 @@
 namespace Petshop.Shared.Enums;
 
+/// <summary>
+/// Status do pedido - valores compatíveis com Spring Boot (VARCHAR)
+/// </summary>
 public enum StatusPedido
 {
-    Pendente,
-    Confirmado,
-    Processando,
-    Enviado,
-    Entregue,
-    Cancelado
+    PENDENTE,
+    CONFIRMADO,
+    PROCESSANDO,
+    ENVIADO,
+    ENTREGUE,
+    CANCELADO
 }

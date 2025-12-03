@@ -43,7 +43,7 @@ public class SchedulingTriggers
                 .Include(a => a.Pet)
                 .Include(a => a.Servicos)
                 .Where(a => a.DataAgendamento.Date == amanha)
-                .Where(a => a.Status == StatusAgendamento.Pendente || a.Status == StatusAgendamento.Confirmado)
+                .Where(a => a.Status == StatusAgendamento.PENDENTE || a.Status == StatusAgendamento.CONFIRMADO)
                 .ToListAsync();
 
             if (agendamentosAmanha.Any())
@@ -101,7 +101,7 @@ public class SchedulingTriggers
             var agendamentosNaoComparecidos = await _context.Agendamentos
                 .Where(a => a.DataAgendamento.Date < hojeData || 
                            (a.DataAgendamento.Date == hojeData && a.Horario < horaLimite))
-                .Where(a => a.Status == StatusAgendamento.Pendente || a.Status == StatusAgendamento.Confirmado)
+                .Where(a => a.Status == StatusAgendamento.PENDENTE || a.Status == StatusAgendamento.CONFIRMADO)
                 .ToListAsync();
 
             if (agendamentosNaoComparecidos.Any())
@@ -110,7 +110,7 @@ public class SchedulingTriggers
 
                 foreach (var agendamento in agendamentosNaoComparecidos)
                 {
-                    agendamento.Status = StatusAgendamento.Cancelado;
+                    agendamento.Status = StatusAgendamento.CANCELADO;
                     agendamento.Observacoes = (agendamento.Observacoes ?? "") + " [Cancelado automaticamente - não compareceu]";
                     _logger.LogWarning("Agendamento #{Id} marcado como cancelado (não compareceu)", agendamento.Id);
                 }
@@ -144,7 +144,7 @@ public class SchedulingTriggers
             var agendamentosParaIniciar = await _context.Agendamentos
                 .Where(a => a.DataAgendamento.Date == hojeData)
                 .Where(a => a.Horario >= horaAtual.Subtract(tolerancia) && a.Horario <= horaAtual)
-                .Where(a => a.Status == StatusAgendamento.Confirmado)
+                .Where(a => a.Status == StatusAgendamento.CONFIRMADO)
                 .ToListAsync();
 
             if (agendamentosParaIniciar.Any())
@@ -153,7 +153,7 @@ public class SchedulingTriggers
 
                 foreach (var agendamento in agendamentosParaIniciar)
                 {
-                    agendamento.Status = StatusAgendamento.EmAndamento;
+                    agendamento.Status = StatusAgendamento.EM_ANDAMENTO;
                     _logger.LogInformation("Agendamento #{Id} iniciado automaticamente", agendamento.Id);
                 }
 
@@ -186,9 +186,9 @@ public class SchedulingTriggers
                 .ToListAsync();
 
             var total = agendamentosHoje.Count;
-            var concluidos = agendamentosHoje.Count(a => a.Status == StatusAgendamento.Concluido);
-            var cancelados = agendamentosHoje.Count(a => a.Status == StatusAgendamento.Cancelado);
-            var valorTotal = agendamentosHoje.Where(a => a.Status == StatusAgendamento.Concluido).Sum(a => a.ValorTotal);
+            var concluidos = agendamentosHoje.Count(a => a.Status == StatusAgendamento.CONCLUIDO);
+            var cancelados = agendamentosHoje.Count(a => a.Status == StatusAgendamento.CANCELADO);
+            var valorTotal = agendamentosHoje.Where(a => a.Status == StatusAgendamento.CONCLUIDO).Sum(a => a.ValorTotal);
 
             _logger.LogInformation("=== RELATÓRIO DIÁRIO DE AGENDAMENTOS ({Data:yyyy-MM-dd}) ===", ontem);
             _logger.LogInformation("Total de agendamentos: {Total}", total);
@@ -241,12 +241,12 @@ public class SchedulingTriggers
 
             if (message.Confirmado)
             {
-                agendamento.Status = StatusAgendamento.Confirmado;
+                agendamento.Status = StatusAgendamento.CONFIRMADO;
                 _logger.LogInformation("Agendamento #{Id} confirmado pelo cliente", agendamento.Id);
             }
             else
             {
-                agendamento.Status = StatusAgendamento.Cancelado;
+                agendamento.Status = StatusAgendamento.CANCELADO;
                 if (!string.IsNullOrEmpty(message.MotivoRecusa))
                 {
                     agendamento.Observacoes = (agendamento.Observacoes ?? "") + $" [Cancelado: {message.MotivoRecusa}]";

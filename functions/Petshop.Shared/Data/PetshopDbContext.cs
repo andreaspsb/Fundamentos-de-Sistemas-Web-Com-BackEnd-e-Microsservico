@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Petshop.Shared.Enums;
 using Petshop.Shared.Models;
 
 namespace Petshop.Shared.Data;
@@ -22,6 +24,17 @@ public class PetshopDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Configurar enums para serem armazenados como STRING (compatível com Spring Boot)
+        modelBuilder.Entity<Agendamento>()
+            .Property(a => a.Status)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
+        modelBuilder.Entity<Pedido>()
+            .Property(p => p.Status)
+            .HasConversion<string>()
+            .HasMaxLength(20);
 
         // Usuario - Cliente (1:1 opcional)
         modelBuilder.Entity<Usuario>()

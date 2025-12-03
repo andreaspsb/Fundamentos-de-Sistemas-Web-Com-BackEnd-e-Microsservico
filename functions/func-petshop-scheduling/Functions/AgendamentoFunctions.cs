@@ -202,7 +202,7 @@ public class AgendamentoFunctions
             MetodoAtendimento = dto.MetodoAtendimento,
             PortePet = dto.PortePet,
             Observacoes = dto.Observacoes,
-            Status = StatusAgendamento.Pendente,
+            Status = StatusAgendamento.PENDENTE,
             ValorTotal = valorTotal,
             Servicos = servicos
         };
@@ -406,7 +406,7 @@ public class AgendamentoFunctions
         // Buscar horários já agendados
         var horariosOcupados = await _context.Agendamentos
             .Where(a => a.DataAgendamento.Date == dataAgendamento.Date && 
-                       a.Status != StatusAgendamento.Cancelado)
+                       a.Status != StatusAgendamento.CANCELADO)
             .Select(a => a.Horario)
             .ToListAsync();
 

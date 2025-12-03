@@ -37,7 +37,7 @@ public class OrderTriggers
             var limite = DateTime.UtcNow.AddHours(-24);
 
             var pedidosAbandonados = await _context.Pedidos
-                .Where(p => p.Status == StatusPedido.Pendente)
+                .Where(p => p.Status == StatusPedido.PENDENTE)
                 .Where(p => p.DataPedido < limite)
                 .ToListAsync();
 
@@ -47,7 +47,7 @@ public class OrderTriggers
 
                 foreach (var pedido in pedidosAbandonados)
                 {
-                    pedido.Status = StatusPedido.Cancelado;
+                    pedido.Status = StatusPedido.CANCELADO;
                     pedido.Observacoes = (pedido.Observacoes ?? "") + " [Cancelado automaticamente por inatividade]";
                     _logger.LogWarning("Pedido #{Id} cancelado automaticamente", pedido.Id);
                 }
@@ -87,8 +87,8 @@ public class OrderTriggers
 
             var totalPedidos = pedidosHoje.Count;
             var valorTotal = pedidosHoje.Sum(p => p.ValorTotal);
-            var pedidosConcluidos = pedidosHoje.Count(p => p.Status == StatusPedido.Entregue);
-            var pedidosCancelados = pedidosHoje.Count(p => p.Status == StatusPedido.Cancelado);
+            var pedidosConcluidos = pedidosHoje.Count(p => p.Status == StatusPedido.ENTREGUE);
+            var pedidosCancelados = pedidosHoje.Count(p => p.Status == StatusPedido.CANCELADO);
 
             _logger.LogInformation("=== RELATÓRIO DIÁRIO DE PEDIDOS ({Data:yyyy-MM-dd}) ===", ontem);
             _logger.LogInformation("Total de pedidos: {Total}", totalPedidos);
@@ -128,7 +128,7 @@ public class OrderTriggers
             
             var pedidosAtrasados = await _context.Pedidos
                 .Include(p => p.Cliente)
-                .Where(p => p.Status == StatusPedido.Confirmado || p.Status == StatusPedido.Processando)
+                .Where(p => p.Status == StatusPedido.CONFIRMADO || p.Status == StatusPedido.PROCESSANDO)
                 .Where(p => p.DataPedido < limiteConfirmacao)
                 .ToListAsync();
 

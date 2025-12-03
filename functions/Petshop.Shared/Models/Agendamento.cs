@@ -38,7 +38,7 @@ public class Agendamento
     public double ValorTotal { get; set; }
 
     [Column("status")]
-    public StatusAgendamento Status { get; set; } = StatusAgendamento.Pendente;
+    public StatusAgendamento Status { get; set; } = StatusAgendamento.PENDENTE;
 
     // Relacionamentos
     [Required]
