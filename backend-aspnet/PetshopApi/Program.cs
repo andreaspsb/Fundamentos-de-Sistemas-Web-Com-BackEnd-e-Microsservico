@@ -93,20 +93,21 @@ builder.Services.AddCors(options =>
     // Production: Restrict to specific origins
     options.AddPolicy("Production", policy =>
     {
-        var allowedOrigins = builder.Configuration
-            .GetSection("Cors:AllowedOrigins")
-            .Get<string[]>() ?? new[] 
-            { 
-                "https://petshop.com",
-                "https://www.petshop.com",
-                "https://api.petshop.com"
-            };
+        // Read from environment variable (CORS_ALLOWED_ORIGINS) or configuration section
+        var corsOriginsEnv = Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS");
+        var allowedOrigins = !string.IsNullOrEmpty(corsOriginsEnv) 
+            ? corsOriginsEnv.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            : builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
+              ?? new[] 
+              { 
+                  "https://petshop.com",
+                  "https://www.petshop.com",
+                  "https://api.petshop.com"
+              };
 
         policy.WithOrigins(allowedOrigins)
-              .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-              .WithHeaders("Content-Type", "Authorization", "X-Requested-With")
-              .AllowCredentials()
-              .SetIsOriginAllowedToAllowWildcardSubdomains()
+              .AllowAnyMethod()
+              .AllowAnyHeader()
               .WithExposedHeaders("X-Pagination", "X-Total-Count")
               .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
     });

@@ -82,6 +82,13 @@ test-results/
 playwright-report/
 playwright/.cache/
 
+# Code Coverage
+*.opencover.xml
+coverage/
+TestResults/
+*.coverage
+*.coveragexml
+
 # Docker
 .env
 docker-compose.override.yml

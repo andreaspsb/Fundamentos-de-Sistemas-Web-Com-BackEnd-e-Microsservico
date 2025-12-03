@@ -5,11 +5,11 @@ namespace PetshopApi.Models;
 
 public enum StatusAgendamento
 {
-    Pendente,
-    Confirmado,
-    EmAndamento,
-    Concluido,
-    Cancelado
+    PENDENTE,
+    CONFIRMADO,
+    EM_ANDAMENTO,
+    CONCLUIDO,
+    CANCELADO
 }
 
 [Table("agendamentos")]
@@ -46,7 +46,7 @@ public class Agendamento
     public double ValorTotal { get; set; }
 
     [Column("status")]
-    public StatusAgendamento Status { get; set; } = StatusAgendamento.Pendente;
+    public StatusAgendamento Status { get; set; } = StatusAgendamento.PENDENTE;
 
     // Relacionamentos
     [Required]

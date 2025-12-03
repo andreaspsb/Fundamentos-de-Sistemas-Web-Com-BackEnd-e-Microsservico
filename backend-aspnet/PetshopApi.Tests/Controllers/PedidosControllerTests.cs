@@ -58,7 +58,7 @@ public class PedidosControllerTests : IDisposable
             Id = 1,
             DataPedido = DateTime.Now,
             ValorTotal = 0,
-            Status = StatusPedido.Pendente,
+            Status = StatusPedido.PENDENTE,
             FormaPagamento = "pix",
             ClienteId = 1
         };
@@ -95,7 +95,7 @@ public class PedidosControllerTests : IDisposable
             Id = 2,
             DataPedido = DateTime.Now.AddDays(-1),
             ValorTotal = 100,
-            Status = StatusPedido.Confirmado,
+            Status = StatusPedido.CONFIRMADO,
             ClienteId = 1
         };
         _context.Pedidos.Add(pedido2);
@@ -236,10 +236,10 @@ public class PedidosControllerTests : IDisposable
         var result = await _controller.CreatePedido(dto);
 
         // Assert
-        var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
+var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
         var pedido = Assert.IsType<PedidoResponseDTO>(createdResult.Value);
         Assert.Equal("credito", pedido.FormaPagamento);
-        Assert.Equal("Pendente", pedido.Status);
+        Assert.Equal("PENDENTE", pedido.Status);
     }
 
     [Fact]
@@ -304,7 +304,7 @@ public class PedidosControllerTests : IDisposable
     public async Task AdicionarItem_ToConfirmedPedido_ReturnsBadRequest()
     {
         // Arrange
-        _pedido.Status = StatusPedido.Confirmado;
+        _pedido.Status = StatusPedido.CONFIRMADO;
         await _context.SaveChangesAsync();
 
         var dto = new ItemPedidoRequestDTO
@@ -429,7 +429,7 @@ public class PedidosControllerTests : IDisposable
             PrecoUnitario = 89.90
         };
         _context.ItensPedido.Add(item);
-        _pedido.Status = StatusPedido.Confirmado;
+        _pedido.Status = StatusPedido.CONFIRMADO;
         await _context.SaveChangesAsync();
 
         // Act
@@ -474,7 +474,7 @@ public class PedidosControllerTests : IDisposable
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var pedido = Assert.IsType<PedidoResponseDTO>(okResult.Value);
-        Assert.Equal("Confirmado", pedido.Status);
+        Assert.Equal("CONFIRMADO", pedido.Status);
 
         // Verify stock was reduced
         var produto = await _context.Produtos.FindAsync(1L);
@@ -495,7 +495,7 @@ public class PedidosControllerTests : IDisposable
     public async Task ConfirmarPedido_AlreadyConfirmed_ReturnsBadRequest()
     {
         // Arrange
-        _pedido.Status = StatusPedido.Confirmado;
+        _pedido.Status = StatusPedido.CONFIRMADO;
         var item = new ItemPedido
         {
             Id = 1,
@@ -544,7 +544,7 @@ public class PedidosControllerTests : IDisposable
     public async Task AtualizarStatus_WithValidStatus_ReturnsOk()
     {
         // Arrange
-        var dto = new StatusUpdateDTO { Status = "Enviado" };
+        var dto = new StatusUpdateDTO { Status = "ENVIADO" };
 
         // Act
         var result = await _controller.AtualizarStatus(1, dto);
@@ -552,7 +552,7 @@ public class PedidosControllerTests : IDisposable
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var pedido = Assert.IsType<PedidoResponseDTO>(okResult.Value);
-        Assert.Equal("Enviado", pedido.Status);
+        Assert.Equal("ENVIADO", pedido.Status);
     }
 
     [Fact]
@@ -581,7 +581,7 @@ public class PedidosControllerTests : IDisposable
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var pedido = Assert.IsType<PedidoResponseDTO>(okResult.Value);
-        Assert.Equal("Cancelado", pedido.Status);
+        Assert.Equal("CANCELADO", pedido.Status);
     }
 
     [Fact]
@@ -597,7 +597,7 @@ public class PedidosControllerTests : IDisposable
             PrecoUnitario = 89.90
         };
         _context.ItensPedido.Add(item);
-        _pedido.Status = StatusPedido.Confirmado;
+        _pedido.Status = StatusPedido.CONFIRMADO;
         _produto.QuantidadeEstoque = 40; // Already reduced by 10
         await _context.SaveChangesAsync();
 
@@ -607,7 +607,7 @@ public class PedidosControllerTests : IDisposable
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var pedido = Assert.IsType<PedidoResponseDTO>(okResult.Value);
-        Assert.Equal("Cancelado", pedido.Status);
+        Assert.Equal("CANCELADO", pedido.Status);
 
         // Verify stock was restored
         var produto = await _context.Produtos.FindAsync(1L);
@@ -618,7 +618,7 @@ public class PedidosControllerTests : IDisposable
     public async Task CancelarPedido_AlreadyCanceled_ReturnsBadRequest()
     {
         // Arrange
-        _pedido.Status = StatusPedido.Cancelado;
+        _pedido.Status = StatusPedido.CANCELADO;
         await _context.SaveChangesAsync();
 
         // Act
@@ -632,7 +632,7 @@ public class PedidosControllerTests : IDisposable
     public async Task CancelarPedido_Delivered_ReturnsBadRequest()
     {
         // Arrange
-        _pedido.Status = StatusPedido.Entregue;
+        _pedido.Status = StatusPedido.ENTREGUE;
         await _context.SaveChangesAsync();
 
         // Act

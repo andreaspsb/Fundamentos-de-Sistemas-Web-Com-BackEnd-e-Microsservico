@@ -1,298 +1,173 @@
-# Testes Playwright - Pet Shop
+# Testes Playwright - Pet Shop (Multi-Backend)
 
-Suite completa de testes E2E usando Playwright para o sistema Pet Shop.
+Suite de testes E2E usando Playwright para o sistema Pet Shop, testando todos os 4 backends.
 
-## 📋 Suites de Testes
+## 🏗️ Arquitetura
 
-### 1. **auth.spec.js** - Autenticação
-- ✅ Login com credenciais válidas
-- ✅ Login com credenciais inválidas
-- ✅ Logout e limpeza de sessão
-- ✅ Redirecionamento para login (páginas protegidas)
-- ✅ Persistência de sessão
+Os testes são executados **sequencialmente** contra cada backend:
 
-### 2. **carrinho.spec.js** - Carrinho de Compras
-- ✅ Adicionar produtos
-- ✅ Visualizar carrinho
-- ✅ Atualizar quantidade
-- ✅ Remover produtos
-- ✅ Limpar carrinho
-- ✅ Validação de estoque
-- ✅ Persistência em localStorage
+| Backend | Nome | Porta | Tipo |
+|---------|------|-------|------|
+| `aspnet` | ASP.NET Core | 5000 | Monolith |
+| `springboot` | Spring Boot | 8080 | Monolith |
+| `functions` | C# Functions | 7071 | Microservices |
+| `functions-java` | Java Functions | 7081 | Microservices |
 
-### 3. **cadastro.spec.js** - Cadastro
-- ✅ Formulário completo
-- ✅ Validações de campos
-- ✅ Auto-sugestão de username
-- ✅ Máscaras (CPF, telefone)
-- ✅ Validação de email
-- ✅ Seleção de espécie do pet
-- ✅ Responsividade
+## 📋 Testes Implementados
 
-### 4. **navigation.spec.js** - Navegação
-- ✅ Links do menu
-- ✅ Logo para home
-- ✅ Menu mobile
-- ✅ Footer em todas as páginas
-- ✅ Navegação por teclado
-- ✅ Carrossel
+### 1. **smoke.spec.js** - Testes de Fumaça
+- ✅ Homepage carrega com navegação visível
+- ✅ Backend responde ao health check
+- ✅ Login com admin funciona
 
-### 5. **acessibilidade.spec.js** - Acessibilidade
-- ✅ Alt text em imagens
-- ✅ Labels em formulários
-- ✅ Navegação por teclado
-- ✅ ARIA labels
-- ✅ Focus visível
-- ✅ Contraste de cores
-- ✅ Hierarquia de headings
+### 2. **auth.spec.js** - Autenticação
+- ✅ Login e logout funcionam corretamente
+- ✅ Sessão persiste após recarregar página
+- ✅ Páginas protegidas redirecionam para login
 
-## 🚀 Como Executar
+### 3. **carrinho.spec.js** - Carrinho de Compras
+- ✅ Adicionar produto ao carrinho atualiza contador
+- ✅ Visualizar carrinho mostra produto adicionado
+- ✅ Remover produto do carrinho
 
-### Pré-requisitos
+## 🚀 Pré-requisitos
 
+### 1. Instalar dependências
 ```bash
-# Instalar Node.js 18+ (se não tiver)
-# Instalar dependências
 npm install
+npx playwright install chromium
 ```
 
-### Executar Testes
-
+### 2. Iniciar TODOS os backends
 ```bash
-# Todos os testes (headless)
+./start-all.sh
+```
+
+⚠️ **IMPORTANTE**: Todos os 4 backends devem estar rodando antes de executar os testes!
+
+### 3. Verificar que backends estão ativos
+```bash
+./start-all.sh status
+```
+
+## ▶️ Executar Testes
+
+### Todos os backends (recomendado)
+```bash
 npm test
+```
 
-# Com interface gráfica
-npm run test:headed
+Isso executa todos os testes em sequência: ASPNET → Spring Boot → Functions → Functions-Java
 
-# Interface UI interativa
+### Backend específico
+```bash
+# Apenas ASP.NET
+npx playwright test --project=aspnet
+
+# Apenas Spring Boot
+npx playwright test --project=springboot
+
+# Apenas C# Functions
+npx playwright test --project=functions
+
+# Apenas Java Functions
+npx playwright test --project=functions-java
+```
+
+### Teste específico
+```bash
+# Apenas smoke tests no ASP.NET
+npx playwright test smoke --project=aspnet
+
+# Apenas auth tests em todos os backends
+npx playwright test auth
+```
+
+### Modo interativo
+```bash
 npm run test:ui
+```
 
-# Debug mode
+### Modo debug
+```bash
 npm run test:debug
+```
 
-# Apenas Chromium
-npm run test:chromium
+## 📊 Relatórios
 
-# Apenas Firefox
-npm run test:firefox
-
-# Apenas WebKit (Safari)
-npm run test:webkit
-
-# Apenas testes mobile
-npm run test:mobile
-
-# Ver relatório HTML
+### Ver relatório HTML
+```bash
 npm run test:report
 ```
 
-### Gerar Testes Automaticamente
+### Arquivos gerados
+- `playwright-report/` - Relatório HTML
+- `test-results/` - Screenshots e traces de falhas
 
-```bash
-# Codegen - grava suas ações e gera código
-npm run test:codegen
+## 🔧 Estrutura de Arquivos
+
+```
+tests/e2e/
+├── test-helpers.js    # Funções auxiliares (setupBackend, loginAsAdmin, etc.)
+├── smoke.spec.js      # Testes de fumaça básicos
+├── auth.spec.js       # Testes de autenticação
+├── carrinho.spec.js   # Testes de carrinho de compras
+└── README.md          # Esta documentação
 ```
 
-## 📊 Browsers Testados
+## 🛠️ Helpers Disponíveis
 
-- ✅ **Chromium** (Chrome, Edge)
-- ✅ **Firefox**
-- ✅ **WebKit** (Safari)
-- ✅ **Mobile Chrome** (Pixel 5)
-- ✅ **Mobile Safari** (iPhone 12)
-
-## 🎯 Executar Testes Específicos
-
-```bash
-# Apenas autenticação
-npx playwright test auth
-
-# Apenas carrinho
-npx playwright test carrinho
-
-# Apenas cadastro
-npx playwright test cadastro
-
-# Arquivo específico
-npx playwright test tests/e2e/navigation.spec.js
-
-# Teste específico por nome
-npx playwright test -g "deve fazer login"
-```
-
-## 📸 Screenshots e Vídeos
-
-Os testes capturam automaticamente:
-- **Screenshots** - Em caso de falha
-- **Vídeos** - Na primeira tentativa de retry
-- **Traces** - Para debug detalhado
-
-Localizados em: `test-results/` e `playwright-report/`
-
-## 🔧 Configuração
-
-Arquivo: `playwright.config.js`
-
-**Principais configurações:**
-- **Timeout:** 30 segundos por teste
-- **Retries:** 2 tentativas em CI
-- **Workers:** Execução paralela
-- **Base URL:** http://localhost:5500
-- **Web Server:** Inicia automaticamente frontend
-
-## ⚙️ CI/CD
-
-### GitHub Actions
-
-Crie `.github/workflows/playwright.yml`:
-
-```yaml
-name: Playwright Tests
-on:
-  push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
-jobs:
-  test:
-    timeout-minutes: 60
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 18
-    - name: Install dependencies
-      run: npm ci
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: npm test
-    - uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
-```
-
-## 📝 Boas Práticas Implementadas
-
-### 1. **Page Object Model**
-- Testes organizados por funcionalidade
-- Fácil manutenção
-
-### 2. **Isolamento de Testes**
 ```javascript
-test.beforeEach(async ({ page }) => {
-  // Limpar estado antes de cada teste
-  await page.evaluate(() => localStorage.clear());
-});
+const {
+  setupBackend,        // Configura localStorage para backend correto
+  checkBackendHealth,  // Verifica se backend está rodando
+  loginAsAdmin,        // Faz login como admin
+  logout,              // Faz logout
+  clearUserState,      // Limpa tokens e dados do usuário
+  clearCart,           // Limpa carrinho
+  getCartCount,        // Obtém contador do carrinho
+  goToCategory,        // Navega para categoria de produtos
+  addFirstProductToCart, // Adiciona primeiro produto ao carrinho
+} = require('./test-helpers');
 ```
 
-### 3. **Waits Inteligentes**
-```javascript
-// Auto-waiting do Playwright
-await page.click('button'); // Espera automaticamente
-await page.waitForSelector('.produto-card');
+## 🐛 Troubleshooting
+
+### Backend não está rodando
 ```
-
-### 4. **Asserções Robustas**
-```javascript
-await expect(page.locator('.navbar')).toContainText('admin');
+Error: Backend ASP.NET Core não está acessível
 ```
+**Solução**: Execute `./start-all.sh` e verifique com `./start-all.sh status`
 
-### 5. **Parallel Execution**
-- Testes independentes
-- Execução mais rápida
-
-## 🐛 Debug
-
-### Modo Debug
-```bash
-npm run test:debug
+### Timeout em testes
 ```
-
-Abre Playwright Inspector:
-- Pause em cada ação
-- Step through
-- Inspect page
-
-### Trace Viewer
-```bash
-npx playwright show-trace test-results/.../trace.zip
+Timeout exceeded
 ```
+**Solução**: Verifique se os backends estão respondendo corretamente. Aumente timeout no `playwright.config.js` se necessário.
 
-Visualização completa:
-- Network
-- Console
-- Screenshots
-- DOM snapshots
-
-## 📈 Métricas de Qualidade
-
-### Cobertura Atual:
-- ✅ **50+ testes** implementados
-- ✅ **5 browsers** testados
-- ✅ **2 viewports mobile**
-- ✅ **100% das páginas principais** cobertas
-- ✅ **Acessibilidade** validada
-
-### Fluxos Críticos Testados:
-1. Autenticação completa
-2. Carrinho de compras
-3. Cadastro de cliente
-4. Navegação geral
-5. Acessibilidade WCAG
-
-## 🚧 Próximos Testes a Implementar
-
-- [ ] Checkout completo (requer backend rodando)
-- [ ] Agendamento de serviços
-- [ ] Meus pedidos
-- [ ] Admin CRUD
-- [ ] Testes de API
-- [ ] Testes de performance
-- [ ] Testes de segurança
-
-## 📚 Recursos
-
-- [Playwright Docs](https://playwright.dev/)
-- [Best Practices](https://playwright.dev/docs/best-practices)
-- [API Reference](https://playwright.dev/docs/api/class-test)
-- [Trace Viewer](https://playwright.dev/docs/trace-viewer)
-
-## 🆘 Troubleshooting
-
-### Testes falhando?
-
-1. **Backend rodando?**
-```bash
-cd backend-springboot
-mvn spring-boot:run
+### Frontend não inicia
 ```
-
-2. **Frontend acessível?**
-```bash
-cd frontend
-python3 -m http.server 5500
+Error: Port 5500 is in use
 ```
+**Solução**: Mate processos na porta 5500 ou configure `reuseExistingServer: true` no config.
 
-3. **Dependências instaladas?**
-```bash
-npm install
-npx playwright install --with-deps
-```
+## 📝 Convenções
 
-4. **Porta 5500 ocupada?**
-```bash
-# Mudar porta em playwright.config.js
-baseURL: 'http://localhost:8000'
-```
+1. **Cada teste deve funcionar em todos os 4 backends** - use `setupBackend()` no `beforeEach`
+2. **Testes são independentes** - cada teste limpa seu estado
+3. **Use os helpers** - evite código duplicado
+4. **Logs informativos** - helpers usam `console.log` com emojis para debug
+
+## 🔜 Próximos Passos
+
+- [ ] Adicionar testes de checkout
+- [ ] Adicionar testes de agendamento
+- [ ] Adicionar testes de cadastro
+- [ ] Adicionar testes mobile (viewports)
+- [ ] Adicionar testes de acessibilidade
 
 ---
 
-**Criado por:** Andreas Paulus Scherdien Berwaldt  
-**Data:** Novembro de 2025  
-**Framework:** Playwright
+**Autor**: Sistema Pet Shop  
+**Framework**: Playwright  
+**Última atualização**: Dezembro 2025

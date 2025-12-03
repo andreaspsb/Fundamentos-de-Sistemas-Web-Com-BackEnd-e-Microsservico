@@ -109,7 +109,7 @@ public class AgendamentosController : ControllerBase
         var agendamentoExistente = await _context.Agendamentos
             .Where(a => a.DataAgendamento.Date == dataDate && 
                         a.Horario == horario && 
-                        a.Status != StatusAgendamento.Cancelado)
+                        a.Status != StatusAgendamento.CANCELADO)
             .AnyAsync();
 
         return Ok(!agendamentoExistente); // Retorna true se está disponível
@@ -149,7 +149,7 @@ public class AgendamentosController : ControllerBase
         var jaAgendado = await _context.Agendamentos
             .AnyAsync(a => a.DataAgendamento == dto.DataAgendamento && 
                           a.Horario == dto.Horario && 
-                          a.Status != StatusAgendamento.Cancelado);
+                          a.Status != StatusAgendamento.CANCELADO);
 
         if (jaAgendado)
             return BadRequest(new { message = "Horário já está agendado" });
@@ -163,7 +163,7 @@ public class AgendamentosController : ControllerBase
             PortePet = dto.PortePet,
             Observacoes = dto.Observacoes,
             ValorTotal = (double)dto.ValorTotal,
-            Status = StatusAgendamento.Pendente,
+            Status = StatusAgendamento.PENDENTE,
             ClienteId = dto.ClienteId,
             PetId = dto.PetId,
             Servicos = servicos
@@ -195,10 +195,10 @@ public class AgendamentosController : ControllerBase
         if (agendamento == null)
             return NotFound(new { message = "Agendamento não encontrado" });
 
-        if (agendamento.Status == StatusAgendamento.Concluido)
+        if (agendamento.Status == StatusAgendamento.CONCLUIDO)
             return BadRequest(new { message = "Não é possível alterar um agendamento concluído" });
 
-        if (agendamento.Status == StatusAgendamento.Cancelado)
+        if (agendamento.Status == StatusAgendamento.CANCELADO)
             return BadRequest(new { message = "Não é possível alterar um agendamento cancelado" });
 
         // Atualizar campos se fornecidos
@@ -210,7 +210,7 @@ public class AgendamentosController : ControllerBase
                 .AnyAsync(a => a.Id != id &&
                               a.DataAgendamento == dto.DataAgendamento.Value && 
                               a.Horario == horario && 
-                              a.Status != StatusAgendamento.Cancelado);
+                              a.Status != StatusAgendamento.CANCELADO);
 
             if (jaAgendado)
                 return BadRequest(new { message = "Horário já está agendado" });
@@ -226,7 +226,7 @@ public class AgendamentosController : ControllerBase
                 .AnyAsync(a => a.Id != id &&
                               a.DataAgendamento == data && 
                               a.Horario == dto.Horario.Value && 
-                              a.Status != StatusAgendamento.Cancelado);
+                              a.Status != StatusAgendamento.CANCELADO);
 
             if (jaAgendado)
                 return BadRequest(new { message = "Horário já está agendado" });
@@ -291,10 +291,10 @@ public class AgendamentosController : ControllerBase
         if (agendamento == null)
             return NotFound(new { message = "Agendamento não encontrado" });
 
-        if (agendamento.Status != StatusAgendamento.Pendente)
+        if (agendamento.Status != StatusAgendamento.PENDENTE)
             return BadRequest(new { message = "Apenas agendamentos pendentes podem ser confirmados" });
 
-        agendamento.Status = StatusAgendamento.Confirmado;
+        agendamento.Status = StatusAgendamento.CONFIRMADO;
         await _context.SaveChangesAsync();
 
         return Ok(ToAgendamentoResponseDTO(agendamento));
@@ -313,13 +313,13 @@ public class AgendamentosController : ControllerBase
         if (agendamento == null)
             return NotFound(new { message = "Agendamento não encontrado" });
 
-        if (agendamento.Status == StatusAgendamento.Concluido)
+        if (agendamento.Status == StatusAgendamento.CONCLUIDO)
             return BadRequest(new { message = "Agendamento já está concluído" });
 
-        if (agendamento.Status == StatusAgendamento.Cancelado)
+        if (agendamento.Status == StatusAgendamento.CANCELADO)
             return BadRequest(new { message = "Não é possível concluir um agendamento cancelado" });
 
-        agendamento.Status = StatusAgendamento.Concluido;
+        agendamento.Status = StatusAgendamento.CONCLUIDO;
         await _context.SaveChangesAsync();
 
         return Ok(ToAgendamentoResponseDTO(agendamento));
@@ -338,13 +338,13 @@ public class AgendamentosController : ControllerBase
         if (agendamento == null)
             return NotFound(new { message = "Agendamento não encontrado" });
 
-        if (agendamento.Status == StatusAgendamento.Cancelado)
+        if (agendamento.Status == StatusAgendamento.CANCELADO)
             return BadRequest(new { message = "Agendamento já está cancelado" });
 
-        if (agendamento.Status == StatusAgendamento.Concluido)
+        if (agendamento.Status == StatusAgendamento.CONCLUIDO)
             return BadRequest(new { message = "Não é possível cancelar um agendamento concluído" });
 
-        agendamento.Status = StatusAgendamento.Cancelado;
+        agendamento.Status = StatusAgendamento.CANCELADO;
         await _context.SaveChangesAsync();
 
         return Ok(ToAgendamentoResponseDTO(agendamento));

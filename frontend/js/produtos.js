@@ -88,7 +88,7 @@ function renderizarProdutos(produtos) {
   produtos.forEach(produto => {
     const produtoHTML = `
       <div class="col-md-6">
-        <div class="card shadow-sm h-100">
+        <div class="card produto-card shadow-sm h-100">
           <img src="${produto.urlImagem || 'https://via.placeholder.com/600x300?text=Sem+Imagem'}" 
                class="card-img-top" 
                alt="${produto.nome}" 

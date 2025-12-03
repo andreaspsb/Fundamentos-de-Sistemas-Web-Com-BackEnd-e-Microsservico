@@ -64,7 +64,7 @@ public class AgendamentosControllerTests : IDisposable
             MetodoAtendimento = "local",
             PortePet = "medio",
             ValorTotal = 50.0,
-            Status = StatusAgendamento.Pendente,
+            Status = StatusAgendamento.PENDENTE,
             ClienteId = 1,
             PetId = 1
         };
@@ -107,7 +107,7 @@ public class AgendamentosControllerTests : IDisposable
             Horario = new TimeSpan(14, 0, 0),
             MetodoAtendimento = "telebusca",
             ValorTotal = 70.0,
-            Status = StatusAgendamento.Pendente,
+            Status = StatusAgendamento.PENDENTE,
             ClienteId = 1,
             PetId = 1
         };
@@ -279,7 +279,7 @@ public class AgendamentosControllerTests : IDisposable
     public async Task VerificarDisponibilidade_WhenCanceled_ReturnsTrue()
     {
         // Arrange
-        _agendamento.Status = StatusAgendamento.Cancelado;
+        _agendamento.Status = StatusAgendamento.CANCELADO;
         await _context.SaveChangesAsync();
 
         // Act
@@ -319,7 +319,7 @@ public class AgendamentosControllerTests : IDisposable
         var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
         var agendamento = Assert.IsType<AgendamentoResponseDTO>(createdResult.Value);
         Assert.Equal("telebusca", agendamento.MetodoAtendimento);
-        Assert.Equal("Pendente", agendamento.Status);
+        Assert.Equal("PENDENTE", agendamento.Status);
     }
 
     [Fact]
@@ -512,7 +512,7 @@ public class AgendamentosControllerTests : IDisposable
     public async Task UpdateAgendamento_WhenConcluido_ReturnsBadRequest()
     {
         // Arrange
-        _agendamento.Status = StatusAgendamento.Concluido;
+        _agendamento.Status = StatusAgendamento.CONCLUIDO;
         await _context.SaveChangesAsync();
 
         var dto = new AgendamentoUpdateDTO
@@ -531,7 +531,7 @@ public class AgendamentosControllerTests : IDisposable
     public async Task UpdateAgendamento_WhenCancelado_ReturnsBadRequest()
     {
         // Arrange
-        _agendamento.Status = StatusAgendamento.Cancelado;
+        _agendamento.Status = StatusAgendamento.CANCELADO;
         await _context.SaveChangesAsync();
 
         var dto = new AgendamentoUpdateDTO
@@ -557,7 +557,7 @@ public class AgendamentosControllerTests : IDisposable
             Horario = new TimeSpan(14, 0, 0),
             MetodoAtendimento = "local",
             ValorTotal = 50.0,
-            Status = StatusAgendamento.Pendente,
+            Status = StatusAgendamento.PENDENTE,
             ClienteId = 1,
             PetId = 1
         };
@@ -590,14 +590,14 @@ public class AgendamentosControllerTests : IDisposable
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var agendamento = Assert.IsType<AgendamentoResponseDTO>(okResult.Value);
-        Assert.Equal("Confirmado", agendamento.Status);
+        Assert.Equal("CONFIRMADO", agendamento.Status);
     }
 
     [Fact]
     public async Task ConfirmarAgendamento_WhenNotPendente_ReturnsBadRequest()
     {
         // Arrange
-        _agendamento.Status = StatusAgendamento.Confirmado;
+        _agendamento.Status = StatusAgendamento.CONFIRMADO;
         await _context.SaveChangesAsync();
 
         // Act
@@ -625,7 +625,7 @@ public class AgendamentosControllerTests : IDisposable
     public async Task ConcluirAgendamento_WhenConfirmado_ReturnsOk()
     {
         // Arrange
-        _agendamento.Status = StatusAgendamento.Confirmado;
+        _agendamento.Status = StatusAgendamento.CONFIRMADO;
         await _context.SaveChangesAsync();
 
         // Act
@@ -634,14 +634,14 @@ public class AgendamentosControllerTests : IDisposable
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var agendamento = Assert.IsType<AgendamentoResponseDTO>(okResult.Value);
-        Assert.Equal("Concluido", agendamento.Status);
+        Assert.Equal("CONCLUIDO", agendamento.Status);
     }
 
     [Fact]
     public async Task ConcluirAgendamento_WhenAlreadyConcluido_ReturnsBadRequest()
     {
         // Arrange
-        _agendamento.Status = StatusAgendamento.Concluido;
+        _agendamento.Status = StatusAgendamento.CONCLUIDO;
         await _context.SaveChangesAsync();
 
         // Act
@@ -655,7 +655,7 @@ public class AgendamentosControllerTests : IDisposable
     public async Task ConcluirAgendamento_WhenCancelado_ReturnsBadRequest()
     {
         // Arrange
-        _agendamento.Status = StatusAgendamento.Cancelado;
+        _agendamento.Status = StatusAgendamento.CANCELADO;
         await _context.SaveChangesAsync();
 
         // Act
@@ -678,14 +678,14 @@ public class AgendamentosControllerTests : IDisposable
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
         var agendamento = Assert.IsType<AgendamentoResponseDTO>(okResult.Value);
-        Assert.Equal("Cancelado", agendamento.Status);
+        Assert.Equal("CANCELADO", agendamento.Status);
     }
 
     [Fact]
     public async Task CancelarAgendamento_WhenAlreadyCancelado_ReturnsBadRequest()
     {
         // Arrange
-        _agendamento.Status = StatusAgendamento.Cancelado;
+        _agendamento.Status = StatusAgendamento.CANCELADO;
         await _context.SaveChangesAsync();
 
         // Act
@@ -699,7 +699,7 @@ public class AgendamentosControllerTests : IDisposable
     public async Task CancelarAgendamento_WhenConcluido_ReturnsBadRequest()
     {
         // Arrange
-        _agendamento.Status = StatusAgendamento.Concluido;
+        _agendamento.Status = StatusAgendamento.CONCLUIDO;
         await _context.SaveChangesAsync();
 
         // Act

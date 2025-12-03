@@ -106,7 +106,7 @@ public class PedidosController : ControllerBase
         {
             ClienteId = dto.ClienteId,
             DataPedido = DateTime.Now,
-            Status = StatusPedido.Pendente,
+            Status = StatusPedido.PENDENTE,
             FormaPagamento = dto.FormaPagamento,
             Observacoes = dto.Observacoes,
             ValorTotal = 0
@@ -138,7 +138,7 @@ public class PedidosController : ControllerBase
         if (pedido == null)
             return NotFound(new { message = "Pedido não encontrado" });
 
-        if (pedido.Status != StatusPedido.Pendente)
+        if (pedido.Status != StatusPedido.PENDENTE)
             return BadRequest(new { message = "Não é possível adicionar itens a um pedido já confirmado" });
 
         var produto = await _context.Produtos.FindAsync(dto.ProdutoId);
@@ -197,7 +197,7 @@ public class PedidosController : ControllerBase
         if (pedido == null)
             return NotFound(new { message = "Pedido não encontrado" });
 
-        if (pedido.Status != StatusPedido.Pendente)
+        if (pedido.Status != StatusPedido.PENDENTE)
             return BadRequest(new { message = "Não é possível remover itens de um pedido já confirmado" });
 
         var item = pedido.Itens.FirstOrDefault(i => i.Id == itemId);
@@ -234,7 +234,7 @@ public class PedidosController : ControllerBase
         if (pedido == null)
             return NotFound(new { message = "Pedido não encontrado" });
 
-        if (pedido.Status != StatusPedido.Pendente)
+        if (pedido.Status != StatusPedido.PENDENTE)
             return BadRequest(new { message = "Apenas pedidos pendentes podem ser confirmados" });
 
         if (pedido.Itens.Count == 0)
@@ -258,7 +258,7 @@ public class PedidosController : ControllerBase
             item.Produto!.QuantidadeEstoque -= item.Quantidade;
         }
 
-        pedido.Status = StatusPedido.Confirmado;
+        pedido.Status = StatusPedido.CONFIRMADO;
         await _context.SaveChangesAsync();
 
         return Ok(ToPedidoResponseDTO(pedido));
@@ -299,15 +299,15 @@ public class PedidosController : ControllerBase
         if (pedido == null)
             return NotFound(new { message = "Pedido não encontrado" });
 
-        if (pedido.Status == StatusPedido.Cancelado)
+        if (pedido.Status == StatusPedido.CANCELADO)
             return BadRequest(new { message = "Pedido já está cancelado" });
 
-        if (pedido.Status == StatusPedido.Entregue)
+        if (pedido.Status == StatusPedido.ENTREGUE)
             return BadRequest(new { message = "Não é possível cancelar um pedido já entregue" });
 
         // Se já foi confirmado, devolver estoque
-        if (pedido.Status == StatusPedido.Confirmado || 
-            pedido.Status == StatusPedido.Enviado)
+        if (pedido.Status == StatusPedido.CONFIRMADO || 
+            pedido.Status == StatusPedido.ENVIADO)
         {
             foreach (var item in pedido.Itens)
             {
@@ -315,7 +315,7 @@ public class PedidosController : ControllerBase
             }
         }
 
-        pedido.Status = StatusPedido.Cancelado;
+        pedido.Status = StatusPedido.CANCELADO;
         await _context.SaveChangesAsync();
 
         return Ok(ToPedidoResponseDTO(pedido));

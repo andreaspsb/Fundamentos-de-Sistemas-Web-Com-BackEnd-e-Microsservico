@@ -93,13 +93,25 @@ cd mobile && npm install && npx expo start
 ```
 
 ### Running Tests
+
+#### E2E Tests (Playwright)
+**Prerequisites**: Backend must be running before E2E tests. Frontend is auto-started by Playwright.
+
 ```bash
-# E2E tests (Playwright)
+# 1. First, install Chromium (one-time setup)
+npx playwright install chromium
+
+# 2. Start all services
+./start-all.sh
+
+# 3. Run E2E tests
 npm test                    # All browsers, headless
 npm run test:ui             # Interactive UI
 npm run test:debug          # Debug mode
+```
 
-# Backend tests
+#### Unit Tests (Backend)
+```bash
 cd backend-aspnet/PetshopApi.Tests && dotnet test
 cd backend-springboot && mvn test
 ```
@@ -184,4 +196,42 @@ az webapp deploy --name petshop-backend-aspnet ...
 
 ### Database Connection (Azure SQL)
 All backends use the same Azure SQL Database via connection strings configured in Azure App Service settings. See `docs/DEPLOY.md` for full deployment guide.
+
+## VS Code Extensions (Recommended)
+
+### Azure Development
+- **Azure Tools** (`ms-vscode.vscode-node-azure-pack`) - Complete pack for Azure development
+- **SQL Server (mssql)** (`ms-mssql.mssql`) - Connect and execute queries on Azure SQL Database
+
+### Azure Login & Database Access
+1. Use **Azure: Sign In** command (`Ctrl+Shift+P`) to authenticate
+2. For Azure SQL queries, use **MS SQL: Connect** with:
+   - Server: `petshop-db.database.windows.net`
+   - Database: `petshop-db`
+   - User: `petshop_admin`
+3. Execute SQL scripts with `Ctrl+Shift+E` on `.sql` files
+
+### Firewall Rules (WSL/Remote)
+If connection fails due to firewall, add your IP via Azure CLI:
+```bash
+az login --use-device-code
+az sql server firewall-rule create \
+  --resource-group petshop-rg \
+  --server petshop-db \
+  --name MeuIP \
+  --start-ip-address YOUR_IP \
+  --end-ip-address YOUR_IP
+```
+
+## Enum Conventions (CRITICAL)
+
+**All status enums use SCREAMING_SNAKE_CASE** across all backends:
+
+### StatusPedido
+`PENDENTE`, `CONFIRMADO`, `PROCESSANDO`, `ENVIADO`, `ENTREGUE`, `CANCELADO`
+
+### StatusAgendamento
+`PENDENTE`, `CONFIRMADO`, `EM_ANDAMENTO`, `CONCLUIDO`, `CANCELADO`
+
+This ensures consistency when switching backends with the shared database.
 

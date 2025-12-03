@@ -5,12 +5,12 @@ namespace PetshopApi.Models;
 
 public enum StatusPedido
 {
-    Pendente,
-    Confirmado,
-    Processando,
-    Enviado,
-    Entregue,
-    Cancelado
+    PENDENTE,
+    CONFIRMADO,
+    PROCESSANDO,
+    ENVIADO,
+    ENTREGUE,
+    CANCELADO
 }
 
 [Table("pedidos")]
@@ -30,7 +30,7 @@ public class Pedido
     public double ValorTotal { get; set; }
 
     [Column("status")]
-    public StatusPedido Status { get; set; } = StatusPedido.Pendente;
+    public StatusPedido Status { get; set; } = StatusPedido.PENDENTE;
 
     [StringLength(50)]
     [Column("forma_pagamento")]
