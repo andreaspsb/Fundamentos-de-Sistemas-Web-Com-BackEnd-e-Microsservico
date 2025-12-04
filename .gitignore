@@ -1,57 +1,68 @@
-# Maven
-backend-springboot/target/
-backend-springboot/.mvn/
-backend-springboot/mvnw
-backend-springboot/mvnw.cmd
+# =============================================================================
+# Maven / Java
+# =============================================================================
 **/target/
 *.class
-
-# .NET / ASP.NET
-backend-aspnet/bin/
-backend-aspnet/obj/
-backend-aspnet/[Dd]ebug/
-backend-aspnet/[Rr]elease/
-*.dll
-*.exe
-*.pdb
-
-# Logs
-*.log
-logs/
-
-# Package Files
 *.jar
 *.war
 *.nar
 *.ear
-*.zip
-*.tar.gz
-*.rar
+backend-springboot/.mvn/
+backend-springboot/mvnw
+backend-springboot/mvnw.cmd
 
+# =============================================================================
+# .NET / ASP.NET Core
+# =============================================================================
+**/bin/
+**/obj/
+*.dll
+*.exe
+*.pdb
+*.cache
+
+# =============================================================================
 # IDE - IntelliJ IDEA
+# =============================================================================
 .idea/
 *.iws
 *.iml
 *.ipr
 out/
 
+# =============================================================================
 # IDE - Eclipse
+# =============================================================================
 .classpath
 .project
 .settings/
-bin/
 
+# =============================================================================
 # IDE - VSCode
+# =============================================================================
 .vscode/
 *.code-workspace
 !.vscode/settings.json
 !.vscode/launch.json
+!.vscode/tasks.json
 
+# =============================================================================
 # OS Files
+# =============================================================================
 .DS_Store
 Thumbs.db
+Desktop.ini
 
-# Databases
+# =============================================================================
+# Logs
+# =============================================================================
+*.log
+logs/
+java-func-logs/
+
+# =============================================================================
+# Databases (Local Development)
+# =============================================================================
 *.db
 *.db-shm
 *.db-wal
@@ -60,43 +71,48 @@ Thumbs.db
 *.sqlite3
 petshop.db
 
-# Spring Boot
-HELP.md
-spring-boot-starter-*/
-
-# Node (Frontend/Testes)
+# =============================================================================
+# Node.js
+# =============================================================================
 node_modules/
 npm-debug.log
 yarn-error.log
 yarn.lock
+package-lock.json
 
-# GitHub Actions
-.github/workflows/*.log
-
-# Azure
+# =============================================================================
+# Azure / Azure Functions
+# =============================================================================
 .azure/
 local.settings.json
+.azurite/
+.azure-java-functions.env
 
-# Playwright
+# =============================================================================
+# Playwright (E2E Tests)
+# =============================================================================
 test-results/
 playwright-report/
 playwright/.cache/
 
+# =============================================================================
 # Code Coverage
+# =============================================================================
 *.opencover.xml
 coverage/
 TestResults/
 *.coverage
 *.coveragexml
 
+# =============================================================================
 # Docker
+# =============================================================================
 .env
 docker-compose.override.yml
-*.sql
-backup-*.sql
-get-docker.sh
 
-# Build artifacts
+# =============================================================================
+# Build & Deploy Artifacts
+# =============================================================================
 dist/
 build/
 *.tmp
@@ -104,47 +120,33 @@ build/
 *.bak
 *.old
 *~
-
-# Build artifacts
+*.zip
+*.tar.gz
+*.rar
 backend-aspnet/PetshopApi/publish/
 backend-springboot/deploy.zip
 backend-aspnet/PetshopApi/deploy.zip
 functions/publish/
 functions-java/publish/
 
-# Runtime files
+# =============================================================================
+# Runtime Files
+# =============================================================================
 functions/pids/
 functions-java/.pids/
-functions/logs/
 *.pid
 
-# Runtime files
-functions/pids/
-functions-java/.pids/
-functions/logs/
-*.pid
+# =============================================================================
+# Spring Boot
+# =============================================================================
+HELP.md
+spring-boot-starter-*/
 
-# .NET Build artifacts
-**/obj/
-**/bin/
-*.dll
-*.pdb
-*.cache
-
-# Java Build artifacts
-**/target/
-*.class
-*.jar
-
-# IDE
-.idea/
-*.iml
-.vscode/settings.json
-
-# Logs
-*.log
-logs/
-
-# Azurite local storage
-.azurite/
-.azure-java-functions.env
+# =============================================================================
+# Mobile (React Native / Expo)
+# =============================================================================
+mobile/.expo/
+mobile/dist/
+*.apk
+*.aab
+*.ipa

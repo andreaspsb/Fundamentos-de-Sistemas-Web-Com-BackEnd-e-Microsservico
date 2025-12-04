@@ -507,6 +507,27 @@ jobs:
         
         echo "✅ Downgrade concluído"
 
+    - name: Reiniciar backends para resetar estado de quota
+      run: |
+        echo "🔄 Reiniciando backends para garantir estado limpo após downgrade..."
+        
+        # Stop + Start (não apenas restart) para resetar o usageState
+        echo "⏹️ Parando petshop-backend-spring..."
+        az webapp stop --name ${{ env.AZURE_WEBAPP_NAME_SPRING }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || true
+        
+        echo "⏹️ Parando petshop-backend-aspnet..."
+        az webapp stop --name ${{ env.AZURE_WEBAPP_NAME_ASPNET }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || true
+        
+        sleep 5
+        
+        echo "▶️ Iniciando petshop-backend-spring..."
+        az webapp start --name ${{ env.AZURE_WEBAPP_NAME_SPRING }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || true
+        
+        echo "▶️ Iniciando petshop-backend-aspnet..."
+        az webapp start --name ${{ env.AZURE_WEBAPP_NAME_ASPNET }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || true
+        
+        echo "✅ Backends reiniciados - estado de quota resetado"
+
     - name: Calcular tempo no plano B1
       run: |
         START_TIME="${{ needs.upgrade-plan.outputs.start-time }}"

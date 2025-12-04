@@ -25,6 +25,6 @@
     "CORSCredentials": false
   },
   "ConnectionStrings": {
-    "SqlConnection": "Server=localhost;Database=PetshopDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;"
+    "SqlConnection": "Server=localhost;Database=PetshopDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;Min Pool Size=0;Max Pool Size=3;Connection Lifetime=60;"
   }
 }
