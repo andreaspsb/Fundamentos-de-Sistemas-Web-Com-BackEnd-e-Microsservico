@@ -92,8 +92,8 @@ services:
   # Auth Service - Autenticação e JWT
   func-auth-java:
     build:
-      context: ./functions-java/func-auth
-      dockerfile: Dockerfile
+      context: ./functions-java
+      dockerfile: func-petshop-auth-java/Dockerfile
     container_name: func-auth-java
     restart: unless-stopped
     environment:
@@ -122,8 +122,8 @@ services:
   # Catalog Service - Produtos e Serviços
   func-catalog-java:
     build:
-      context: ./functions-java/func-catalog
-      dockerfile: Dockerfile
+      context: ./functions-java
+      dockerfile: func-petshop-catalog-java/Dockerfile
     container_name: func-catalog-java
     restart: unless-stopped
     environment:
@@ -150,8 +150,8 @@ services:
   # Customers Service - Clientes
   func-customers-java:
     build:
-      context: ./functions-java/func-customers
-      dockerfile: Dockerfile
+      context: ./functions-java
+      dockerfile: func-petshop-customers-java/Dockerfile
     container_name: func-customers-java
     restart: unless-stopped
     environment:
@@ -178,8 +178,8 @@ services:
   # Orders Service - Pedidos
   func-orders-java:
     build:
-      context: ./functions-java/func-orders
-      dockerfile: Dockerfile
+      context: ./functions-java
+      dockerfile: func-petshop-orders-java/Dockerfile
     container_name: func-orders-java
     restart: unless-stopped
     environment:
@@ -206,8 +206,8 @@ services:
   # Pets Service - Pets
   func-pets-java:
     build:
-      context: ./functions-java/func-pets
-      dockerfile: Dockerfile
+      context: ./functions-java
+      dockerfile: func-petshop-pets-java/Dockerfile
     container_name: func-pets-java
     restart: unless-stopped
     environment:
@@ -234,8 +234,8 @@ services:
   # Scheduling Service - Agendamentos
   func-scheduling-java:
     build:
-      context: ./functions-java/func-scheduling
-      dockerfile: Dockerfile
+      context: ./functions-java
+      dockerfile: func-petshop-scheduling-java/Dockerfile
     container_name: func-scheduling-java
     restart: unless-stopped
     environment:
