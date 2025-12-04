@@ -497,6 +497,18 @@ jobs:
         
         echo "✅ AlwaysOn desabilitado"
 
+    - name: Parar backends antes do downgrade
+      run: |
+        echo "⏹️ Parando backends ANTES do downgrade para evitar QuotaExceeded..."
+        
+        # IMPORTANTE: Parar ANTES do downgrade para F1
+        # Se fizer downgrade com app rodando, o usageState pode ficar "Exceeded"
+        az webapp stop --name ${{ env.AZURE_WEBAPP_NAME_SPRING }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || true
+        az webapp stop --name ${{ env.AZURE_WEBAPP_NAME_ASPNET }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || true
+        
+        sleep 10
+        echo "✅ Backends parados"
+
     - name: Downgrade App Service Plan para F1
       run: |
         echo "⬇️ Fazendo downgrade do plano para F1..."
@@ -505,28 +517,27 @@ jobs:
           --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
           --sku F1
         
+        sleep 5
         echo "✅ Downgrade concluído"
 
-    - name: Reiniciar backends para resetar estado de quota
+    - name: Iniciar backends após downgrade
       run: |
-        echo "🔄 Reiniciando backends para garantir estado limpo após downgrade..."
+        echo "▶️ Iniciando backends após downgrade..."
         
-        # Stop + Start (não apenas restart) para resetar o usageState
-        echo "⏹️ Parando petshop-backend-spring..."
-        az webapp stop --name ${{ env.AZURE_WEBAPP_NAME_SPRING }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || true
-        
-        echo "⏹️ Parando petshop-backend-aspnet..."
-        az webapp stop --name ${{ env.AZURE_WEBAPP_NAME_ASPNET }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || true
+        az webapp start --name ${{ env.AZURE_WEBAPP_NAME_SPRING }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || true
+        az webapp start --name ${{ env.AZURE_WEBAPP_NAME_ASPNET }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || true
         
         sleep 5
         
-        echo "▶️ Iniciando petshop-backend-spring..."
-        az webapp start --name ${{ env.AZURE_WEBAPP_NAME_SPRING }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || true
+        # Verificar estado
+        echo "🔍 Verificando estado dos backends..."
+        SPRING_STATE=$(az webapp show --name ${{ env.AZURE_WEBAPP_NAME_SPRING }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "state" -o tsv)
+        ASPNET_STATE=$(az webapp show --name ${{ env.AZURE_WEBAPP_NAME_ASPNET }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} --query "state" -o tsv)
         
-        echo "▶️ Iniciando petshop-backend-aspnet..."
-        az webapp start --name ${{ env.AZURE_WEBAPP_NAME_ASPNET }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }} || true
+        echo "📊 petshop-backend-spring: $SPRING_STATE"
+        echo "📊 petshop-backend-aspnet: $ASPNET_STATE"
         
-        echo "✅ Backends reiniciados - estado de quota resetado"
+        echo "✅ Backends iniciados com estado de quota limpo"
 
     - name: Calcular tempo no plano B1
       run: |
