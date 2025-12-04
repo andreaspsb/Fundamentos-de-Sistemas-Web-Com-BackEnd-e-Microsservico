@@ -48,7 +48,7 @@ services:
     networks:
       - petshop-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/produtos"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -79,7 +79,7 @@ services:
     networks:
       - petshop-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/api/produtos"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -141,7 +141,7 @@ services:
     networks:
       - petshop-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/produtos/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/categories/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -169,7 +169,7 @@ services:
     networks:
       - petshop-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/clientes/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/customers/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -197,7 +197,7 @@ services:
     networks:
       - petshop-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/pedidos/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/orders/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -253,7 +253,7 @@ services:
     networks:
       - petshop-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/agendamentos/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/api/scheduling/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -280,7 +280,7 @@ services:
       - petshop-springboot
       - petshop-aspnet
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost"]
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -300,7 +300,7 @@ services:
       - petshop-springboot
       - petshop-aspnet
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

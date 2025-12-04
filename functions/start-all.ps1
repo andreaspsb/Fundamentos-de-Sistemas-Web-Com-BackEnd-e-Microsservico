@@ -5,6 +5,9 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location $ScriptDir
 
+# IMPORTANTE: Recarregar PATH do sistema para encontrar 'func' e outras ferramentas
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path", "User")
+
 Write-Host "==================================================="
 Write-Host "  Starting Petshop C# Azure Functions (Windows)"
 Write-Host "==================================================="

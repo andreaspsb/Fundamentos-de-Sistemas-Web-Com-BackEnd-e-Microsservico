@@ -11,15 +11,18 @@ WORKDIR /app
 # Copy parent pom first for dependency resolution
 COPY pom.xml .
 
-# Copy shared module
+# Copy ALL modules (required by parent pom)
 COPY petshop-functions-shared ./petshop-functions-shared
-
-# Copy this function module
+COPY func-petshop-auth-java ./func-petshop-auth-java
+COPY func-petshop-catalog-java ./func-petshop-catalog-java
+COPY func-petshop-customers-java ./func-petshop-customers-java
 COPY func-petshop-orders-java ./func-petshop-orders-java
+COPY func-petshop-pets-java ./func-petshop-pets-java
+COPY func-petshop-scheduling-java ./func-petshop-scheduling-java
 
-# Build shared module first, then this module
+# Build shared module first, then this module with docker profile for executable JAR
 RUN mvn clean install -pl petshop-functions-shared -DskipTests && \
-    mvn clean package -pl func-petshop-orders-java -DskipTests
+    mvn clean package -pl func-petshop-orders-java -am -Pdocker -DskipTests
 
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre-alpine

@@ -89,11 +89,13 @@
     <build>
         <plugins>
             <!-- Disable Spring Boot repackage for Azure Functions compatibility -->
+            <!-- Use -Pdocker profile to enable executable JAR for Docker -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
                     <skip>true</skip>
+                    <mainClass>com.petshop.functions.auth.AuthFunctionApplication</mainClass>
                 </configuration>
             </plugin>
             <!-- Use maven-dependency-plugin to copy dependencies to lib folder -->
@@ -183,4 +185,30 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- Docker profile - creates executable JAR for Docker deployment -->
+        <profile>
+            <id>docker</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <skip>false</skip>
+                            <mainClass>com.petshop.functions.auth.AuthFunctionApplication</mainClass>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>repackage</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
