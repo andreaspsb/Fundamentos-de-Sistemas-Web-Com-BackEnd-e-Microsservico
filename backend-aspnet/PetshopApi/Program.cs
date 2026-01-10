@@ -79,31 +79,30 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// Configure CORS with environment-specific settings
+// Configure CORS - Lista ÚNICA de origens para TODOS os ambientes
+// Adicione novas origens SOMENTE AQUI - não há outro lugar para configurar!
 builder.Services.AddCors(options =>
 {
-    // Development: Allow all origins (for local testing)
-    options.AddPolicy("Development", policy =>
+    options.AddPolicy("AllEnvironments", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-
-    // Production: Restrict to specific origins
-    options.AddPolicy("Production", policy =>
-    {
-        // Read from environment variable (CORS_ALLOWED_ORIGINS) or configuration section
-        var corsOriginsEnv = Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS");
-        var allowedOrigins = !string.IsNullOrEmpty(corsOriginsEnv) 
-            ? corsOriginsEnv.Split(',', StringSplitOptions.RemoveEmptyEntries)
-            : builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() 
-              ?? new[] 
-              { 
-                  "https://petshop.com",
-                  "https://www.petshop.com",
-                  "https://api.petshop.com"
-              };
+        var allowedOrigins = new[]
+        {
+            // === PRODUÇÃO ===
+            "https://andreaspsb.github.io",
+            "https://yellow-field-047215b0f.3.azurestaticapps.net",
+            
+            // === DESENVOLVIMENTO LOCAL ===
+            "http://localhost:5500",
+            "http://127.0.0.1:5500",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:8080",
+            "http://127.0.0.1:8080",
+            "http://localhost:19006",
+            "http://127.0.0.1:19006"
+        };
 
         policy.WithOrigins(allowedOrigins)
               .AllowAnyMethod()
@@ -178,9 +177,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// Use environment-specific CORS policy
-var corsPolicy = app.Environment.IsDevelopment() ? "Development" : "Production";
-app.UseCors(corsPolicy);
+// CORS - política única para todos os ambientes
+app.UseCors("AllEnvironments");
 
 // Use JWT Middleware
 app.UseMiddleware<JwtMiddleware>();
