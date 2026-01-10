@@ -77,7 +77,8 @@ public class DataInitializer {
                 createCategoria("Casas e Tocas", "Casas, tocas e abrigos para pets", true)
             );
             
-            List<Categoria> saved = categoriaRepository.saveAll(categorias);
+            List<Categoria> toSave = new java.util.ArrayList<>(categorias);
+            List<Categoria> saved = (List<Categoria>) categoriaRepository.saveAll(toSave);
             logger.info("{} categorias criadas", saved.size());
             return saved;
         } else {
@@ -140,7 +141,7 @@ public class DataInitializer {
                     new BigDecimal("59.90"), 55, acessorios, "comedouro-duplo.jpg", true)
             );
 
-            produtoRepository.saveAll(produtos);
+            produtoRepository.saveAll(new java.util.ArrayList<>(produtos));
             logger.info("{} produtos criados", produtos.size());
         } else {
             logger.info("Produtos já existem ou categorias vazias");
@@ -193,7 +194,7 @@ public class DataInitializer {
                     new BigDecimal("80.00"), 1440, true)
             );
 
-            servicoRepository.saveAll(servicos);
+            servicoRepository.saveAll(new java.util.ArrayList<>(servicos));
             logger.info("{} serviços criados", servicos.size());
         } else {
             logger.info("Serviços já existem");

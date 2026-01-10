@@ -4,6 +4,7 @@ import com.petshop.dto.PetRequestDTO;
 import com.petshop.dto.PetResponseDTO;
 import com.petshop.model.Pet;
 import com.petshop.service.PetService;
+import com.petshop.util.ValidationUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,14 +34,14 @@ public class PetController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PetResponseDTO> buscarPorId(@PathVariable Long id) {
-        return petService.buscarPorId(id)
+        return petService.buscarPorId(ValidationUtils.requireNonNullId(id, "Pet"))
                 .map(pet -> ResponseEntity.ok(toResponseDTO(pet)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/cliente/{clienteId}")
     public ResponseEntity<List<PetResponseDTO>> buscarPorCliente(@PathVariable Long clienteId) {
-        List<PetResponseDTO> pets = petService.buscarPorCliente(clienteId)
+        List<PetResponseDTO> pets = petService.buscarPorCliente(ValidationUtils.requireNonNullId(clienteId, "Cliente"))
                 .stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -58,8 +59,8 @@ public class PetController {
 
     @PostMapping
     public ResponseEntity<PetResponseDTO> criar(@Valid @RequestBody PetRequestDTO dto) {
-        Pet pet = toEntity(dto);
-        Pet petSalvo = petService.salvar(pet, dto.getClienteId());
+        Pet pet = ValidationUtils.requireNonNullEntity(toEntity(dto), "Pet");
+        Pet petSalvo = petService.salvar(pet, ValidationUtils.requireNonNullId(dto.getClienteId(), "Cliente"));
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponseDTO(petSalvo));
     }
 
@@ -67,14 +68,14 @@ public class PetController {
     public ResponseEntity<PetResponseDTO> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody PetRequestDTO dto) {
-        Pet pet = toEntity(dto);
-        Pet petAtualizado = petService.atualizar(id, pet);
+        Pet pet = ValidationUtils.requireNonNullEntity(toEntity(dto), "Pet");
+        Pet petAtualizado = petService.atualizar(ValidationUtils.requireNonNullId(id, "Pet"), pet);
         return ResponseEntity.ok(toResponseDTO(petAtualizado));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        petService.deletar(id);
+        petService.deletar(ValidationUtils.requireNonNullId(id, "Pet"));
         return ResponseEntity.noContent().build();
     }
 

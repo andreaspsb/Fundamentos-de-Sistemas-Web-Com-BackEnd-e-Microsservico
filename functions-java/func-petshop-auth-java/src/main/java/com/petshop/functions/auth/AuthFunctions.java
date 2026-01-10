@@ -28,7 +28,6 @@ public class AuthFunctions {
     private final FunctionAuthorization functionAuthorization;
     private final BCryptPasswordEncoder passwordEncoder;
 
-    @Autowired
     public AuthFunctions(
             UsuarioRepository usuarioRepository,
             ClienteRepository clienteRepository,

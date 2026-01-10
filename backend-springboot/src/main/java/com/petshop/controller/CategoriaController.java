@@ -4,6 +4,7 @@ import com.petshop.dto.CategoriaRequestDTO;
 import com.petshop.dto.CategoriaResponseDTO;
 import com.petshop.model.Categoria;
 import com.petshop.service.CategoriaService;
+import com.petshop.util.ValidationUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,14 +43,14 @@ public class CategoriaController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CategoriaResponseDTO> buscarPorId(@PathVariable Long id) {
-        return categoriaService.buscarPorId(id)
+        return categoriaService.buscarPorId(ValidationUtils.requireNonNullId(id, "Categoria"))
                 .map(categoria -> ResponseEntity.ok(toResponseDTO(categoria)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public ResponseEntity<CategoriaResponseDTO> criar(@Valid @RequestBody CategoriaRequestDTO dto) {
-        Categoria categoria = toEntity(dto);
+        Categoria categoria = ValidationUtils.requireNonNullEntity(toEntity(dto), "Categoria");
         Categoria categoriaSalva = categoriaService.salvar(categoria);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponseDTO(categoriaSalva));
     }
@@ -58,26 +59,26 @@ public class CategoriaController {
     public ResponseEntity<CategoriaResponseDTO> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody CategoriaRequestDTO dto) {
-        Categoria categoria = toEntity(dto);
-        Categoria categoriaAtualizada = categoriaService.atualizar(id, categoria);
+        Categoria categoria = ValidationUtils.requireNonNullEntity(toEntity(dto), "Categoria");
+        Categoria categoriaAtualizada = categoriaService.atualizar(ValidationUtils.requireNonNullId(id, "Categoria"), categoria);
         return ResponseEntity.ok(toResponseDTO(categoriaAtualizada));
     }
 
     @PatchMapping("/{id}/ativar")
     public ResponseEntity<Void> ativar(@PathVariable Long id) {
-        categoriaService.ativar(id);
+        categoriaService.ativar(ValidationUtils.requireNonNullId(id, "Categoria"));
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/desativar")
     public ResponseEntity<Void> desativar(@PathVariable Long id) {
-        categoriaService.desativar(id);
+        categoriaService.desativar(ValidationUtils.requireNonNullId(id, "Categoria"));
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        categoriaService.deletar(id);
+        categoriaService.deletar(ValidationUtils.requireNonNullId(id, "Categoria"));
         return ResponseEntity.noContent().build();
     }
 

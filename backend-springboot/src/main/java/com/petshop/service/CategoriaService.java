@@ -2,7 +2,9 @@ package com.petshop.service;
 
 import com.petshop.model.Categoria;
 import com.petshop.repository.CategoriaRepository;
+import com.petshop.util.ValidationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,8 +28,8 @@ public class CategoriaService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Categoria> buscarPorId(Long id) {
-        return categoriaRepository.findById(id);
+    public Optional<Categoria> buscarPorId(@NonNull Long id) {
+        return categoriaRepository.findById(ValidationUtils.requireNonNullId(id, "Categoria"));
     }
 
     @Transactional(readOnly = true)
@@ -36,7 +38,8 @@ public class CategoriaService {
     }
 
     @Transactional
-    public Categoria salvar(Categoria categoria) {
+    public Categoria salvar(@NonNull Categoria categoria) {
+        ValidationUtils.requireNonNullEntity(categoria, "Categoria");
         if (categoriaRepository.existsByNome(categoria.getNome())) {
             throw new RuntimeException("Já existe uma categoria com este nome");
         }
@@ -44,7 +47,9 @@ public class CategoriaService {
     }
 
     @Transactional
-    public Categoria atualizar(Long id, Categoria categoriaAtualizada) {
+    public Categoria atualizar(@NonNull Long id, @NonNull Categoria categoriaAtualizada) {
+        ValidationUtils.requireNonNullId(id, "Categoria");
+        ValidationUtils.requireNonNullEntity(categoriaAtualizada, "Categoria");
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada com ID: " + id));
 
@@ -62,26 +67,27 @@ public class CategoriaService {
     }
 
     @Transactional
-    public void ativar(Long id) {
-        Categoria categoria = categoriaRepository.findById(id)
+    public void ativar(@NonNull Long id) {
+        Categoria categoria = categoriaRepository.findById(ValidationUtils.requireNonNullId(id, "Categoria"))
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada com ID: " + id));
         categoria.setAtivo(true);
         categoriaRepository.save(categoria);
     }
 
     @Transactional
-    public void desativar(Long id) {
-        Categoria categoria = categoriaRepository.findById(id)
+    public void desativar(@NonNull Long id) {
+        Categoria categoria = categoriaRepository.findById(ValidationUtils.requireNonNullId(id, "Categoria"))
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada com ID: " + id));
         categoria.setAtivo(false);
         categoriaRepository.save(categoria);
     }
 
     @Transactional
-    public void deletar(Long id) {
-        if (!categoriaRepository.existsById(id)) {
+    public void deletar(@NonNull Long id) {
+        Long safeId = ValidationUtils.requireNonNullId(id, "Categoria");
+        if (!categoriaRepository.existsById(safeId)) {
             throw new RuntimeException("Categoria não encontrada com ID: " + id);
         }
-        categoriaRepository.deleteById(id);
+        categoriaRepository.deleteById(safeId);
     }
 }

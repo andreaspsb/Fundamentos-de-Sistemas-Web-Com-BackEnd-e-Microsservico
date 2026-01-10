@@ -5,6 +5,7 @@ import com.petshop.functions.shared.dto.ItemPedidoRequestDTO;
 import com.petshop.functions.shared.dto.PedidoRequestDTO;
 import com.petshop.functions.shared.dto.PedidoResponseDTO;
 import com.petshop.functions.shared.model.Cliente;
+import com.petshop.shared.util.ValidationUtils;
 import com.petshop.functions.shared.model.ItemPedido;
 import com.petshop.functions.shared.model.Pedido;
 import com.petshop.functions.shared.model.Pedido.StatusPedido;
@@ -88,7 +89,7 @@ public class OrderController {
 
     @GetMapping("/pedidos/{id}")
     public ResponseEntity<?> getPedidoById(@PathVariable Long id) {
-        Optional<Pedido> pedido = pedidoRepository.findById(id);
+        Optional<Pedido> pedido = pedidoRepository.findById(ValidationUtils.requireNonNullId(id, "Pedido"));
         
         if (pedido.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -101,7 +102,7 @@ public class OrderController {
     @PostMapping("/pedidos")
     public ResponseEntity<?> createPedido(@Valid @RequestBody PedidoRequestDTO request) {
         // Validar cliente
-        Optional<Cliente> clienteOpt = clienteRepository.findById(request.getClienteId());
+        Optional<Cliente> clienteOpt = clienteRepository.findById(ValidationUtils.requireNonNullId(request.getClienteId(), "Cliente"));
         if (clienteOpt.isEmpty()) {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", "Cliente não encontrado"));
@@ -126,7 +127,7 @@ public class OrderController {
         double valorTotal = 0.0;
         
         for (ItemPedidoRequestDTO itemDto : request.getItens()) {
-            Optional<Produto> produtoOpt = produtoRepository.findById(itemDto.getProdutoId());
+            Optional<Produto> produtoOpt = produtoRepository.findById(ValidationUtils.requireNonNullId(itemDto.getProdutoId(), "Produto"));
             if (produtoOpt.isEmpty()) {
                 return ResponseEntity.badRequest()
                     .body(Map.of("error", "Produto não encontrado: " + itemDto.getProdutoId()));
@@ -152,18 +153,18 @@ public class OrderController {
             
             // Atualizar estoque
             produto.setQuantidadeEstoque(produto.getQuantidadeEstoque() - itemDto.getQuantidade());
-            produtoRepository.save(produto);
+            ValidationUtils.requireNonNullEntity(produtoRepository.save(produto), "Produto");
         }
         
         pedido.setValorTotal(valorTotal);
         pedido.setItens(itens);
         
-        Pedido saved = pedidoRepository.save(pedido);
+        Pedido saved = ValidationUtils.requireNonNullEntity(pedidoRepository.save(pedido), "Pedido");
         
         // Salvar itens
         for (ItemPedido item : itens) {
             item.setPedido(saved);
-            itemPedidoRepository.save(item);
+            ValidationUtils.requireNonNullEntity(itemPedidoRepository.save(item), "ItemPedido");
         }
         
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -173,7 +174,7 @@ public class OrderController {
     @PatchMapping("/pedidos/{id}/status")
     public ResponseEntity<?> updatePedidoStatus(@PathVariable Long id,
                                                 @RequestBody Map<String, String> body) {
-        Optional<Pedido> existingOpt = pedidoRepository.findById(id);
+        Optional<Pedido> existingOpt = pedidoRepository.findById(ValidationUtils.requireNonNullId(id, "Pedido"));
         
         if (existingOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -201,19 +202,19 @@ public class OrderController {
             for (ItemPedido item : pedido.getItens()) {
                 Produto produto = item.getProduto();
                 produto.setQuantidadeEstoque(produto.getQuantidadeEstoque() + item.getQuantidade());
-                produtoRepository.save(produto);
+                ValidationUtils.requireNonNullEntity(produtoRepository.save(produto), "Produto");
             }
         }
         
         pedido.setStatus(newStatus);
-        Pedido updated = pedidoRepository.save(pedido);
+        Pedido updated = ValidationUtils.requireNonNullEntity(pedidoRepository.save(pedido), "Pedido");
         
         return ResponseEntity.ok(toPedidoResponse(updated));
     }
 
     @DeleteMapping("/pedidos/{id}")
     public ResponseEntity<?> deletePedido(@PathVariable Long id) {
-        Optional<Pedido> pedidoOpt = pedidoRepository.findById(id);
+        Optional<Pedido> pedidoOpt = pedidoRepository.findById(ValidationUtils.requireNonNullId(id, "Pedido"));
         
         if (pedidoOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -227,7 +228,7 @@ public class OrderController {
             for (ItemPedido item : pedido.getItens()) {
                 Produto produto = item.getProduto();
                 produto.setQuantidadeEstoque(produto.getQuantidadeEstoque() + item.getQuantidade());
-                produtoRepository.save(produto);
+                ValidationUtils.requireNonNullEntity(produtoRepository.save(produto), "Produto");
             }
         }
         

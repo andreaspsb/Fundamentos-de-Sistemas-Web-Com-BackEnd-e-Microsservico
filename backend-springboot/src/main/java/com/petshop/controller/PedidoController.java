@@ -7,6 +7,7 @@ import com.petshop.dto.PedidoResponseDTO;
 import com.petshop.model.Pedido;
 import com.petshop.model.Pedido.StatusPedido;
 import com.petshop.service.PedidoService;
+import com.petshop.util.ValidationUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,14 +37,14 @@ public class PedidoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<PedidoResponseDTO> buscarPorId(@PathVariable Long id) {
-        return pedidoService.buscarPorId(id)
+        return pedidoService.buscarPorId(ValidationUtils.requireNonNullId(id, "Pedido"))
                 .map(pedido -> ResponseEntity.ok(toResponseDTO(pedido)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/cliente/{clienteId}")
     public ResponseEntity<List<PedidoResponseDTO>> buscarPorCliente(@PathVariable Long clienteId) {
-        List<PedidoResponseDTO> pedidos = pedidoService.buscarPorCliente(clienteId)
+        List<PedidoResponseDTO> pedidos = pedidoService.buscarPorCliente(ValidationUtils.requireNonNullId(clienteId, "Cliente"))
                 .stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -69,7 +70,7 @@ public class PedidoController {
 
     @PostMapping
     public ResponseEntity<PedidoResponseDTO> criar(@Valid @RequestBody PedidoRequestDTO dto) {
-        Pedido pedido = pedidoService.criar(dto.getClienteId());
+        Pedido pedido = pedidoService.criar(ValidationUtils.requireNonNullId(dto.getClienteId(), "Cliente"));
         pedido.setFormaPagamento(dto.getFormaPagamento());
         pedido.setObservacoes(dto.getObservacoes());
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponseDTO(pedido));
@@ -79,7 +80,7 @@ public class PedidoController {
     public ResponseEntity<PedidoResponseDTO> adicionarItem(
             @PathVariable Long pedidoId,
             @Valid @RequestBody ItemPedidoRequestDTO dto) {
-        Pedido pedido = pedidoService.adicionarItem(pedidoId, dto.getProdutoId(), dto.getQuantidade());
+        Pedido pedido = pedidoService.adicionarItem(ValidationUtils.requireNonNullId(pedidoId, "Pedido"), ValidationUtils.requireNonNullId(dto.getProdutoId(), "Produto"), ValidationUtils.requireNonNullQuantity(dto.getQuantidade(), "Quantidade"));
         return ResponseEntity.ok(toResponseDTO(pedido));
     }
 
@@ -87,13 +88,13 @@ public class PedidoController {
     public ResponseEntity<PedidoResponseDTO> removerItem(
             @PathVariable Long pedidoId,
             @PathVariable Long itemId) {
-        Pedido pedido = pedidoService.removerItem(pedidoId, itemId);
+        Pedido pedido = pedidoService.removerItem(ValidationUtils.requireNonNullId(pedidoId, "Pedido"), ValidationUtils.requireNonNullId(itemId, "Item"));
         return ResponseEntity.ok(toResponseDTO(pedido));
     }
 
     @PostMapping("/{id}/confirmar")
     public ResponseEntity<PedidoResponseDTO> confirmar(@PathVariable Long id) {
-        Pedido pedido = pedidoService.confirmar(id);
+        Pedido pedido = pedidoService.confirmar(ValidationUtils.requireNonNullId(id, "Pedido"));
         return ResponseEntity.ok(toResponseDTO(pedido));
     }
 
@@ -102,19 +103,19 @@ public class PedidoController {
             @PathVariable Long id,
             @RequestParam String status) {
         StatusPedido statusEnum = StatusPedido.valueOf(status.toUpperCase());
-        Pedido pedido = pedidoService.atualizarStatus(id, statusEnum);
+        Pedido pedido = pedidoService.atualizarStatus(ValidationUtils.requireNonNullId(id, "Pedido"), statusEnum);
         return ResponseEntity.ok(toResponseDTO(pedido));
     }
 
     @PostMapping("/{id}/cancelar")
     public ResponseEntity<PedidoResponseDTO> cancelar(@PathVariable Long id) {
-        Pedido pedido = pedidoService.cancelar(id);
+        Pedido pedido = pedidoService.cancelar(ValidationUtils.requireNonNullId(id, "Pedido"));
         return ResponseEntity.ok(toResponseDTO(pedido));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        pedidoService.deletar(id);
+        pedidoService.deletar(ValidationUtils.requireNonNullId(id, "Pedido"));
         return ResponseEntity.noContent().build();
     }
 

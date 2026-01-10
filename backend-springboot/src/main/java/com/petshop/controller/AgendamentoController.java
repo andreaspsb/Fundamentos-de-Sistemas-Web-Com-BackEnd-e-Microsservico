@@ -6,6 +6,7 @@ import com.petshop.dto.ServicoSimpleDTO;
 import com.petshop.model.Agendamento;
 import com.petshop.model.Agendamento.StatusAgendamento;
 import com.petshop.service.AgendamentoService;
+import com.petshop.util.ValidationUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,14 +38,14 @@ public class AgendamentoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<AgendamentoResponseDTO> buscarPorId(@PathVariable Long id) {
-        return agendamentoService.buscarPorId(id)
+        return agendamentoService.buscarPorId(ValidationUtils.requireNonNullId(id, "Agendamento"))
                 .map(agendamento -> ResponseEntity.ok(toResponseDTO(agendamento)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/cliente/{clienteId}")
     public ResponseEntity<List<AgendamentoResponseDTO>> buscarPorCliente(@PathVariable Long clienteId) {
-        List<AgendamentoResponseDTO> agendamentos = agendamentoService.buscarPorCliente(clienteId)
+        List<AgendamentoResponseDTO> agendamentos = agendamentoService.buscarPorCliente(ValidationUtils.requireNonNullId(clienteId, "Cliente"))
                 .stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -93,9 +94,9 @@ public class AgendamentoController {
         );
         Agendamento agendamentoSalvo = agendamentoService.salvar(
                 agendamento,
-                dto.getClienteId(),
-                dto.getPetId(),
-                dto.getServicoIds()
+                ValidationUtils.requireNonNullId(dto.getClienteId(), "Cliente"),
+                ValidationUtils.requireNonNullId(dto.getPetId(), "Pet"),
+                ValidationUtils.requireNonNullList(dto.getServicoIds())
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponseDTO(agendamentoSalvo));
     }
@@ -105,19 +106,19 @@ public class AgendamentoController {
             @PathVariable Long id,
             @RequestParam String status) {
         StatusAgendamento statusEnum = StatusAgendamento.valueOf(status.toUpperCase());
-        Agendamento agendamento = agendamentoService.atualizarStatus(id, statusEnum);
+        Agendamento agendamento = agendamentoService.atualizarStatus(ValidationUtils.requireNonNullId(id, "Agendamento"), statusEnum);
         return ResponseEntity.ok(toResponseDTO(agendamento));
     }
 
     @PatchMapping("/{id}/cancelar")
     public ResponseEntity<Void> cancelar(@PathVariable Long id) {
-        agendamentoService.cancelar(id);
+        agendamentoService.cancelar(ValidationUtils.requireNonNullId(id, "Agendamento"));
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        agendamentoService.deletar(id);
+        agendamentoService.deletar(ValidationUtils.requireNonNullId(id, "Agendamento"));
         return ResponseEntity.noContent().build();
     }
 

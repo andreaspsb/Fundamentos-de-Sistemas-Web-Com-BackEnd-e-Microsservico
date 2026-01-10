@@ -4,6 +4,7 @@ import com.petshop.dto.ProdutoRequestDTO;
 import com.petshop.dto.ProdutoResponseDTO;
 import com.petshop.model.Produto;
 import com.petshop.service.ProdutoService;
+import com.petshop.util.ValidationUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,14 +43,14 @@ public class ProdutoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ProdutoResponseDTO> buscarPorId(@PathVariable Long id) {
-        return produtoService.buscarPorId(id)
+        return produtoService.buscarPorId(ValidationUtils.requireNonNullId(id, "Produto"))
                 .map(produto -> ResponseEntity.ok(toResponseDTO(produto)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/categoria/{categoriaId}")
     public ResponseEntity<List<ProdutoResponseDTO>> listarPorCategoria(@PathVariable Long categoriaId) {
-        List<ProdutoResponseDTO> produtos = produtoService.listarPorCategoria(categoriaId)
+        List<ProdutoResponseDTO> produtos = produtoService.listarPorCategoria(ValidationUtils.requireNonNullId(categoriaId, "Categoria"))
                 .stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -58,7 +59,7 @@ public class ProdutoController {
 
     @GetMapping("/categoria/{categoriaId}/disponiveis")
     public ResponseEntity<List<ProdutoResponseDTO>> listarDisponiveisPorCategoria(@PathVariable Long categoriaId) {
-        List<ProdutoResponseDTO> produtos = produtoService.listarDisponiveisPorCategoria(categoriaId)
+        List<ProdutoResponseDTO> produtos = produtoService.listarDisponiveisPorCategoria(ValidationUtils.requireNonNullId(categoriaId, "Categoria"))
                 .stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -85,8 +86,8 @@ public class ProdutoController {
 
     @PostMapping
     public ResponseEntity<ProdutoResponseDTO> criar(@Valid @RequestBody ProdutoRequestDTO dto) {
-        Produto produto = toEntity(dto);
-        Produto produtoSalvo = produtoService.salvar(produto, dto.getCategoriaId());
+        Produto produto = ValidationUtils.requireNonNullEntity(toEntity(dto), "Produto");
+        Produto produtoSalvo = produtoService.salvar(produto, ValidationUtils.requireNonNullId(dto.getCategoriaId(), "Categoria"));
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponseDTO(produtoSalvo));
     }
 
@@ -94,8 +95,8 @@ public class ProdutoController {
     public ResponseEntity<ProdutoResponseDTO> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody ProdutoRequestDTO dto) {
-        Produto produto = toEntity(dto);
-        Produto produtoAtualizado = produtoService.atualizar(id, produto);
+        Produto produto = ValidationUtils.requireNonNullEntity(toEntity(dto), "Produto");
+        Produto produtoAtualizado = produtoService.atualizar(ValidationUtils.requireNonNullId(id, "Produto"), produto);
         return ResponseEntity.ok(toResponseDTO(produtoAtualizado));
     }
 
@@ -103,7 +104,7 @@ public class ProdutoController {
     public ResponseEntity<ProdutoResponseDTO> atualizarEstoque(
             @PathVariable Long id,
             @RequestParam Integer quantidade) {
-        Produto produto = produtoService.atualizarEstoque(id, quantidade);
+        Produto produto = produtoService.atualizarEstoque(ValidationUtils.requireNonNullId(id, "Produto"), ValidationUtils.requireNonNullQuantity(quantidade, "Quantidade"));
         return ResponseEntity.ok(toResponseDTO(produto));
     }
 
@@ -111,25 +112,25 @@ public class ProdutoController {
     public ResponseEntity<ProdutoResponseDTO> adicionarEstoque(
             @PathVariable Long id,
             @RequestParam Integer quantidade) {
-        Produto produto = produtoService.adicionarEstoque(id, quantidade);
+        Produto produto = produtoService.adicionarEstoque(ValidationUtils.requireNonNullId(id, "Produto"), ValidationUtils.requireNonNullQuantity(quantidade, "Quantidade"));
         return ResponseEntity.ok(toResponseDTO(produto));
     }
 
     @PatchMapping("/{id}/ativar")
     public ResponseEntity<Void> ativar(@PathVariable Long id) {
-        produtoService.ativar(id);
+        produtoService.ativar(ValidationUtils.requireNonNullId(id, "Produto"));
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/desativar")
     public ResponseEntity<Void> desativar(@PathVariable Long id) {
-        produtoService.desativar(id);
+        produtoService.desativar(ValidationUtils.requireNonNullId(id, "Produto"));
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        produtoService.deletar(id);
+        produtoService.deletar(ValidationUtils.requireNonNullId(id, "Produto"));
         return ResponseEntity.noContent().build();
     }
 

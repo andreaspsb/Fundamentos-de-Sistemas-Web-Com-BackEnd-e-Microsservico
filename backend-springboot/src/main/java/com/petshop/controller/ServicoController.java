@@ -4,6 +4,7 @@ import com.petshop.dto.ServicoRequestDTO;
 import com.petshop.dto.ServicoResponseDTO;
 import com.petshop.model.Servico;
 import com.petshop.service.ServicoService;
+import com.petshop.util.ValidationUtils;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,14 +43,14 @@ public class ServicoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ServicoResponseDTO> buscarPorId(@PathVariable Long id) {
-        return servicoService.buscarPorId(id)
+        return servicoService.buscarPorId(ValidationUtils.requireNonNullId(id, "Serviço"))
                 .map(servico -> ResponseEntity.ok(toResponseDTO(servico)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
     public ResponseEntity<ServicoResponseDTO> criar(@Valid @RequestBody ServicoRequestDTO dto) {
-        Servico servico = toEntity(dto);
+        Servico servico = ValidationUtils.requireNonNullEntity(toEntity(dto), "Serviço");
         Servico servicoSalvo = servicoService.salvar(servico);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponseDTO(servicoSalvo));
     }
@@ -58,26 +59,26 @@ public class ServicoController {
     public ResponseEntity<ServicoResponseDTO> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody ServicoRequestDTO dto) {
-        Servico servico = toEntity(dto);
-        Servico servicoAtualizado = servicoService.atualizar(id, servico);
+        Servico servico = ValidationUtils.requireNonNullEntity(toEntity(dto), "Serviço");
+        Servico servicoAtualizado = servicoService.atualizar(ValidationUtils.requireNonNullId(id, "Serviço"), servico);
         return ResponseEntity.ok(toResponseDTO(servicoAtualizado));
     }
 
     @PatchMapping("/{id}/ativar")
     public ResponseEntity<Void> ativar(@PathVariable Long id) {
-        servicoService.ativar(id);
+        servicoService.ativar(ValidationUtils.requireNonNullId(id, "Serviço"));
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/{id}/desativar")
     public ResponseEntity<Void> desativar(@PathVariable Long id) {
-        servicoService.desativar(id);
+        servicoService.desativar(ValidationUtils.requireNonNullId(id, "Serviço"));
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        servicoService.deletar(id);
+        servicoService.deletar(ValidationUtils.requireNonNullId(id, "Serviço"));
         return ResponseEntity.noContent().build();
     }
 

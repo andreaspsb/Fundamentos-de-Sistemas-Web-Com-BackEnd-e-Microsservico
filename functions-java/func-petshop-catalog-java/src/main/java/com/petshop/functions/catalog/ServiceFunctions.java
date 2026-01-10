@@ -8,7 +8,7 @@ import com.petshop.functions.shared.dto.ServicoSimpleDTO;
 import com.petshop.functions.shared.model.Servico;
 import com.petshop.functions.shared.repository.ServicoRepository;
 import com.petshop.functions.shared.security.FunctionAuthorization;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.petshop.shared.util.ValidationUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -25,7 +25,6 @@ public class ServiceFunctions {
     private final ServicoRepository servicoRepository;
     private final FunctionAuthorization functionAuthorization;
 
-    @Autowired
     public ServiceFunctions(
             ServicoRepository servicoRepository,
             FunctionAuthorization functionAuthorization) {
@@ -133,7 +132,7 @@ public class ServiceFunctions {
 
         context.getLogger().info("Getting service by ID: " + id);
 
-        Optional<Servico> servicoOpt = servicoRepository.findById(id);
+        Optional<Servico> servicoOpt = servicoRepository.findById(ValidationUtils.requireNonNullId(id, "Serviço"));
         
         if (servicoOpt.isEmpty()) {
             return request.createResponseBuilder(HttpStatus.NOT_FOUND)
@@ -222,7 +221,7 @@ public class ServiceFunctions {
         context.getLogger().info("Updating service: " + id);
 
         return functionAuthorization.executeProtectedAdmin(request, authResult -> {
-            Optional<Servico> servicoOpt = servicoRepository.findById(id);
+            Optional<Servico> servicoOpt = servicoRepository.findById(ValidationUtils.requireNonNullId(id, "Serviço"));
             if (servicoOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -246,7 +245,8 @@ public class ServiceFunctions {
             if (dto.getPreco() != null) servico.setPreco(dto.getPreco());
             if (dto.getAtivo() != null) servico.setAtivo(dto.getAtivo());
 
-            servico = servicoRepository.save(servico);
+            Servico toSave = ValidationUtils.requireNonNullEntity(servico, "Serviço");
+            servico = ValidationUtils.requireNonNullEntity(servicoRepository.save(toSave), "Serviço");
 
             return request.createResponseBuilder(HttpStatus.OK)
                     .header("Content-Type", "application/json")
@@ -273,7 +273,8 @@ public class ServiceFunctions {
         context.getLogger().info("Deleting service: " + id);
 
         return functionAuthorization.executeProtectedAdmin(request, authResult -> {
-            Optional<Servico> servicoOpt = servicoRepository.findById(id);
+            Long safeId = ValidationUtils.requireNonNullId(id, "Serviço");
+            Optional<Servico> servicoOpt = servicoRepository.findById(safeId);
             if (servicoOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -281,7 +282,7 @@ public class ServiceFunctions {
                         .build();
             }
 
-            servicoRepository.deleteById(id);
+            servicoRepository.deleteById(safeId);
 
             return request.createResponseBuilder(HttpStatus.NO_CONTENT)
                     .build();

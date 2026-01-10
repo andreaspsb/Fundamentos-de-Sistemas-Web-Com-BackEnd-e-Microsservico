@@ -8,6 +8,7 @@ import com.petshop.model.Usuario;
 import com.petshop.repository.ClienteRepository;
 import com.petshop.repository.UsuarioRepository;
 import com.petshop.security.JwtUtil;
+import com.petshop.util.ValidationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -83,7 +84,7 @@ public class AuthService {
 
         // Vincular cliente se fornecido
         if (usuarioRequest.getClienteId() != null) {
-            Cliente cliente = clienteRepository.findById(usuarioRequest.getClienteId())
+            Cliente cliente = clienteRepository.findById(ValidationUtils.requireNonNullId(usuarioRequest.getClienteId(), "Cliente"))
                     .orElseThrow(() -> new RuntimeException("Cliente não encontrado"));
             usuario.setCliente(cliente);
         }

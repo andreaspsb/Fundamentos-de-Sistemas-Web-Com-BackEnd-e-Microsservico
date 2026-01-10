@@ -3,6 +3,7 @@ package com.petshop.functions.customers;
 import com.petshop.functions.shared.dto.*;
 import com.petshop.functions.shared.model.Cliente;
 import com.petshop.functions.shared.repository.ClienteRepository;
+import com.petshop.shared.util.ValidationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,7 +47,7 @@ public class CustomerController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getCustomerById(@PathVariable Long id) {
-        Optional<Cliente> clienteOpt = clienteRepository.findById(id);
+        Optional<Cliente> clienteOpt = clienteRepository.findById(ValidationUtils.requireNonNullId(id, "Cliente"));
         if (clienteOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Customer not found"));
@@ -86,7 +87,7 @@ public class CustomerController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCustomer(@PathVariable Long id, @RequestBody ClienteRequestDTO request) {
         try {
-            Optional<Cliente> clienteOpt = clienteRepository.findById(id);
+            Optional<Cliente> clienteOpt = clienteRepository.findById(ValidationUtils.requireNonNullId(id, "Cliente"));
             if (clienteOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Customer not found"));
@@ -100,7 +101,7 @@ public class CustomerController {
             if (request.getTelefone() != null) cliente.setTelefone(request.getTelefone());
             if (request.getEndereco() != null) cliente.setEndereco(request.getEndereco());
 
-            cliente = clienteRepository.save(cliente);
+            cliente = clienteRepository.save(ValidationUtils.requireNonNullEntity(cliente, "Cliente"));
             return ResponseEntity.ok(toResponseDTO(cliente));
 
         } catch (Exception e) {
@@ -112,12 +113,13 @@ public class CustomerController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCustomer(@PathVariable Long id) {
         try {
-            if (!clienteRepository.existsById(id)) {
+            Long safeId = ValidationUtils.requireNonNullId(id, "Cliente");
+            if (!clienteRepository.existsById(safeId)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Customer not found"));
             }
             
-            clienteRepository.deleteById(id);
+            clienteRepository.deleteById(safeId);
             return ResponseEntity.ok(Map.of("message", "Customer deleted successfully"));
 
         } catch (Exception e) {

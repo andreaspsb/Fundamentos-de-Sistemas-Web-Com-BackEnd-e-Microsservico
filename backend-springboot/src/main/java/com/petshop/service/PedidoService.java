@@ -8,7 +8,9 @@ import com.petshop.model.Produto;
 import com.petshop.repository.PedidoRepository;
 import com.petshop.repository.ClienteRepository;
 import com.petshop.repository.ProdutoRepository;
+import com.petshop.util.ValidationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,13 +36,13 @@ public class PedidoService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Pedido> buscarPorId(Long id) {
-        return pedidoRepository.findById(id);
+    public Optional<Pedido> buscarPorId(@NonNull Long id) {
+        return pedidoRepository.findById(ValidationUtils.requireNonNullId(id, "Pedido"));
     }
 
     @Transactional(readOnly = true)
-    public List<Pedido> buscarPorCliente(Long clienteId) {
-        return pedidoRepository.findByClienteIdOrderByDataPedidoDesc(clienteId);
+    public List<Pedido> buscarPorCliente(@NonNull Long clienteId) {
+        return pedidoRepository.findByClienteIdOrderByDataPedidoDesc(ValidationUtils.requireNonNullId(clienteId, "Cliente"));
     }
 
     @Transactional(readOnly = true)
@@ -54,8 +56,9 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido criar(Long clienteId) {
-        Cliente cliente = clienteRepository.findById(clienteId)
+    public Pedido criar(@NonNull Long clienteId) {
+        Long safeClienteId = ValidationUtils.requireNonNullId(clienteId, "Cliente");
+        Cliente cliente = clienteRepository.findById(safeClienteId)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + clienteId));
         
         Pedido pedido = new Pedido(cliente);
@@ -63,15 +66,17 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido adicionarItem(Long pedidoId, Long produtoId, Integer quantidade) {
-        Pedido pedido = pedidoRepository.findById(pedidoId)
+    public Pedido adicionarItem(@NonNull Long pedidoId, @NonNull Long produtoId, @NonNull Integer quantidade) {
+        Long safePedidoId = ValidationUtils.requireNonNullId(pedidoId, "Pedido");
+        Long safeProdutoId = ValidationUtils.requireNonNullId(produtoId, "Produto");
+        Pedido pedido = pedidoRepository.findById(safePedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado com ID: " + pedidoId));
 
         if (pedido.getStatus() != StatusPedido.PENDENTE) {
             throw new RuntimeException("Não é possível adicionar itens a um pedido que não está pendente");
         }
 
-        Produto produto = produtoRepository.findById(produtoId)
+        Produto produto = produtoRepository.findById(safeProdutoId)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado com ID: " + produtoId));
 
         if (!produto.getAtivo()) {
@@ -89,8 +94,10 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido removerItem(Long pedidoId, Long itemId) {
-        Pedido pedido = pedidoRepository.findById(pedidoId)
+    public Pedido removerItem(@NonNull Long pedidoId, @NonNull Long itemId) {
+        Long safePedidoId = ValidationUtils.requireNonNullId(pedidoId, "Pedido");
+        ValidationUtils.requireNonNullId(itemId, "Item");
+        Pedido pedido = pedidoRepository.findById(safePedidoId)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado com ID: " + pedidoId));
 
         if (pedido.getStatus() != StatusPedido.PENDENTE) {
@@ -107,8 +114,8 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido confirmar(Long id) {
-        Pedido pedido = pedidoRepository.findById(id)
+    public Pedido confirmar(@NonNull Long id) {
+        Pedido pedido = pedidoRepository.findById(ValidationUtils.requireNonNullId(id, "Pedido"))
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado com ID: " + id));
 
         if (pedido.getItens().isEmpty()) {
@@ -130,8 +137,8 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido atualizarStatus(Long id, StatusPedido novoStatus) {
-        Pedido pedido = pedidoRepository.findById(id)
+    public Pedido atualizarStatus(@NonNull Long id, @NonNull StatusPedido novoStatus) {
+        Pedido pedido = pedidoRepository.findById(ValidationUtils.requireNonNullId(id, "Pedido"))
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado com ID: " + id));
         
         pedido.setStatus(novoStatus);
@@ -139,8 +146,8 @@ public class PedidoService {
     }
 
     @Transactional
-    public Pedido cancelar(Long id) {
-        Pedido pedido = pedidoRepository.findById(id)
+    public Pedido cancelar(@NonNull Long id) {
+        Pedido pedido = pedidoRepository.findById(ValidationUtils.requireNonNullId(id, "Pedido"))
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado com ID: " + id));
 
         if (pedido.getStatus() == StatusPedido.ENTREGUE) {
@@ -164,14 +171,15 @@ public class PedidoService {
 
     @Transactional
     public void deletar(Long id) {
-        Pedido pedido = pedidoRepository.findById(id)
+        Long safeId = ValidationUtils.requireNonNullId(id, "Pedido");
+        Pedido pedido = pedidoRepository.findById(safeId)
                 .orElseThrow(() -> new RuntimeException("Pedido não encontrado com ID: " + id));
 
         if (pedido.getStatus() != StatusPedido.PENDENTE && pedido.getStatus() != StatusPedido.CANCELADO) {
             throw new RuntimeException("Apenas pedidos pendentes ou cancelados podem ser deletados");
         }
 
-        pedidoRepository.deleteById(id);
+        pedidoRepository.deleteById(safeId);
     }
 
     @Transactional(readOnly = true)

@@ -12,6 +12,11 @@ import org.mockito.MockitoAnnotations;
 
 import static org.mockito.Mockito.*;
 
+/**
+ * Testes para o inicializador de dados.
+ * Anotação SuppressWarnings("null") usada para suprimir warnings do Mockito any().
+ */
+@SuppressWarnings("null")
 class DataInitializerTest {
 
     @Mock

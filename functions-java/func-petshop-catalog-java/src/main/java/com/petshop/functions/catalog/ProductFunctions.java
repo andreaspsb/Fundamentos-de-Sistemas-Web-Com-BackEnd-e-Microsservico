@@ -9,7 +9,7 @@ import com.petshop.functions.shared.model.Produto;
 import com.petshop.functions.shared.repository.CategoriaRepository;
 import com.petshop.functions.shared.repository.ProdutoRepository;
 import com.petshop.functions.shared.security.FunctionAuthorization;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.petshop.shared.util.ValidationUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -27,7 +27,6 @@ public class ProductFunctions {
     private final CategoriaRepository categoriaRepository;
     private final FunctionAuthorization functionAuthorization;
 
-    @Autowired
     public ProductFunctions(
             ProdutoRepository produtoRepository,
             CategoriaRepository categoriaRepository,
@@ -110,7 +109,7 @@ public class ProductFunctions {
 
         context.getLogger().info("Getting product by ID: " + id);
 
-        Optional<Produto> produtoOpt = produtoRepository.findById(id);
+        Optional<Produto> produtoOpt = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"));
         
         if (produtoOpt.isEmpty()) {
             return request.createResponseBuilder(HttpStatus.NOT_FOUND)
@@ -142,7 +141,7 @@ public class ProductFunctions {
 
         context.getLogger().info("Getting products by category: " + categoriaId);
 
-        List<Produto> produtos = produtoRepository.findProdutosDisponiveisPorCategoria(categoriaId);
+        List<Produto> produtos = produtoRepository.findProdutosDisponiveisPorCategoria(ValidationUtils.requireNonNullId(categoriaId, "Categoria"));
         List<ProdutoResponseDTO> response = produtos.stream()
                 .map(this::toResponseDTO)
                 .collect(Collectors.toList());
@@ -205,7 +204,7 @@ public class ProductFunctions {
 
         context.getLogger().info("Getting product stock: " + id);
 
-        Optional<Produto> produtoOpt = produtoRepository.findById(id);
+        Optional<Produto> produtoOpt = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"));
         
         if (produtoOpt.isEmpty()) {
             return request.createResponseBuilder(HttpStatus.NOT_FOUND)
@@ -263,11 +262,11 @@ public class ProductFunctions {
             produto.setAtivo(dto.getAtivo() != null ? dto.getAtivo() : true);
 
             if (dto.getCategoriaId() != null) {
-                Optional<Categoria> categoriaOpt = categoriaRepository.findById(dto.getCategoriaId());
+                Optional<Categoria> categoriaOpt = categoriaRepository.findById(ValidationUtils.requireNonNullId(dto.getCategoriaId(), "Categoria"));
                 categoriaOpt.ifPresent(produto::setCategoria);
             }
 
-            produto = produtoRepository.save(produto);
+            produto = ValidationUtils.requireNonNullEntity(produtoRepository.save(produto), "Produto");
 
             return request.createResponseBuilder(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
@@ -294,7 +293,7 @@ public class ProductFunctions {
         context.getLogger().info("Updating product: " + id);
 
         return functionAuthorization.executeProtectedAdmin(request, authResult -> {
-            Optional<Produto> produtoOpt = produtoRepository.findById(id);
+            Optional<Produto> produtoOpt = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"));
             if (produtoOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -321,11 +320,12 @@ public class ProductFunctions {
             if (dto.getAtivo() != null) produto.setAtivo(dto.getAtivo());
 
             if (dto.getCategoriaId() != null) {
-                Optional<Categoria> categoriaOpt = categoriaRepository.findById(dto.getCategoriaId());
+                Optional<Categoria> categoriaOpt = categoriaRepository.findById(ValidationUtils.requireNonNullId(dto.getCategoriaId(), "Categoria"));
                 categoriaOpt.ifPresent(produto::setCategoria);
             }
 
-            produto = produtoRepository.save(produto);
+            Produto toSave = ValidationUtils.requireNonNullEntity(produto, "Produto");
+            produto = ValidationUtils.requireNonNullEntity(produtoRepository.save(toSave), "Produto");
 
             return request.createResponseBuilder(HttpStatus.OK)
                     .header("Content-Type", "application/json")
@@ -352,7 +352,7 @@ public class ProductFunctions {
         context.getLogger().info("Updating product stock: " + id);
 
         return functionAuthorization.executeProtectedAdmin(request, authResult -> {
-            Optional<Produto> produtoOpt = produtoRepository.findById(id);
+            Optional<Produto> produtoOpt = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"));
             if (produtoOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -397,7 +397,7 @@ public class ProductFunctions {
         context.getLogger().info("Deducting product stock: " + id);
 
         return functionAuthorization.executeProtectedAdmin(request, authResult -> {
-            Optional<Produto> produtoOpt = produtoRepository.findById(id);
+            Optional<Produto> produtoOpt = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"));
             if (produtoOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -451,7 +451,8 @@ public class ProductFunctions {
         context.getLogger().info("Deleting product: " + id);
 
         return functionAuthorization.executeProtectedAdmin(request, authResult -> {
-            Optional<Produto> produtoOpt = produtoRepository.findById(id);
+            Long safeId = ValidationUtils.requireNonNullId(id, "Produto");
+            Optional<Produto> produtoOpt = produtoRepository.findById(safeId);
             if (produtoOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -459,7 +460,7 @@ public class ProductFunctions {
                         .build();
             }
 
-            produtoRepository.deleteById(id);
+            produtoRepository.deleteById(safeId);
 
             return request.createResponseBuilder(HttpStatus.NO_CONTENT)
                     .build();

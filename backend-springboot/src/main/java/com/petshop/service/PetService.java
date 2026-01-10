@@ -4,7 +4,9 @@ import com.petshop.model.Pet;
 import com.petshop.model.Cliente;
 import com.petshop.repository.PetRepository;
 import com.petshop.repository.ClienteRepository;
+import com.petshop.util.ValidationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,13 +28,13 @@ public class PetService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Pet> buscarPorId(Long id) {
-        return petRepository.findById(id);
+    public Optional<Pet> buscarPorId(@NonNull Long id) {
+        return petRepository.findById(ValidationUtils.requireNonNullId(id, "Pet"));
     }
 
     @Transactional(readOnly = true)
-    public List<Pet> buscarPorCliente(Long clienteId) {
-        return petRepository.findByClienteId(clienteId);
+    public List<Pet> buscarPorCliente(@NonNull Long clienteId) {
+        return petRepository.findByClienteId(ValidationUtils.requireNonNullId(clienteId, "Cliente"));
     }
 
     @Transactional(readOnly = true)
@@ -41,8 +43,10 @@ public class PetService {
     }
 
     @Transactional
-    public Pet salvar(Pet pet, Long clienteId) {
-        Cliente cliente = clienteRepository.findById(clienteId)
+    public Pet salvar(@NonNull Pet pet, @NonNull Long clienteId) {
+        ValidationUtils.requireNonNullEntity(pet, "Pet");
+        Long safeClienteId = ValidationUtils.requireNonNullId(clienteId, "Cliente");
+        Cliente cliente = clienteRepository.findById(safeClienteId)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + clienteId));
         
         pet.setCliente(cliente);
@@ -50,7 +54,9 @@ public class PetService {
     }
 
     @Transactional
-    public Pet atualizar(Long id, Pet petAtualizado) {
+    public Pet atualizar(@NonNull Long id, @NonNull Pet petAtualizado) {
+        ValidationUtils.requireNonNullId(id, "Pet");
+        ValidationUtils.requireNonNullEntity(petAtualizado, "Pet");
         Pet pet = petRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Pet não encontrado com ID: " + id));
 
@@ -70,10 +76,11 @@ public class PetService {
     }
 
     @Transactional
-    public void deletar(Long id) {
-        if (!petRepository.existsById(id)) {
+    public void deletar(@NonNull Long id) {
+        Long safeId = ValidationUtils.requireNonNullId(id, "Pet");
+        if (!petRepository.existsById(safeId)) {
             throw new RuntimeException("Pet não encontrado com ID: " + id);
         }
-        petRepository.deleteById(id);
+        petRepository.deleteById(safeId);
     }
 }

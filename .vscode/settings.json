@@ -1,3 +1,4 @@
 {
-  "github.copilot.chat.model": "claude-sonnet-4.5"
+  "github.copilot.chat.model": "claude-sonnet-4.5",
+  "java.compile.nullAnalysis.mode": "automatic"
 }

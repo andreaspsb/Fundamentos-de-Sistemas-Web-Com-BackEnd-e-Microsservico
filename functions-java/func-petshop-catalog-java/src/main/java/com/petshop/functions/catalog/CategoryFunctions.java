@@ -7,7 +7,7 @@ import com.petshop.functions.shared.dto.CategoriaResponseDTO;
 import com.petshop.functions.shared.model.Categoria;
 import com.petshop.functions.shared.repository.CategoriaRepository;
 import com.petshop.functions.shared.security.FunctionAuthorization;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.petshop.shared.util.ValidationUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -24,7 +24,6 @@ public class CategoryFunctions {
     private final CategoriaRepository categoriaRepository;
     private final FunctionAuthorization functionAuthorization;
 
-    @Autowired
     public CategoryFunctions(
             CategoriaRepository categoriaRepository,
             FunctionAuthorization functionAuthorization) {
@@ -105,7 +104,7 @@ public class CategoryFunctions {
 
         context.getLogger().info("Getting category by ID: " + id);
 
-        Optional<Categoria> categoriaOpt = categoriaRepository.findById(id);
+        Optional<Categoria> categoriaOpt = categoriaRepository.findById(ValidationUtils.requireNonNullId(id, "Categoria"));
         
         if (categoriaOpt.isEmpty()) {
             return request.createResponseBuilder(HttpStatus.NOT_FOUND)
@@ -193,7 +192,7 @@ public class CategoryFunctions {
         context.getLogger().info("Updating category: " + id);
 
         return functionAuthorization.executeProtectedAdmin(request, authResult -> {
-            Optional<Categoria> categoriaOpt = categoriaRepository.findById(id);
+            Optional<Categoria> categoriaOpt = categoriaRepository.findById(ValidationUtils.requireNonNullId(id, "Categoria"));
             if (categoriaOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -216,7 +215,8 @@ public class CategoryFunctions {
             if (dto.getDescricao() != null) categoria.setDescricao(dto.getDescricao());
             if (dto.getAtivo() != null) categoria.setAtivo(dto.getAtivo());
 
-            categoria = categoriaRepository.save(categoria);
+            Categoria toSave = ValidationUtils.requireNonNullEntity(categoria, "Categoria");
+            categoria = ValidationUtils.requireNonNullEntity(categoriaRepository.save(toSave), "Categoria");
 
             return request.createResponseBuilder(HttpStatus.OK)
                     .header("Content-Type", "application/json")
@@ -243,7 +243,8 @@ public class CategoryFunctions {
         context.getLogger().info("Deleting category: " + id);
 
         return functionAuthorization.executeProtectedAdmin(request, authResult -> {
-            Optional<Categoria> categoriaOpt = categoriaRepository.findById(id);
+            Long safeId = ValidationUtils.requireNonNullId(id, "Categoria");
+            Optional<Categoria> categoriaOpt = categoriaRepository.findById(safeId);
             if (categoriaOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -251,7 +252,7 @@ public class CategoryFunctions {
                         .build();
             }
 
-            categoriaRepository.deleteById(id);
+            categoriaRepository.deleteById(safeId);
 
             return request.createResponseBuilder(HttpStatus.NO_CONTENT)
                     .build();

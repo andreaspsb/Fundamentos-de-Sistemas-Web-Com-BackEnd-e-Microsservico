@@ -9,7 +9,7 @@ import com.petshop.functions.shared.model.Pet;
 import com.petshop.functions.shared.repository.ClienteRepository;
 import com.petshop.functions.shared.repository.PetRepository;
 import com.petshop.functions.shared.security.FunctionAuthorization;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.petshop.shared.util.ValidationUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -28,7 +28,6 @@ public class PetFunctions {
     private final ClienteRepository clienteRepository;
     private final FunctionAuthorization functionAuthorization;
 
-    @Autowired
     public PetFunctions(
             PetRepository petRepository,
             ClienteRepository clienteRepository,
@@ -99,7 +98,7 @@ public class PetFunctions {
         context.getLogger().info("Getting pet by ID: " + id);
 
         return functionAuthorization.executeProtectedWithRoles(request, Set.of("Admin", "Cliente"), authResult -> {
-            Optional<Pet> petOpt = petRepository.findById(id);
+            Optional<Pet> petOpt = petRepository.findById(ValidationUtils.requireNonNullId(id, "Pet"));
             
             if (petOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
@@ -146,7 +145,7 @@ public class PetFunctions {
                 return functionAuthorization.createForbiddenResponse(request, "Você só pode visualizar seus próprios pets");
             }
 
-            List<Pet> pets = petRepository.findByClienteId(clienteId);
+            List<Pet> pets = petRepository.findByClienteId(ValidationUtils.requireNonNullId(clienteId, "Cliente"));
             List<PetResponseDTO> response = pets.stream()
                     .map(this::toResponseDTO)
                     .collect(Collectors.toList());
@@ -249,7 +248,7 @@ public class PetFunctions {
         context.getLogger().info("Updating pet: " + id);
 
         return functionAuthorization.executeProtectedWithRoles(request, Set.of("Admin", "Cliente"), authResult -> {
-            Optional<Pet> petOpt = petRepository.findById(id);
+            Optional<Pet> petOpt = petRepository.findById(ValidationUtils.requireNonNullId(id, "Pet"));
             if (petOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -284,11 +283,12 @@ public class PetFunctions {
 
             // Admin can change owner
             if ("Admin".equals(authResult.role()) && dto.getClienteId() != null) {
-                Optional<Cliente> clienteOpt = clienteRepository.findById(dto.getClienteId());
+                Optional<Cliente> clienteOpt = clienteRepository.findById(ValidationUtils.requireNonNullId(dto.getClienteId(), "Cliente"));
                 clienteOpt.ifPresent(pet::setCliente);
             }
 
-            pet = petRepository.save(pet);
+            Pet toSave = ValidationUtils.requireNonNullEntity(pet, "Pet");
+            pet = ValidationUtils.requireNonNullEntity(petRepository.save(toSave), "Pet");
 
             return request.createResponseBuilder(HttpStatus.OK)
                     .header("Content-Type", "application/json")
@@ -315,7 +315,8 @@ public class PetFunctions {
         context.getLogger().info("Deleting pet: " + id);
 
         return functionAuthorization.executeProtectedWithRoles(request, Set.of("Admin", "Cliente"), authResult -> {
-            Optional<Pet> petOpt = petRepository.findById(id);
+            Long validatedId = ValidationUtils.requireNonNullId(id, "Pet");
+            Optional<Pet> petOpt = petRepository.findById(validatedId);
             if (petOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -331,7 +332,7 @@ public class PetFunctions {
                 return functionAuthorization.createForbiddenResponse(request, "Você só pode excluir seus próprios pets");
             }
 
-            petRepository.deleteById(id);
+            petRepository.deleteById(validatedId);
 
             return request.createResponseBuilder(HttpStatus.NO_CONTENT)
                     .build();

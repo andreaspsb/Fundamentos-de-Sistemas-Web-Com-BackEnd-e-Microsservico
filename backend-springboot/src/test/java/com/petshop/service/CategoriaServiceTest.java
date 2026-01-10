@@ -17,6 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("null") // Suppress warnings from Mockito any() matchers
 @ExtendWith(MockitoExtension.class)
 class CategoriaServiceTest {
 

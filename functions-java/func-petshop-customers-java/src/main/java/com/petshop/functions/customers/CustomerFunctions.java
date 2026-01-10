@@ -7,7 +7,7 @@ import com.petshop.functions.shared.dto.ClienteResponseDTO;
 import com.petshop.functions.shared.model.Cliente;
 import com.petshop.functions.shared.repository.ClienteRepository;
 import com.petshop.functions.shared.security.FunctionAuthorization;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.petshop.shared.util.ValidationUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -25,7 +25,6 @@ public class CustomerFunctions {
     private final ClienteRepository clienteRepository;
     private final FunctionAuthorization functionAuthorization;
 
-    @Autowired
     public CustomerFunctions(
             ClienteRepository clienteRepository,
             FunctionAuthorization functionAuthorization) {
@@ -85,7 +84,7 @@ public class CustomerFunctions {
                 return functionAuthorization.createForbiddenResponse(request, "Você só pode visualizar seus próprios dados");
             }
 
-            Optional<Cliente> clienteOpt = clienteRepository.findById(id);
+            Optional<Cliente> clienteOpt = clienteRepository.findById(ValidationUtils.requireNonNullId(id, "Cliente"));
             
             if (clienteOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
@@ -266,7 +265,7 @@ public class CustomerFunctions {
                 return functionAuthorization.createForbiddenResponse(request, "Você só pode atualizar seus próprios dados");
             }
 
-            Optional<Cliente> clienteOpt = clienteRepository.findById(id);
+            Optional<Cliente> clienteOpt = clienteRepository.findById(ValidationUtils.requireNonNullId(id, "Cliente"));
             if (clienteOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -318,7 +317,8 @@ public class CustomerFunctions {
                 }
             }
 
-            cliente = clienteRepository.save(cliente);
+            Cliente toSave = ValidationUtils.requireNonNullEntity(cliente, "Cliente");
+            cliente = ValidationUtils.requireNonNullEntity(clienteRepository.save(toSave), "Cliente");
 
             return request.createResponseBuilder(HttpStatus.OK)
                     .header("Content-Type", "application/json")
@@ -345,7 +345,8 @@ public class CustomerFunctions {
         context.getLogger().info("Deleting customer: " + id);
 
         return functionAuthorization.executeProtectedAdmin(request, authResult -> {
-            Optional<Cliente> clienteOpt = clienteRepository.findById(id);
+            Long safeId = ValidationUtils.requireNonNullId(id, "Cliente");
+            Optional<Cliente> clienteOpt = clienteRepository.findById(safeId);
             if (clienteOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -353,7 +354,7 @@ public class CustomerFunctions {
                         .build();
             }
 
-            clienteRepository.deleteById(id);
+            clienteRepository.deleteById(safeId);
 
             return request.createResponseBuilder(HttpStatus.NO_CONTENT)
                     .build();

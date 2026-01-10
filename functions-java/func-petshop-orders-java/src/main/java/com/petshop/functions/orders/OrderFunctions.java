@@ -7,7 +7,7 @@ import com.petshop.functions.shared.model.*;
 import com.petshop.functions.shared.model.Pedido.StatusPedido;
 import com.petshop.functions.shared.repository.*;
 import com.petshop.functions.shared.security.FunctionAuthorization;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.petshop.shared.util.ValidationUtils;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -30,7 +30,6 @@ public class OrderFunctions {
     private final ProdutoRepository produtoRepository;
     private final FunctionAuthorization functionAuthorization;
 
-    @Autowired
     public OrderFunctions(
             PedidoRepository pedidoRepository,
             ItemPedidoRepository itemPedidoRepository,
@@ -104,7 +103,7 @@ public class OrderFunctions {
         context.getLogger().info("Getting order by ID: " + id);
 
         return functionAuthorization.executeProtectedWithRoles(request, Set.of("Admin", "Cliente"), authResult -> {
-            Optional<Pedido> pedidoOpt = pedidoRepository.findById(id);
+            Optional<Pedido> pedidoOpt = pedidoRepository.findById(ValidationUtils.requireNonNullId(id, "Pedido"));
             
             if (pedidoOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
@@ -227,7 +226,7 @@ public class OrderFunctions {
             List<ItemPedido> itens = new ArrayList<>();
 
             for (ItemPedidoRequestDTO itemDTO : dto.getItens()) {
-                Optional<Produto> produtoOpt = produtoRepository.findById(itemDTO.getProdutoId());
+                Optional<Produto> produtoOpt = produtoRepository.findById(ValidationUtils.requireNonNullId(itemDTO.getProdutoId(), "Produto"));
                 if (produtoOpt.isEmpty()) {
                     return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                             .header("Content-Type", "application/json")
@@ -276,7 +275,7 @@ public class OrderFunctions {
             }
 
             // Reload to get items
-            pedido = pedidoRepository.findById(pedido.getId()).orElse(pedido);
+            pedido = pedidoRepository.findById(ValidationUtils.requireNonNullId(pedido.getId(), "Pedido")).orElse(pedido);
 
             return request.createResponseBuilder(HttpStatus.CREATED)
                     .header("Content-Type", "application/json")
@@ -303,7 +302,7 @@ public class OrderFunctions {
         context.getLogger().info("Updating order status: " + id);
 
         return functionAuthorization.executeProtectedAdmin(request, authResult -> {
-            Optional<Pedido> pedidoOpt = pedidoRepository.findById(id);
+            Optional<Pedido> pedidoOpt = pedidoRepository.findById(ValidationUtils.requireNonNullId(id, "Pedido"));
             if (pedidoOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -368,7 +367,7 @@ public class OrderFunctions {
         context.getLogger().info("Cancelling order: " + id);
 
         return functionAuthorization.executeProtectedWithRoles(request, Set.of("Admin", "Cliente"), authResult -> {
-            Optional<Pedido> pedidoOpt = pedidoRepository.findById(id);
+            Optional<Pedido> pedidoOpt = pedidoRepository.findById(ValidationUtils.requireNonNullId(id, "Pedido"));
             if (pedidoOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")

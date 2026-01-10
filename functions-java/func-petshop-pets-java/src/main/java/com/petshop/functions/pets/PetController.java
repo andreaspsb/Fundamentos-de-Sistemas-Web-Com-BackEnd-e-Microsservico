@@ -4,6 +4,7 @@ import com.petshop.functions.shared.dto.*;
 import com.petshop.functions.shared.model.Pet;
 import com.petshop.functions.shared.repository.PetRepository;
 import com.petshop.functions.shared.repository.ClienteRepository;
+import com.petshop.shared.util.ValidationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -50,7 +51,7 @@ public class PetController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getPetById(@PathVariable Long id) {
-        Optional<Pet> petOpt = petRepository.findById(id);
+        Optional<Pet> petOpt = petRepository.findById(ValidationUtils.requireNonNullId(id, "Pet"));
         if (petOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Pet not found"));
@@ -75,7 +76,7 @@ public class PetController {
                         .body(Map.of("error", "Name and clienteId are required"));
             }
 
-            Optional<com.petshop.functions.shared.model.Cliente> clienteOpt = clienteRepository.findById(request.getClienteId());
+            Optional<com.petshop.functions.shared.model.Cliente> clienteOpt = clienteRepository.findById(ValidationUtils.requireNonNullId(request.getClienteId(), "Cliente"));
             if (clienteOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Cliente not found"));
@@ -104,7 +105,7 @@ public class PetController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePet(@PathVariable Long id, @RequestBody PetRequestDTO request) {
         try {
-            Optional<Pet> petOpt = petRepository.findById(id);
+            Optional<Pet> petOpt = petRepository.findById(ValidationUtils.requireNonNullId(id, "Pet"));
             if (petOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Pet not found"));
@@ -121,7 +122,7 @@ public class PetController {
             if (request.getCastrado() != null) pet.setCastrado(request.getCastrado());
             if (request.getObservacoes() != null) pet.setObservacoes(request.getObservacoes());
 
-            pet = petRepository.save(pet);
+            pet = petRepository.save(ValidationUtils.requireNonNullEntity(pet, "Pet"));
             return ResponseEntity.ok(toResponseDTO(pet));
 
         } catch (Exception e) {
@@ -133,12 +134,13 @@ public class PetController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deletePet(@PathVariable Long id) {
         try {
-            if (!petRepository.existsById(id)) {
+            Long safeId = ValidationUtils.requireNonNullId(id, "Pet");
+            if (!petRepository.existsById(safeId)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Pet not found"));
             }
             
-            petRepository.deleteById(id);
+            petRepository.deleteById(safeId);
             return ResponseEntity.ok(Map.of("message", "Pet deleted successfully"));
 
         } catch (Exception e) {

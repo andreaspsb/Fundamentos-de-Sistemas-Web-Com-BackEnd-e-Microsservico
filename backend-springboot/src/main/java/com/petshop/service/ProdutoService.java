@@ -4,7 +4,9 @@ import com.petshop.model.Produto;
 import com.petshop.model.Categoria;
 import com.petshop.repository.ProdutoRepository;
 import com.petshop.repository.CategoriaRepository;
+import com.petshop.util.ValidationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,18 +33,18 @@ public class ProdutoService {
     }
 
     @Transactional(readOnly = true)
-    public List<Produto> listarPorCategoria(Long categoriaId) {
-        return produtoRepository.findByCategoriaId(categoriaId);
+    public List<Produto> listarPorCategoria(@NonNull Long categoriaId) {
+        return produtoRepository.findByCategoriaId(ValidationUtils.requireNonNullId(categoriaId, "Categoria"));
     }
 
     @Transactional(readOnly = true)
-    public List<Produto> listarDisponiveisPorCategoria(Long categoriaId) {
-        return produtoRepository.findProdutosDisponiveisPorCategoria(categoriaId);
+    public List<Produto> listarDisponiveisPorCategoria(@NonNull Long categoriaId) {
+        return produtoRepository.findProdutosDisponiveisPorCategoria(ValidationUtils.requireNonNullId(categoriaId, "Categoria"));
     }
 
     @Transactional(readOnly = true)
-    public Optional<Produto> buscarPorId(Long id) {
-        return produtoRepository.findById(id);
+    public Optional<Produto> buscarPorId(@NonNull Long id) {
+        return produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"));
     }
 
     @Transactional(readOnly = true)
@@ -56,8 +58,10 @@ public class ProdutoService {
     }
 
     @Transactional
-    public Produto salvar(Produto produto, Long categoriaId) {
-        Categoria categoria = categoriaRepository.findById(categoriaId)
+    public Produto salvar(@NonNull Produto produto, @NonNull Long categoriaId) {
+        ValidationUtils.requireNonNullEntity(produto, "Produto");
+        Long safeCategoriaId = ValidationUtils.requireNonNullId(categoriaId, "Categoria");
+        Categoria categoria = categoriaRepository.findById(safeCategoriaId)
                 .orElseThrow(() -> new RuntimeException("Categoria não encontrada com ID: " + categoriaId));
         
         produto.setCategoria(categoria);
@@ -65,7 +69,9 @@ public class ProdutoService {
     }
 
     @Transactional
-    public Produto atualizar(Long id, Produto produtoAtualizado) {
+    public Produto atualizar(@NonNull Long id, @NonNull Produto produtoAtualizado) {
+        ValidationUtils.requireNonNullId(id, "Produto");
+        ValidationUtils.requireNonNullEntity(produtoAtualizado, "Produto");
         Produto produto = produtoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado com ID: " + id));
 
@@ -80,8 +86,8 @@ public class ProdutoService {
     }
 
     @Transactional
-    public Produto atualizarEstoque(Long id, Integer quantidade) {
-        Produto produto = produtoRepository.findById(id)
+    public Produto atualizarEstoque(@NonNull Long id, @NonNull Integer quantidade) {
+        Produto produto = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"))
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado com ID: " + id));
         
         produto.setQuantidadeEstoque(quantidade);
@@ -89,8 +95,8 @@ public class ProdutoService {
     }
 
     @Transactional
-    public Produto adicionarEstoque(Long id, Integer quantidade) {
-        Produto produto = produtoRepository.findById(id)
+    public Produto adicionarEstoque(@NonNull Long id, @NonNull Integer quantidade) {
+        Produto produto = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"))
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado com ID: " + id));
         
         produto.adicionarEstoque(quantidade);
@@ -98,8 +104,8 @@ public class ProdutoService {
     }
 
     @Transactional
-    public Produto reduzirEstoque(Long id, Integer quantidade) {
-        Produto produto = produtoRepository.findById(id)
+    public Produto reduzirEstoque(@NonNull Long id, @NonNull Integer quantidade) {
+        Produto produto = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"))
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado com ID: " + id));
         
         if (!produto.temEstoque(quantidade)) {
@@ -111,26 +117,27 @@ public class ProdutoService {
     }
 
     @Transactional
-    public void ativar(Long id) {
-        Produto produto = produtoRepository.findById(id)
+    public void ativar(@NonNull Long id) {
+        Produto produto = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"))
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado com ID: " + id));
         produto.setAtivo(true);
         produtoRepository.save(produto);
     }
 
     @Transactional
-    public void desativar(Long id) {
-        Produto produto = produtoRepository.findById(id)
+    public void desativar(@NonNull Long id) {
+        Produto produto = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"))
                 .orElseThrow(() -> new RuntimeException("Produto não encontrado com ID: " + id));
         produto.setAtivo(false);
         produtoRepository.save(produto);
     }
 
     @Transactional
-    public void deletar(Long id) {
-        if (!produtoRepository.existsById(id)) {
+    public void deletar(@NonNull Long id) {
+        Long safeId = ValidationUtils.requireNonNullId(id, "Produto");
+        if (!produtoRepository.existsById(safeId)) {
             throw new RuntimeException("Produto não encontrado com ID: " + id);
         }
-        produtoRepository.deleteById(id);
+        produtoRepository.deleteById(safeId);
     }
 }

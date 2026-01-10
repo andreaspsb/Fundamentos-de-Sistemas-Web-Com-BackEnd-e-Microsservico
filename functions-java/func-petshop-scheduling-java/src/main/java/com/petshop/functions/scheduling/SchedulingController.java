@@ -4,6 +4,7 @@ import com.petshop.functions.shared.dto.AgendamentoRequestDTO;
 import com.petshop.functions.shared.dto.AgendamentoResponseDTO;
 import com.petshop.functions.shared.dto.ServicoSimpleDTO;
 import com.petshop.functions.shared.model.Agendamento;
+import com.petshop.shared.util.ValidationUtils;
 import com.petshop.functions.shared.model.Agendamento.StatusAgendamento;
 import com.petshop.functions.shared.model.Cliente;
 import com.petshop.functions.shared.model.Pet;
@@ -90,7 +91,7 @@ public class SchedulingController {
 
     @GetMapping("/agendamentos/{id}")
     public ResponseEntity<?> getAgendamentoById(@PathVariable Long id) {
-        Optional<Agendamento> agendamento = agendamentoRepository.findById(id);
+        Optional<Agendamento> agendamento = agendamentoRepository.findById(ValidationUtils.requireNonNullId(id, "Agendamento"));
         
         if (agendamento.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -103,14 +104,14 @@ public class SchedulingController {
     @PostMapping("/agendamentos")
     public ResponseEntity<?> createAgendamento(@Valid @RequestBody AgendamentoRequestDTO request) {
         // Validar cliente
-        Optional<Cliente> cliente = clienteRepository.findById(request.getClienteId());
+        Optional<Cliente> cliente = clienteRepository.findById(ValidationUtils.requireNonNullId(request.getClienteId(), "Cliente"));
         if (cliente.isEmpty()) {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", "Cliente não encontrado"));
         }
         
         // Validar pet
-        Optional<Pet> pet = petRepository.findById(request.getPetId());
+        Optional<Pet> pet = petRepository.findById(ValidationUtils.requireNonNullId(request.getPetId(), "Pet"));
         if (pet.isEmpty()) {
             return ResponseEntity.badRequest()
                 .body(Map.of("error", "Pet não encontrado"));
@@ -147,7 +148,7 @@ public class SchedulingController {
         agendamento.setPet(pet.get());
         agendamento.setServicos(servicos);
         
-        Agendamento saved = agendamentoRepository.save(agendamento);
+        Agendamento saved = ValidationUtils.requireNonNullEntity(agendamentoRepository.save(agendamento), "Agendamento");
         
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(toAgendamentoResponse(saved));
@@ -156,7 +157,7 @@ public class SchedulingController {
     @PutMapping("/agendamentos/{id}")
     public ResponseEntity<?> updateAgendamento(@PathVariable Long id,
                                                @Valid @RequestBody AgendamentoRequestDTO request) {
-        Optional<Agendamento> existingOpt = agendamentoRepository.findById(id);
+        Optional<Agendamento> existingOpt = agendamentoRepository.findById(ValidationUtils.requireNonNullId(id, "Agendamento"));
         
         if (existingOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -167,7 +168,7 @@ public class SchedulingController {
         
         // Validar cliente se fornecido
         if (request.getClienteId() != null) {
-            Optional<Cliente> cliente = clienteRepository.findById(request.getClienteId());
+            Optional<Cliente> cliente = clienteRepository.findById(ValidationUtils.requireNonNullId(request.getClienteId(), "Cliente"));
             if (cliente.isEmpty()) {
                 return ResponseEntity.badRequest()
                     .body(Map.of("error", "Cliente não encontrado"));
@@ -177,7 +178,7 @@ public class SchedulingController {
         
         // Validar pet se fornecido
         if (request.getPetId() != null) {
-            Optional<Pet> pet = petRepository.findById(request.getPetId());
+            Optional<Pet> pet = petRepository.findById(ValidationUtils.requireNonNullId(request.getPetId(), "Pet"));
             if (pet.isEmpty()) {
                 return ResponseEntity.badRequest()
                     .body(Map.of("error", "Pet não encontrado"));
@@ -219,7 +220,9 @@ public class SchedulingController {
             agendamento.setObservacoes(request.getObservacoes());
         }
         
-        Agendamento updated = agendamentoRepository.save(agendamento);
+        Agendamento updated = ValidationUtils.requireNonNullEntity(
+            agendamentoRepository.save(ValidationUtils.requireNonNullEntity(agendamento, "Agendamento")), 
+            "Agendamento");
         
         return ResponseEntity.ok(toAgendamentoResponse(updated));
     }
@@ -227,7 +230,7 @@ public class SchedulingController {
     @PatchMapping("/agendamentos/{id}/status")
     public ResponseEntity<?> updateAgendamentoStatus(@PathVariable Long id,
                                                      @RequestBody Map<String, String> body) {
-        Optional<Agendamento> existingOpt = agendamentoRepository.findById(id);
+        Optional<Agendamento> existingOpt = agendamentoRepository.findById(ValidationUtils.requireNonNullId(id, "Agendamento"));
         
         if (existingOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -251,21 +254,21 @@ public class SchedulingController {
         Agendamento agendamento = existingOpt.get();
         agendamento.setStatus(newStatus);
         
-        Agendamento updated = agendamentoRepository.save(agendamento);
+        Agendamento updated = ValidationUtils.requireNonNullEntity(agendamentoRepository.save(agendamento), "Agendamento");
         
         return ResponseEntity.ok(toAgendamentoResponse(updated));
     }
 
     @DeleteMapping("/agendamentos/{id}")
     public ResponseEntity<?> deleteAgendamento(@PathVariable Long id) {
-        Optional<Agendamento> agendamento = agendamentoRepository.findById(id);
+        Optional<Agendamento> agendamento = agendamentoRepository.findById(ValidationUtils.requireNonNullId(id, "Agendamento"));
         
         if (agendamento.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(Map.of("error", "Agendamento não encontrado"));
         }
         
-        agendamentoRepository.delete(agendamento.get());
+        agendamentoRepository.delete(ValidationUtils.requireNonNullEntity(agendamento.get(), "Agendamento"));
         
         return ResponseEntity.ok(Map.of("message", "Agendamento excluído com sucesso"));
     }

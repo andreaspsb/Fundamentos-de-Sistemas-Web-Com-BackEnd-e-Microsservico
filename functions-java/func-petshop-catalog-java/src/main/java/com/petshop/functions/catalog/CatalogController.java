@@ -7,6 +7,7 @@ import com.petshop.functions.shared.model.Servico;
 import com.petshop.functions.shared.repository.CategoriaRepository;
 import com.petshop.functions.shared.repository.ProdutoRepository;
 import com.petshop.functions.shared.repository.ServicoRepository;
+import com.petshop.shared.util.ValidationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -74,7 +75,8 @@ public class CatalogController {
 
     @GetMapping("/api/categories/{id}")
     public ResponseEntity<?> getCategoryById(@PathVariable Long id) {
-        Optional<Categoria> categoriaOpt = categoriaRepository.findById(id);
+        Long validatedId = ValidationUtils.requireNonNullId(id, "Categoria");
+        Optional<Categoria> categoriaOpt = categoriaRepository.findById(validatedId);
         if (categoriaOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Category not found"));
@@ -99,7 +101,8 @@ public class CatalogController {
     @PutMapping("/api/categories/{id}")
     public ResponseEntity<?> updateCategory(@PathVariable Long id, @RequestBody CategoriaRequestDTO request) {
         try {
-            Optional<Categoria> categoriaOpt = categoriaRepository.findById(id);
+            Long validatedId = ValidationUtils.requireNonNullId(id, "Categoria");
+            Optional<Categoria> categoriaOpt = categoriaRepository.findById(validatedId);
             if (categoriaOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Category not found"));
@@ -107,7 +110,8 @@ public class CatalogController {
             Categoria categoria = categoriaOpt.get();
             if (request.getNome() != null) categoria.setNome(request.getNome());
             if (request.getDescricao() != null) categoria.setDescricao(request.getDescricao());
-            categoria = categoriaRepository.save(categoria);
+            Categoria toSave = ValidationUtils.requireNonNullEntity(categoria, "Categoria");
+            categoria = ValidationUtils.requireNonNullEntity(categoriaRepository.save(toSave), "Categoria");
             return ResponseEntity.ok(toCategoriaResponseDTO(categoria));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -118,11 +122,12 @@ public class CatalogController {
     @DeleteMapping("/api/categories/{id}")
     public ResponseEntity<?> deleteCategory(@PathVariable Long id) {
         try {
-            if (!categoriaRepository.existsById(id)) {
+            Long validatedId = ValidationUtils.requireNonNullId(id, "Categoria");
+            if (!categoriaRepository.existsById(validatedId)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Category not found"));
             }
-            categoriaRepository.deleteById(id);
+            categoriaRepository.deleteById(validatedId);
             return ResponseEntity.ok(Map.of("message", "Category deleted successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -143,7 +148,8 @@ public class CatalogController {
 
     @GetMapping("/api/products/{id}")
     public ResponseEntity<?> getProductById(@PathVariable Long id) {
-        Optional<Produto> produtoOpt = produtoRepository.findById(id);
+        Long validatedId = ValidationUtils.requireNonNullId(id, "Produto");
+        Optional<Produto> produtoOpt = produtoRepository.findById(validatedId);
         if (produtoOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Product not found"));
@@ -163,7 +169,8 @@ public class CatalogController {
     @PostMapping("/api/products")
     public ResponseEntity<?> createProduct(@RequestBody ProdutoRequestDTO request) {
         try {
-            Optional<Categoria> categoriaOpt = categoriaRepository.findById(request.getCategoriaId());
+            Long categoriaId = ValidationUtils.requireNonNullId(request.getCategoriaId(), "Categoria");
+            Optional<Categoria> categoriaOpt = categoriaRepository.findById(categoriaId);
             if (categoriaOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Category not found"));
@@ -177,7 +184,8 @@ public class CatalogController {
             produto.setCategoria(categoriaOpt.get());
             produto.setUrlImagem(request.getUrlImagem());
             produto.setAtivo(request.getAtivo() != null ? request.getAtivo() : true);
-            produto = produtoRepository.save(produto);
+            Produto toSave = ValidationUtils.requireNonNullEntity(produto, "Produto");
+            produto = ValidationUtils.requireNonNullEntity(produtoRepository.save(toSave), "Produto");
             return ResponseEntity.status(HttpStatus.CREATED).body(toProdutoResponseDTO(produto));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -188,7 +196,8 @@ public class CatalogController {
     @PutMapping("/api/products/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProdutoRequestDTO request) {
         try {
-            Optional<Produto> produtoOpt = produtoRepository.findById(id);
+            Long validatedId = ValidationUtils.requireNonNullId(id, "Produto");
+            Optional<Produto> produtoOpt = produtoRepository.findById(validatedId);
             if (produtoOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Product not found"));
@@ -199,12 +208,14 @@ public class CatalogController {
             if (request.getPreco() != null) produto.setPreco(request.getPreco());
             if (request.getQuantidadeEstoque() != null) produto.setQuantidadeEstoque(request.getQuantidadeEstoque());
             if (request.getCategoriaId() != null) {
-                Optional<Categoria> categoriaOpt = categoriaRepository.findById(request.getCategoriaId());
+                Long catId = ValidationUtils.requireNonNullId(request.getCategoriaId(), "Categoria");
+                Optional<Categoria> categoriaOpt = categoriaRepository.findById(catId);
                 categoriaOpt.ifPresent(produto::setCategoria);
             }
             if (request.getUrlImagem() != null) produto.setUrlImagem(request.getUrlImagem());
             if (request.getAtivo() != null) produto.setAtivo(request.getAtivo());
-            produto = produtoRepository.save(produto);
+            Produto toSave = ValidationUtils.requireNonNullEntity(produto, "Produto");
+            produto = ValidationUtils.requireNonNullEntity(produtoRepository.save(toSave), "Produto");
             return ResponseEntity.ok(toProdutoResponseDTO(produto));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -215,11 +226,12 @@ public class CatalogController {
     @DeleteMapping("/api/products/{id}")
     public ResponseEntity<?> deleteProduct(@PathVariable Long id) {
         try {
-            if (!produtoRepository.existsById(id)) {
+            Long validatedId = ValidationUtils.requireNonNullId(id, "Produto");
+            if (!produtoRepository.existsById(validatedId)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Product not found"));
             }
-            produtoRepository.deleteById(id);
+            produtoRepository.deleteById(validatedId);
             return ResponseEntity.ok(Map.of("message", "Product deleted successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -240,7 +252,8 @@ public class CatalogController {
 
     @GetMapping("/api/services/{id}")
     public ResponseEntity<?> getServiceById(@PathVariable Long id) {
-        Optional<Servico> servicoOpt = servicoRepository.findById(id);
+        Long validatedId = ValidationUtils.requireNonNullId(id, "Serviço");
+        Optional<Servico> servicoOpt = servicoRepository.findById(validatedId);
         if (servicoOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Service not found"));
@@ -267,7 +280,8 @@ public class CatalogController {
     @PutMapping("/api/services/{id}")
     public ResponseEntity<?> updateService(@PathVariable Long id, @RequestBody ServicoRequestDTO request) {
         try {
-            Optional<Servico> servicoOpt = servicoRepository.findById(id);
+            Long validatedId = ValidationUtils.requireNonNullId(id, "Serviço");
+            Optional<Servico> servicoOpt = servicoRepository.findById(validatedId);
             if (servicoOpt.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Service not found"));
@@ -277,7 +291,8 @@ public class CatalogController {
             if (request.getDescricao() != null) servico.setDescricao(request.getDescricao());
             if (request.getPreco() != null) servico.setPreco(request.getPreco());
             if (request.getAtivo() != null) servico.setAtivo(request.getAtivo());
-            servico = servicoRepository.save(servico);
+            Servico toSave = ValidationUtils.requireNonNullEntity(servico, "Serviço");
+            servico = ValidationUtils.requireNonNullEntity(servicoRepository.save(toSave), "Serviço");
             return ResponseEntity.ok(toServicoResponseDTO(servico));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -288,11 +303,12 @@ public class CatalogController {
     @DeleteMapping("/api/services/{id}")
     public ResponseEntity<?> deleteService(@PathVariable Long id) {
         try {
-            if (!servicoRepository.existsById(id)) {
+            Long validatedId = ValidationUtils.requireNonNullId(id, "Serviço");
+            if (!servicoRepository.existsById(validatedId)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(Map.of("error", "Service not found"));
             }
-            servicoRepository.deleteById(id);
+            servicoRepository.deleteById(validatedId);
             return ResponseEntity.ok(Map.of("message", "Service deleted successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

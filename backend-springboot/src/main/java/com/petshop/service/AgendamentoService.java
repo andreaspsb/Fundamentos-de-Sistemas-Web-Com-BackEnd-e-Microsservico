@@ -9,7 +9,9 @@ import com.petshop.repository.AgendamentoRepository;
 import com.petshop.repository.ClienteRepository;
 import com.petshop.repository.PetRepository;
 import com.petshop.repository.ServicoRepository;
+import com.petshop.util.ValidationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,13 +41,13 @@ public class AgendamentoService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Agendamento> buscarPorId(Long id) {
-        return agendamentoRepository.findById(id);
+    public Optional<Agendamento> buscarPorId(@NonNull Long id) {
+        return agendamentoRepository.findById(ValidationUtils.requireNonNullId(id, "Agendamento"));
     }
 
     @Transactional(readOnly = true)
-    public List<Agendamento> buscarPorCliente(Long clienteId) {
-        return agendamentoRepository.findByClienteId(clienteId);
+    public List<Agendamento> buscarPorCliente(@NonNull Long clienteId) {
+        return agendamentoRepository.findByClienteId(ValidationUtils.requireNonNullId(clienteId, "Cliente"));
     }
 
     @Transactional(readOnly = true)
@@ -64,7 +66,11 @@ public class AgendamentoService {
     }
 
     @Transactional
-    public Agendamento salvar(Agendamento agendamento, Long clienteId, Long petId, List<Long> servicoIds) {
+    public Agendamento salvar(@NonNull Agendamento agendamento, @NonNull Long clienteId, @NonNull Long petId, @NonNull List<Long> servicoIds) {
+        ValidationUtils.requireNonNullEntity(agendamento, "Agendamento");
+        Long safeClienteId = ValidationUtils.requireNonNullId(clienteId, "Cliente");
+        Long safePetId = ValidationUtils.requireNonNullId(petId, "Pet");
+        
         // Validar disponibilidade de horário
         if (agendamentoRepository.existsByDataAgendamentoAndHorario(
                 agendamento.getDataAgendamento(), agendamento.getHorario())) {
@@ -72,11 +78,11 @@ public class AgendamentoService {
         }
 
         // Buscar cliente
-        Cliente cliente = clienteRepository.findById(clienteId)
+        Cliente cliente = clienteRepository.findById(safeClienteId)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + clienteId));
         
         // Buscar pet
-        Pet pet = petRepository.findById(petId)
+        Pet pet = petRepository.findById(safePetId)
                 .orElseThrow(() -> new RuntimeException("Pet não encontrado com ID: " + petId));
 
         // Validar se o pet pertence ao cliente
@@ -115,8 +121,8 @@ public class AgendamentoService {
     }
 
     @Transactional
-    public Agendamento atualizarStatus(Long id, StatusAgendamento novoStatus) {
-        Agendamento agendamento = agendamentoRepository.findById(id)
+    public Agendamento atualizarStatus(@NonNull Long id, @NonNull StatusAgendamento novoStatus) {
+        Agendamento agendamento = agendamentoRepository.findById(ValidationUtils.requireNonNullId(id, "Agendamento"))
                 .orElseThrow(() -> new RuntimeException("Agendamento não encontrado com ID: " + id));
         
         agendamento.setStatus(novoStatus);
@@ -124,8 +130,8 @@ public class AgendamentoService {
     }
 
     @Transactional
-    public void cancelar(Long id) {
-        Agendamento agendamento = agendamentoRepository.findById(id)
+    public void cancelar(@NonNull Long id) {
+        Agendamento agendamento = agendamentoRepository.findById(ValidationUtils.requireNonNullId(id, "Agendamento"))
                 .orElseThrow(() -> new RuntimeException("Agendamento não encontrado com ID: " + id));
         
         agendamento.setStatus(StatusAgendamento.CANCELADO);
@@ -133,11 +139,12 @@ public class AgendamentoService {
     }
 
     @Transactional
-    public void deletar(Long id) {
-        if (!agendamentoRepository.existsById(id)) {
+    public void deletar(@NonNull Long id) {
+        Long safeId = ValidationUtils.requireNonNullId(id, "Agendamento");
+        if (!agendamentoRepository.existsById(safeId)) {
             throw new RuntimeException("Agendamento não encontrado com ID: " + id);
         }
-        agendamentoRepository.deleteById(id);
+        agendamentoRepository.deleteById(safeId);
     }
 
     @Transactional(readOnly = true)

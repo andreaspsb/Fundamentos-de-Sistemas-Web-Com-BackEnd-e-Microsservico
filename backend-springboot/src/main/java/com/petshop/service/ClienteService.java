@@ -2,7 +2,9 @@ package com.petshop.service;
 
 import com.petshop.model.Cliente;
 import com.petshop.repository.ClienteRepository;
+import com.petshop.util.ValidationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,8 +23,8 @@ public class ClienteService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Cliente> buscarPorId(Long id) {
-        return clienteRepository.findById(id);
+    public Optional<Cliente> buscarPorId(@NonNull Long id) {
+        return clienteRepository.findById(ValidationUtils.requireNonNullId(id, "Cliente"));
     }
 
     @Transactional(readOnly = true)
@@ -36,7 +38,8 @@ public class ClienteService {
     }
 
     @Transactional
-    public Cliente salvar(Cliente cliente) {
+    public Cliente salvar(@NonNull Cliente cliente) {
+        ValidationUtils.requireNonNullEntity(cliente, "Cliente");
         // Limpar formatação antes de salvar
         cliente.setCpf(limparCpf(cliente.getCpf()));
         cliente.setTelefone(limparTelefone(cliente.getTelefone()));
@@ -46,7 +49,9 @@ public class ClienteService {
     }
 
     @Transactional
-    public Cliente atualizar(Long id, Cliente clienteAtualizado) {
+    public Cliente atualizar(@NonNull Long id, @NonNull Cliente clienteAtualizado) {
+        ValidationUtils.requireNonNullId(id, "Cliente");
+        ValidationUtils.requireNonNullEntity(clienteAtualizado, "Cliente");
         Cliente cliente = clienteRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + id));
 
@@ -81,11 +86,12 @@ public class ClienteService {
     }
 
     @Transactional
-    public void deletar(Long id) {
-        if (!clienteRepository.existsById(id)) {
+    public void deletar(@NonNull Long id) {
+        Long safeId = ValidationUtils.requireNonNullId(id, "Cliente");
+        if (!clienteRepository.existsById(safeId)) {
             throw new RuntimeException("Cliente não encontrado com ID: " + id);
         }
-        clienteRepository.deleteById(id);
+        clienteRepository.deleteById(safeId);
     }
 
     private void validarCliente(Cliente cliente) {

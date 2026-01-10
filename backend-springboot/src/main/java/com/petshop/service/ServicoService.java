@@ -2,7 +2,9 @@ package com.petshop.service;
 
 import com.petshop.model.Servico;
 import com.petshop.repository.ServicoRepository;
+import com.petshop.util.ValidationUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,8 +28,8 @@ public class ServicoService {
     }
 
     @Transactional(readOnly = true)
-    public Optional<Servico> buscarPorId(Long id) {
-        return servicoRepository.findById(id);
+    public Optional<Servico> buscarPorId(@NonNull Long id) {
+        return servicoRepository.findById(ValidationUtils.requireNonNullId(id, "Serviço"));
     }
 
     @Transactional(readOnly = true)
@@ -36,7 +38,8 @@ public class ServicoService {
     }
 
     @Transactional
-    public Servico salvar(Servico servico) {
+    public Servico salvar(@NonNull Servico servico) {
+        ValidationUtils.requireNonNullEntity(servico, "Serviço");
         if (servicoRepository.existsByNome(servico.getNome())) {
             throw new RuntimeException("Já existe um serviço com este nome");
         }
@@ -44,7 +47,9 @@ public class ServicoService {
     }
 
     @Transactional
-    public Servico atualizar(Long id, Servico servicoAtualizado) {
+    public Servico atualizar(@NonNull Long id, @NonNull Servico servicoAtualizado) {
+        ValidationUtils.requireNonNullId(id, "Serviço");
+        ValidationUtils.requireNonNullEntity(servicoAtualizado, "Serviço");
         Servico servico = servicoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Serviço não encontrado com ID: " + id));
 
@@ -63,26 +68,27 @@ public class ServicoService {
     }
 
     @Transactional
-    public void ativar(Long id) {
-        Servico servico = servicoRepository.findById(id)
+    public void ativar(@NonNull Long id) {
+        Servico servico = servicoRepository.findById(ValidationUtils.requireNonNullId(id, "Serviço"))
                 .orElseThrow(() -> new RuntimeException("Serviço não encontrado com ID: " + id));
         servico.setAtivo(true);
         servicoRepository.save(servico);
     }
 
     @Transactional
-    public void desativar(Long id) {
-        Servico servico = servicoRepository.findById(id)
+    public void desativar(@NonNull Long id) {
+        Servico servico = servicoRepository.findById(ValidationUtils.requireNonNullId(id, "Serviço"))
                 .orElseThrow(() -> new RuntimeException("Serviço não encontrado com ID: " + id));
         servico.setAtivo(false);
         servicoRepository.save(servico);
     }
 
     @Transactional
-    public void deletar(Long id) {
-        if (!servicoRepository.existsById(id)) {
+    public void deletar(@NonNull Long id) {
+        Long safeId = ValidationUtils.requireNonNullId(id, "Serviço");
+        if (!servicoRepository.existsById(safeId)) {
             throw new RuntimeException("Serviço não encontrado com ID: " + id);
         }
-        servicoRepository.deleteById(id);
+        servicoRepository.deleteById(safeId);
     }
 }

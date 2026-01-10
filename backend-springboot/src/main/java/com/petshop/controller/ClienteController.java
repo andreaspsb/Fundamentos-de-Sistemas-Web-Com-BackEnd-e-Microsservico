@@ -4,6 +4,7 @@ import com.petshop.dto.ClienteRequestDTO;
 import com.petshop.dto.ClienteResponseDTO;
 import com.petshop.model.Cliente;
 import com.petshop.service.ClienteService;
+import com.petshop.util.ValidationUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -35,7 +36,7 @@ public class ClienteController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ClienteResponseDTO> buscarPorId(@PathVariable Long id) {
-        return clienteService.buscarPorId(id)
+        return clienteService.buscarPorId(ValidationUtils.requireNonNullId(id, "Cliente"))
                 .map(cliente -> ResponseEntity.ok(toResponseDTO(cliente)))
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -50,7 +51,7 @@ public class ClienteController {
     @PostMapping
     @Operation(summary = "Criar novo cliente", description = "Cadastra um novo cliente no sistema")
     public ResponseEntity<ClienteResponseDTO> criar(@Valid @RequestBody ClienteRequestDTO dto) {
-        Cliente cliente = toEntity(dto);
+        Cliente cliente = ValidationUtils.requireNonNullEntity(toEntity(dto), "Cliente");
         Cliente clienteSalvo = clienteService.salvar(cliente);
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponseDTO(clienteSalvo));
     }
@@ -59,14 +60,14 @@ public class ClienteController {
     public ResponseEntity<ClienteResponseDTO> atualizar(
             @PathVariable Long id,
             @Valid @RequestBody ClienteRequestDTO dto) {
-        Cliente cliente = toEntity(dto);
-        Cliente clienteAtualizado = clienteService.atualizar(id, cliente);
+        Cliente cliente = ValidationUtils.requireNonNullEntity(toEntity(dto), "Cliente");
+        Cliente clienteAtualizado = clienteService.atualizar(ValidationUtils.requireNonNullId(id, "Cliente"), cliente);
         return ResponseEntity.ok(toResponseDTO(clienteAtualizado));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletar(@PathVariable Long id) {
-        clienteService.deletar(id);
+        clienteService.deletar(ValidationUtils.requireNonNullId(id, "Cliente"));
         return ResponseEntity.noContent().build();
     }
 

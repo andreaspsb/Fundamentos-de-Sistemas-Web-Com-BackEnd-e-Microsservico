@@ -15,7 +15,7 @@ import com.petshop.functions.shared.repository.ClienteRepository;
 import com.petshop.functions.shared.repository.PetRepository;
 import com.petshop.functions.shared.repository.ServicoRepository;
 import com.petshop.functions.shared.security.FunctionAuthorization;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.petshop.shared.util.ValidationUtils;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -38,7 +38,6 @@ public class SchedulingFunctions {
     private final ServicoRepository servicoRepository;
     private final FunctionAuthorization functionAuthorization;
 
-    @Autowired
     public SchedulingFunctions(
             AgendamentoRepository agendamentoRepository,
             ClienteRepository clienteRepository,
@@ -112,7 +111,7 @@ public class SchedulingFunctions {
         context.getLogger().info("Getting appointment by ID: " + id);
 
         return functionAuthorization.executeProtectedWithRoles(request, Set.of("Admin", "Cliente"), authResult -> {
-            Optional<Agendamento> agendamentoOpt = agendamentoRepository.findById(id);
+            Optional<Agendamento> agendamentoOpt = agendamentoRepository.findById(ValidationUtils.requireNonNullId(id, "Agendamento"));
             
             if (agendamentoOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
@@ -305,7 +304,7 @@ public class SchedulingFunctions {
                         .build();
             }
 
-            Optional<Pet> petOpt = petRepository.findById(dto.getPetId());
+            Optional<Pet> petOpt = petRepository.findById(ValidationUtils.requireNonNullId(dto.getPetId(), "Pet"));
             if (petOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -327,7 +326,7 @@ public class SchedulingFunctions {
             List<Servico> servicos = new ArrayList<>();
             double valorTotal = 0.0;
             for (Long servicoId : dto.getServicoIds()) {
-                Optional<Servico> servicoOpt = servicoRepository.findById(servicoId);
+                Optional<Servico> servicoOpt = servicoRepository.findById(ValidationUtils.requireNonNullId(servicoId, "Serviço"));
                 if (servicoOpt.isEmpty()) {
                     return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                             .header("Content-Type", "application/json")
@@ -387,7 +386,7 @@ public class SchedulingFunctions {
         context.getLogger().info("Updating appointment: " + id);
 
         return functionAuthorization.executeProtectedWithRoles(request, Set.of("Admin", "Cliente"), authResult -> {
-            Optional<Agendamento> agendamentoOpt = agendamentoRepository.findById(id);
+            Optional<Agendamento> agendamentoOpt = agendamentoRepository.findById(ValidationUtils.requireNonNullId(id, "Agendamento"));
             if (agendamentoOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -420,7 +419,8 @@ public class SchedulingFunctions {
             if (dto.getPortePet() != null) agendamento.setPortePet(dto.getPortePet());
             if (dto.getObservacoes() != null) agendamento.setObservacoes(dto.getObservacoes());
 
-            agendamento = agendamentoRepository.save(agendamento);
+            Agendamento toSave = ValidationUtils.requireNonNullEntity(agendamento, "Agendamento");
+            agendamento = ValidationUtils.requireNonNullEntity(agendamentoRepository.save(toSave), "Agendamento");
 
             return request.createResponseBuilder(HttpStatus.OK)
                     .header("Content-Type", "application/json")
@@ -447,7 +447,7 @@ public class SchedulingFunctions {
         context.getLogger().info("Updating appointment status: " + id);
 
         return functionAuthorization.executeProtectedAdmin(request, authResult -> {
-            Optional<Agendamento> agendamentoOpt = agendamentoRepository.findById(id);
+            Optional<Agendamento> agendamentoOpt = agendamentoRepository.findById(ValidationUtils.requireNonNullId(id, "Agendamento"));
             if (agendamentoOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -500,7 +500,8 @@ public class SchedulingFunctions {
         context.getLogger().info("Deleting appointment: " + id);
 
         return functionAuthorization.executeProtectedWithRoles(request, Set.of("Admin", "Cliente"), authResult -> {
-            Optional<Agendamento> agendamentoOpt = agendamentoRepository.findById(id);
+            Long safeId = ValidationUtils.requireNonNullId(id, "Agendamento");
+            Optional<Agendamento> agendamentoOpt = agendamentoRepository.findById(safeId);
             if (agendamentoOpt.isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
                         .header("Content-Type", "application/json")
@@ -521,7 +522,7 @@ public class SchedulingFunctions {
                 agendamento.setStatus(StatusAgendamento.CANCELADO);
                 agendamentoRepository.save(agendamento);
             } else {
-                agendamentoRepository.deleteById(id);
+                agendamentoRepository.deleteById(safeId);
             }
 
             return request.createResponseBuilder(HttpStatus.NO_CONTENT)
