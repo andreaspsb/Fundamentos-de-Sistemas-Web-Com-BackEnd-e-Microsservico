@@ -327,11 +327,15 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+    - name: Setup Azure Functions Core Tools
+      run: |
+        npm install -g azure-functions-core-tools@4 --unsafe-perm true
+
     - name: Deploy func-petshop-${{ matrix.function }}
-      uses: Azure/functions-action@v1
-      with:
-        app-name: func-petshop-${{ matrix.function }}
-        package: ./publish/func-petshop-${{ matrix.function }}
+      working-directory: ./publish/func-petshop-${{ matrix.function }}
+      run: |
+        echo "📦 Deploying func-petshop-${{ matrix.function }}..."
+        func azure functionapp publish func-petshop-${{ matrix.function }} --dotnet-isolated
 
     - name: Verificar Function
       run: |

@@ -128,6 +128,8 @@ backend-springboot/deploy.zip
 backend-aspnet/PetshopApi/deploy.zip
 functions/publish/
 functions-java/publish/
+**/deploy-package/
+**/test-publish/
 
 # =============================================================================
 # Runtime Files
