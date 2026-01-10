@@ -2,506 +2,308 @@
 
 ## 📋 Visão Geral
 
-Este documento descreve a configuração de CORS (Cross-Origin Resource Sharing) implementada nos backends do projeto Pet Shop, seguindo as melhores práticas de segurança.
+Este documento descreve a configuração de CORS (Cross-Origin Resource Sharing) implementada nos backends do projeto Pet Shop.
 
-## 🎯 Objetivos
-
-- ✅ **Desenvolvimento**: Permitir acesso de qualquer origem local para facilitar testes
-- ✅ **Produção**: Restringir acesso apenas a domínios específicos e confiáveis
-- ✅ **Segurança**: Controlar métodos HTTP, headers e credenciais permitidos
-- ✅ **Performance**: Cache de preflight requests para reduzir latência
+> ⚠️ **IMPORTANTE**: Cada tipo de backend tem seu próprio método de configuração CORS. Não existe uma forma única de centralizar tudo.
 
 ---
 
-## 🔧 Implementação
+## 🎯 Origens Permitidas (TODAS)
 
-### Backend ASP.NET Core
+```
+# PRODUÇÃO
+https://andreaspsb.github.io
+https://yellow-field-047215b0f.3.azurestaticapps.net
 
-#### Arquivo: `Program.cs`
+# DESENVOLVIMENTO LOCAL
+http://localhost:5500
+http://127.0.0.1:5500
+http://localhost:3000
+http://127.0.0.1:3000
+http://localhost:5173
+http://127.0.0.1:5173
+http://localhost:8080
+http://127.0.0.1:8080
+http://localhost:19006
+http://127.0.0.1:19006
+```
+
+---
+
+## 📊 Resumo por Backend
+
+| Backend | Onde Configurar | Local vs Produção |
+|---------|-----------------|-------------------|
+| **ASP.NET Core** | `Program.cs` (código) | ✅ Mesmo código funciona em ambos |
+| **Spring Boot** | `WebConfig.java` (código) | ✅ Mesmo código funciona em ambos |
+| **C# Azure Functions** | Azure Portal/CLI | ⚠️ `host.json` só funciona local |
+| **Java Azure Functions** | Azure Portal/CLI | ⚠️ `host.json` só funciona local |
+
+---
+
+## 🔧 Implementação por Backend
+
+### 1. Backend ASP.NET Core
+
+#### Arquivo: `backend-aspnet/PetshopApi/Program.cs`
+
+CORS está configurado diretamente no código com origens hardcoded:
 
 ```csharp
-// Configure CORS with environment-specific settings
 builder.Services.AddCors(options =>
 {
-    // Development: Allow all origins (for local testing)
-    options.AddPolicy("Development", policy =>
+    options.AddPolicy("AllEnvironments", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-
-    // Production: Restrict to specific origins
-    options.AddPolicy("Production", policy =>
-    {
-        var allowedOrigins = builder.Configuration
-            .GetSection("Cors:AllowedOrigins")
-            .Get<string[]>() ?? new[] 
-            { 
-                "https://petshop.com",
-                "https://www.petshop.com",
-                "https://api.petshop.com"
-            };
-
-        policy.WithOrigins(allowedOrigins)
-              .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-              .WithHeaders("Content-Type", "Authorization", "X-Requested-With")
-              .AllowCredentials()
-              .SetIsOriginAllowedToAllowWildcardSubdomains()
-              .WithExposedHeaders("X-Pagination", "X-Total-Count")
-              .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
+        policy.WithOrigins(
+                // PRODUÇÃO
+                "https://andreaspsb.github.io",
+                "https://yellow-field-047215b0f.3.azurestaticapps.net",
+                // DESENVOLVIMENTO LOCAL
+                "http://localhost:5500",
+                "http://127.0.0.1:5500",
+                "http://localhost:3000",
+                "http://127.0.0.1:3000",
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "http://localhost:8080",
+                "http://127.0.0.1:8080",
+                "http://localhost:19006",
+                "http://127.0.0.1:19006"
+            )
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()
+            .WithExposedHeaders("X-Pagination", "X-Total-Count")
+            .SetPreflightMaxAge(TimeSpan.FromHours(1));
     });
 });
 
-// Apply CORS policy based on environment
-var corsPolicy = app.Environment.IsDevelopment() ? "Development" : "Production";
-app.UseCors(corsPolicy);
+// Aplicar a política
+app.UseCors("AllEnvironments");
 ```
 
-#### Arquivo: `appsettings.json` (Produção)
-
-```json
-{
-  "Cors": {
-    "AllowedOrigins": [
-      "https://petshop.com",
-      "https://www.petshop.com",
-      "https://api.petshop.com"
-    ]
-  }
-}
-```
-
-#### Arquivo: `appsettings.Development.json` (Desenvolvimento)
-
-```json
-{
-  "Cors": {
-    "AllowedOrigins": [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://localhost:8080",
-      "http://127.0.0.1:5173",
-      "http://127.0.0.1:3000",
-      "http://127.0.0.1:8080"
-    ]
-  }
-}
-```
+**Para adicionar nova origem**: Edite `Program.cs` e faça deploy.
 
 ---
 
-### Backend Spring Boot
+### 2. Backend Spring Boot
 
-#### Arquivo: `WebConfig.java`
+#### Arquivo: `backend-springboot/src/main/java/com/petshop/config/WebConfig.java`
+
+CORS está configurado diretamente no código com origens hardcoded:
 
 ```java
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${cors.allowed-origins:https://petshop.com,https://www.petshop.com}")
-    private String[] allowedOrigins;
+    @NonNull
+    private static final String[] ALLOWED_ORIGINS = {
+        // === PRODUÇÃO ===
+        "https://andreaspsb.github.io",
+        "https://yellow-field-047215b0f.3.azurestaticapps.net",
+        
+        // === DESENVOLVIMENTO LOCAL ===
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080",
+        "http://localhost:19006",
+        "http://127.0.0.1:19006"
+    };
 
     @Override
-    public void addCorsMappings(CorsRegistry registry) {
+    public void addCorsMappings(@NonNull CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins(allowedOrigins)
+                .allowedOrigins(ALLOWED_ORIGINS)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-                .allowedHeaders("Content-Type", "Authorization", "X-Requested-With")
+                .allowedHeaders("*")
                 .allowCredentials(true)
                 .exposedHeaders("X-Pagination", "X-Total-Count")
-                .maxAge(3600); // Cache preflight por 1 hora
+                .maxAge(3600);
     }
 }
 ```
 
-#### Arquivo: `application-dev.properties` (Desenvolvimento)
-
-```properties
-# CORS - Allow local development origins
-cors.allowed-origins=http://localhost:5173,http://localhost:3000,http://localhost:8080,http://127.0.0.1:5173,http://127.0.0.1:3000,http://127.0.0.1:8080
-```
-
-#### Arquivo: `application-prod.properties` (Produção)
-
-```properties
-# CORS - Restrict to production domains only
-cors.allowed-origins=https://petshop.com,https://www.petshop.com,https://api.petshop.com
-```
+**Para adicionar nova origem**: Edite `WebConfig.java` e faça deploy.
 
 ---
 
-## 🚀 Como Usar
+### 3. Azure Functions (C# e Java) - ⚠️ ATENÇÃO ESPECIAL
 
-### Desenvolvimento Local
+> **IMPORTANTE**: Para Azure Functions em produção, o CORS configurado no **Azure Portal/CLI tem precedência** sobre o `host.json`. O `host.json` só funciona para desenvolvimento local.
 
-#### ASP.NET Core
-```bash
-# Executa automaticamente com política "Development"
-dotnet run
-```
+#### Desenvolvimento Local: `host.json`
 
-#### Spring Boot
-```bash
-# Executa com perfil de desenvolvimento
-mvn spring-boot:run -Dspring-boot.run.profiles=dev
-
-# Ou via java
-java -jar -Dspring.profiles.active=dev petshop.jar
-```
-
-### Produção
-
-#### ASP.NET Core
-```bash
-# Define ambiente como Production
-export ASPNETCORE_ENVIRONMENT=Production
-dotnet run
-
-# Ou publica e executa
-dotnet publish -c Release
-cd bin/Release/net8.0/publish
-dotnet PetshopApi.dll
-```
-
-#### Spring Boot
-```bash
-# Executa com perfil de produção
-mvn spring-boot:run -Dspring-boot.run.profiles=prod
-
-# Ou via java
-java -jar -Dspring.profiles.active=prod petshop.jar
-```
-
----
-
-## ⚙️ Configuração de Origens Permitidas
-
-### Desenvolvimento
-
-As seguintes origens são permitidas em desenvolvimento:
-
-| Origem | Uso Comum |
-|--------|-----------|
-| `http://localhost:5173` | Vite (Vue, React) |
-| `http://localhost:3000` | React, Next.js |
-| `http://localhost:8080` | Angular, Spring Boot |
-| `http://127.0.0.1:*` | Alternativa a localhost |
-
-### Produção
-
-Em produção, **SEMPRE** configure origens específicas:
+Cada function tem seu próprio `host.json`. Exemplo:
 
 ```json
-// ASP.NET Core: appsettings.json
 {
-  "Cors": {
-    "AllowedOrigins": [
-      "https://seudominio.com",
-      "https://www.seudominio.com"
-    ]
+  "version": "2.0",
+  "extensions": {
+    "http": {
+      "routePrefix": "api",
+      "cors": {
+        "allowedOrigins": [
+          "https://andreaspsb.github.io",
+          "https://yellow-field-047215b0f.3.azurestaticapps.net",
+          "http://localhost:5500",
+          "http://127.0.0.1:5500"
+        ],
+        "allowedMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allowedHeaders": ["Content-Type", "Authorization", "Accept"],
+        "supportCredentials": false
+      }
+    }
   }
 }
 ```
 
-```properties
-# Spring Boot: application-prod.properties
-cors.allowed-origins=https://seudominio.com,https://www.seudominio.com
+#### Produção (Azure): CLI ou Portal
+
+**O CORS em produção DEVE ser configurado via Azure CLI ou Portal!**
+
+```bash
+# Adicionar origens permitidas
+az functionapp cors add \
+  --name func-petshop-catalog-java \
+  --resource-group petshop-rg \
+  --allowed-origins "https://andreaspsb.github.io" "https://yellow-field-047215b0f.3.azurestaticapps.net"
+
+# Verificar configuração atual
+az functionapp cors show \
+  --name func-petshop-catalog-java \
+  --resource-group petshop-rg
+
+# Remover todas as origens (limpar)
+az functionapp cors remove \
+  --name func-petshop-catalog-java \
+  --resource-group petshop-rg \
+  --allowed-origins "*"
+```
+
+#### Script para configurar TODAS as Functions de uma vez
+
+```powershell
+# PowerShell - Configurar CORS para todas as 12 Functions
+$functions = @(
+    "func-petshop-auth-java", "func-petshop-catalog-java", 
+    "func-petshop-customers-java", "func-petshop-orders-java", 
+    "func-petshop-pets-java", "func-petshop-scheduling-java",
+    "func-petshop-auth", "func-petshop-catalog", 
+    "func-petshop-customers", "func-petshop-orders", 
+    "func-petshop-pets", "func-petshop-scheduling"
+)
+
+$origins = @(
+    "https://andreaspsb.github.io",
+    "https://yellow-field-047215b0f.3.azurestaticapps.net",
+    "http://localhost:5500"
+)
+
+foreach ($fn in $functions) {
+    # Limpar configuração existente
+    az functionapp cors remove --name $fn --resource-group petshop-rg --allowed-origins "*" 2>$null
+    
+    # Adicionar novas origens
+    az functionapp cors add --name $fn --resource-group petshop-rg --allowed-origins $origins
+    
+    Write-Host "✓ $fn configurado"
+}
 ```
 
 ---
 
-## 🔒 Configurações de Segurança
+## ⚠️ Por que Azure Functions é diferente?
 
-### Métodos HTTP Permitidos
+| Aspecto | Monólitos (ASP.NET/Spring) | Azure Functions |
+|---------|----------------------------|-----------------|
+| **Quem controla CORS** | Aplicação (código) | Azure Platform |
+| **Onde configurar para produção** | Código fonte | Azure Portal/CLI |
+| **`host.json` funciona em prod?** | N/A | ❌ NÃO |
+| **Deploy atualiza CORS?** | ✅ Sim | ❌ Não - é config do Azure |
 
-```
-✅ GET     - Leitura de dados
-✅ POST    - Criação de recursos
-✅ PUT     - Atualização completa
-✅ DELETE  - Remoção de recursos
-✅ PATCH   - Atualização parcial
-✅ OPTIONS - Preflight requests (obrigatório para CORS)
-```
-
-### Headers Permitidos
-
-```
-✅ Content-Type      - Tipo de conteúdo (application/json)
-✅ Authorization     - Token de autenticação
-✅ X-Requested-With  - Identificação de requisições AJAX
-```
-
-### Headers Expostos
-
-Estes headers podem ser lidos pelo JavaScript no frontend:
-
-```
-✅ X-Pagination   - Informações de paginação
-✅ X-Total-Count  - Total de registros
-```
-
-### Credenciais (Cookies)
-
-```csharp
-// ASP.NET Core
-.AllowCredentials()  // Permite envio de cookies
-
-// Spring Boot
-.allowCredentials(true)  // Permite envio de cookies
-```
-
-⚠️ **IMPORTANTE**: Quando `AllowCredentials()` está habilitado, **não é possível** usar `AllowAnyOrigin()`. É necessário especificar origens exatas.
+A Microsoft projetou Azure Functions para que configurações de infraestrutura (como CORS) sejam gerenciadas pela plataforma Azure, não pelo código deployado.
 
 ---
 
 ## 🧪 Testando CORS
 
-### Teste Manual com cURL
+### Teste com cURL
 
 ```bash
 # Preflight request (OPTIONS)
-curl -X OPTIONS http://localhost:5000/api/produtos \
-  -H "Origin: http://localhost:5173" \
+curl -X OPTIONS https://func-petshop-catalog-java.azurewebsites.net/api/categorias \
+  -H "Origin: https://andreaspsb.github.io" \
   -H "Access-Control-Request-Method: GET" \
   -v
 
 # Deve retornar:
-# Access-Control-Allow-Origin: http://localhost:5173
-# Access-Control-Allow-Methods: GET, POST, PUT, DELETE, PATCH, OPTIONS
+# Access-Control-Allow-Origin: https://andreaspsb.github.io
 ```
 
 ### Teste no Navegador
 
 ```javascript
 // No console do navegador
-fetch('http://localhost:5000/api/produtos', {
+fetch('https://func-petshop-catalog-java.azurewebsites.net/api/categorias/ativas', {
   method: 'GET',
-  headers: {
-    'Content-Type': 'application/json'
-  }
+  headers: { 'Content-Type': 'application/json' }
 })
-.then(response => response.json())
-.then(data => console.log('Sucesso:', data))
-.catch(error => console.error('Erro CORS:', error));
+.then(r => r.json())
+.then(console.log)
+.catch(console.error);
 ```
-
-### Erros Comuns
-
-#### ❌ Erro: "CORS policy: No 'Access-Control-Allow-Origin' header"
-
-**Causa**: Origem não permitida na configuração
-
-**Solução**: Adicionar origem na lista de origens permitidas
-
-#### ❌ Erro: "Credential is not supported if the CORS header 'Access-Control-Allow-Origin' is '*'"
-
-**Causa**: Tentativa de usar `AllowAnyOrigin()` com `AllowCredentials()`
-
-**Solução**: Especificar origens exatas em vez de usar wildcard
-
-#### ❌ Erro: "Method PUT is not allowed by Access-Control-Allow-Methods"
-
-**Causa**: Método HTTP não permitido
-
-**Solução**: Adicionar método na lista de métodos permitidos
 
 ---
 
-## 📊 Comparação: Antes vs Depois
+## 🔧 Troubleshooting
 
-### ❌ Antes (Inseguro)
+### Erro: "No 'Access-Control-Allow-Origin' header"
 
-```csharp
-// ASP.NET Core
-policy.AllowAnyOrigin()
-      .AllowAnyMethod()
-      .AllowAnyHeader();
-```
+1. **Para ASP.NET/Spring Boot**: Verifique se a origem está no código
+2. **Para Azure Functions**: Execute o script de configuração CLI acima
 
-```java
-// Spring Boot
-registry.addMapping("/**")
-        .allowedOrigins("*")
-        .allowedMethods("*")
-        .allowedHeaders("*");
-```
+### Erro: CORS funciona local mas não em produção
 
-**Problemas:**
-- ⚠️ Qualquer site pode acessar sua API
-- ⚠️ Vulnerável a ataques CSRF
-- ⚠️ Não é possível usar credenciais (cookies)
-- ⚠️ Sem controle de cache
+- **Azure Functions**: O `host.json` NÃO é usado em produção. Configure via CLI.
+- **ASP.NET/Spring Boot**: Verifique se o código foi deployado corretamente.
 
-### ✅ Depois (Seguro)
+### Como verificar CORS atual no Azure
 
-```csharp
-// ASP.NET Core (Produção)
-policy.WithOrigins(allowedOrigins)
-      .WithMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-      .WithHeaders("Content-Type", "Authorization", "X-Requested-With")
-      .AllowCredentials()
-      .SetPreflightMaxAge(TimeSpan.FromMinutes(10));
-```
-
-```java
-// Spring Boot (Produção)
-registry.addMapping("/**")
-        .allowedOrigins("https://petshop.com")
-        .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
-        .allowedHeaders("Content-Type", "Authorization", "X-Requested-With")
-        .allowCredentials(true)
-        .maxAge(3600);
-```
-
-**Benefícios:**
-- ✅ Apenas domínios confiáveis podem acessar
-- ✅ Controle fino sobre métodos e headers
-- ✅ Suporte a credenciais (cookies)
-- ✅ Cache de preflight (melhor performance)
-- ✅ Proteção contra CSRF
-
----
-
-## 🎓 Melhores Práticas
-
-### ✅ DO
-
-1. **Use configurações diferentes para dev/prod**
-   ```
-   Development: Permissivo (facilitar testes)
-   Production: Restritivo (segurança)
-   ```
-
-2. **Especifique origens exatas em produção**
-   ```
-   ✅ https://meusite.com
-   ❌ https://*.meusite.com (wildcards só com SetIsOriginAllowedToAllowWildcardSubdomains)
-   ```
-
-3. **Liste apenas métodos HTTP necessários**
-   ```
-   ✅ GET, POST, PUT, DELETE, PATCH, OPTIONS
-   ❌ Não use "*" ou AllowAnyMethod em produção
-   ```
-
-4. **Use HTTPS em produção**
-   ```
-   ✅ https://meusite.com
-   ❌ http://meusite.com
-   ```
-
-5. **Configure cache de preflight**
-   ```csharp
-   .SetPreflightMaxAge(TimeSpan.FromMinutes(10))  // ASP.NET
-   ```
-   ```java
-   .maxAge(3600)  // Spring Boot (1 hora)
-   ```
-
-### ❌ DON'T
-
-1. **Não use `AllowAnyOrigin()` em produção**
-2. **Não use `AllowAnyMethod()` em produção**
-3. **Não use `AllowAnyHeader()` em produção**
-4. **Não exponha headers desnecessários**
-5. **Não configure CORS no frontend** (não funciona!)
-
----
-
-## 📚 Recursos Adicionais
-
-### Documentação Oficial
-
-- [ASP.NET Core CORS](https://learn.microsoft.com/en-us/aspnet/core/security/cors)
-- [Spring Boot CORS](https://docs.spring.io/spring-framework/reference/web/webmvc-cors.html)
-- [MDN - CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
-
-### Ferramentas de Teste
-
-- [CORS Tester](https://www.test-cors.org/)
-- [Postman](https://www.postman.com/) - Testar APIs
-- Browser DevTools - Console e Network tab
-
----
-
-## 🔍 Troubleshooting
-
-### Verificar Configuração Atual
-
-#### ASP.NET Core
 ```bash
-# Ver variáveis de ambiente
-dotnet run --environment Development
-
-# Ver configuração carregada
-dotnet user-secrets list
-```
-
-#### Spring Boot
-```bash
-# Ver perfil ativo
-java -jar petshop.jar --spring.profiles.active=dev
-
-# Ver todas as propriedades
-java -jar petshop.jar --debug
-```
-
-### Logs Úteis
-
-```csharp
-// ASP.NET Core: Adicionar logs
-app.UseCors(policy => 
-{
-    policy.WithOrigins("http://localhost:5173");
-    Console.WriteLine("CORS policy applied for localhost:5173");
-});
-```
-
-```java
-// Spring Boot: Adicionar logs
-@Override
-public void addCorsMappings(CorsRegistry registry) {
-    logger.info("Configuring CORS with origins: " + Arrays.toString(allowedOrigins));
-    registry.addMapping("/**").allowedOrigins(allowedOrigins);
-}
+# Ver configuração de uma Function específica
+az functionapp cors show --name func-petshop-catalog-java --resource-group petshop-rg -o json
 ```
 
 ---
 
-## ✅ Checklist de Implementação
+## ✅ Checklist de Configuração
 
-- [x] Configuração CORS implementada em ASP.NET Core
-- [x] Configuração CORS implementada em Spring Boot
-- [x] Políticas diferentes para dev/prod criadas
-- [x] Origens permitidas configuradas via arquivos de configuração
-- [x] Métodos HTTP específicos definidos
-- [x] Headers permitidos e expostos configurados
-- [x] Cache de preflight configurado
-- [x] Credenciais habilitadas com origens específicas
-- [x] Anotações `@CrossOrigin` removidas dos controllers (Spring Boot)
-- [x] Documentação criada
-- [x] Testes realizados em ambos backends
+### Monólitos (ASP.NET / Spring Boot)
+- [x] Origens hardcoded no código fonte
+- [x] Deploy automático via CI/CD atualiza CORS
+
+### Azure Functions (C# e Java)
+- [x] `host.json` configurado para desenvolvimento local
+- [x] Azure CLI usado para configurar CORS em produção
+- [ ] **LEMBRETE**: Após criar nova Function, executar script CLI
 
 ---
 
-## 📝 Notas de Versão
+## 📝 Referência Rápida
 
-**Versão 2.0** (22 Nov 2025)
-- ✅ Implementação de políticas por ambiente
-- ✅ Configuração via arquivos de configuração
-- ✅ Remoção de `@CrossOrigin` redundantes
-- ✅ Headers expostos adicionados
-- ✅ Cache de preflight configurado
-- ✅ Suporte a credenciais com origens específicas
-
-**Versão 1.0** (Original)
-- ⚠️ Configuração permissiva (`AllowAnyOrigin`)
-- ⚠️ Sem diferenciação entre ambientes
-- ⚠️ Sem cache de preflight
+| Precisa fazer | Backend | Comando/Ação |
+|---------------|---------|--------------|
+| Adicionar origem | ASP.NET | Editar `Program.cs` → deploy |
+| Adicionar origem | Spring Boot | Editar `WebConfig.java` → deploy |
+| Adicionar origem | Functions | `az functionapp cors add ...` |
+| Verificar CORS | Functions | `az functionapp cors show ...` |
+| Limpar CORS | Functions | `az functionapp cors remove ... --allowed-origins "*"` |
 
 ---
 
-**Autor:** GitHub Copilot  
-**Data:** 22 de Novembro de 2025  
-**Projeto:** Pet Shop Full Stack
+**Última atualização:** 10 de Janeiro de 2026

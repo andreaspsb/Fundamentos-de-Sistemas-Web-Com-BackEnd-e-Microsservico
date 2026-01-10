@@ -16,6 +16,7 @@ public class WebConfig implements WebMvcConfigurer {
      * Lista ÚNICA de origens permitidas para TODOS os ambientes.
      * Adicione novas origens SOMENTE AQUI.
      */
+    @NonNull
     private static final String[] ALLOWED_ORIGINS = {
         // === PRODUÇÃO ===
         "https://andreaspsb.github.io",
