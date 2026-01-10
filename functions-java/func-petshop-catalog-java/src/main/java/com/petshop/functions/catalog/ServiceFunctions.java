@@ -116,6 +116,33 @@ public class ServiceFunctions {
     }
 
     /**
+     * GET /api/servicos/ativos
+     * List active services only (public) - alias for /servicos
+     */
+    @FunctionName("getActiveServices")
+    public HttpResponseMessage getActiveServices(
+            @HttpTrigger(
+                name = "req",
+                methods = {HttpMethod.GET},
+                authLevel = AuthorizationLevel.ANONYMOUS,
+                route = "servicos/ativos"
+            ) HttpRequestMessage<Optional<String>> request,
+            final ExecutionContext context) {
+
+        context.getLogger().info("Getting active services");
+
+        List<Servico> servicos = servicoRepository.findByAtivo(true);
+        List<ServicoResponseDTO> response = servicos.stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+
+        return request.createResponseBuilder(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(response)
+                .build();
+    }
+
+    /**
      * GET /api/servicos/{id}
      * Get service by ID (public)
      */
@@ -247,6 +274,80 @@ public class ServiceFunctions {
 
             Servico toSave = ValidationUtils.requireNonNullEntity(servico, "Serviço");
             servico = ValidationUtils.requireNonNullEntity(servicoRepository.save(toSave), "Serviço");
+
+            return request.createResponseBuilder(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(toResponseDTO(servico))
+                    .build();
+        });
+    }
+
+    /**
+     * PATCH /api/servicos/{id}/ativar
+     * Activate service (Admin only)
+     */
+    @FunctionName("activateService")
+    public HttpResponseMessage activateService(
+            @HttpTrigger(
+                name = "req",
+                methods = {HttpMethod.PATCH},
+                authLevel = AuthorizationLevel.ANONYMOUS,
+                route = "servicos/{id}/ativar"
+            ) HttpRequestMessage<Optional<String>> request,
+            @BindingName("id") Long id,
+            final ExecutionContext context) {
+
+        context.getLogger().info("Activating service: " + id);
+
+        return functionAuthorization.executeProtectedAdmin(request, authResult -> {
+            Optional<Servico> servicoOpt = servicoRepository.findById(ValidationUtils.requireNonNullId(id, "Serviço"));
+            if (servicoOpt.isEmpty()) {
+                return request.createResponseBuilder(HttpStatus.NOT_FOUND)
+                        .header("Content-Type", "application/json")
+                        .body(Map.of("error", "Serviço não encontrado"))
+                        .build();
+            }
+
+            Servico servico = servicoOpt.get();
+            servico.setAtivo(true);
+            servicoRepository.save(servico);
+
+            return request.createResponseBuilder(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(toResponseDTO(servico))
+                    .build();
+        });
+    }
+
+    /**
+     * PATCH /api/servicos/{id}/desativar
+     * Deactivate service (Admin only)
+     */
+    @FunctionName("deactivateService")
+    public HttpResponseMessage deactivateService(
+            @HttpTrigger(
+                name = "req",
+                methods = {HttpMethod.PATCH},
+                authLevel = AuthorizationLevel.ANONYMOUS,
+                route = "servicos/{id}/desativar"
+            ) HttpRequestMessage<Optional<String>> request,
+            @BindingName("id") Long id,
+            final ExecutionContext context) {
+
+        context.getLogger().info("Deactivating service: " + id);
+
+        return functionAuthorization.executeProtectedAdmin(request, authResult -> {
+            Optional<Servico> servicoOpt = servicoRepository.findById(ValidationUtils.requireNonNullId(id, "Serviço"));
+            if (servicoOpt.isEmpty()) {
+                return request.createResponseBuilder(HttpStatus.NOT_FOUND)
+                        .header("Content-Type", "application/json")
+                        .body(Map.of("error", "Serviço não encontrado"))
+                        .build();
+            }
+
+            Servico servico = servicoOpt.get();
+            servico.setAtivo(false);
+            servicoRepository.save(servico);
 
             return request.createResponseBuilder(HttpStatus.OK)
                     .header("Content-Type", "application/json")

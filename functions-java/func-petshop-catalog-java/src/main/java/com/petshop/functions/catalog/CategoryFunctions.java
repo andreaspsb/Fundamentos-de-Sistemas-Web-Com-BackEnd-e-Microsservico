@@ -33,7 +33,7 @@ public class CategoryFunctions {
 
     /**
      * GET /api/categorias
-     * List all active categories (public)
+     * List all categories (public)
      */
     @FunctionName("getAllCategories")
     public HttpResponseMessage getAllCategories(
@@ -46,6 +46,33 @@ public class CategoryFunctions {
             final ExecutionContext context) {
 
         context.getLogger().info("Getting all categories");
+
+        List<Categoria> categorias = categoriaRepository.findAll();
+        List<CategoriaResponseDTO> response = categorias.stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+
+        return request.createResponseBuilder(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(response)
+                .build();
+    }
+
+    /**
+     * GET /api/categorias/ativas
+     * List active categories only (public)
+     */
+    @FunctionName("getActiveCategories")
+    public HttpResponseMessage getActiveCategories(
+            @HttpTrigger(
+                name = "req",
+                methods = {HttpMethod.GET},
+                authLevel = AuthorizationLevel.ANONYMOUS,
+                route = "categorias/ativas"
+            ) HttpRequestMessage<Optional<String>> request,
+            final ExecutionContext context) {
+
+        context.getLogger().info("Getting active categories");
 
         List<Categoria> categorias = categoriaRepository.findByAtivo(true);
         List<CategoriaResponseDTO> response = categorias.stream()

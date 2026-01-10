@@ -93,6 +93,33 @@ public class ProductFunctions {
     }
 
     /**
+     * GET /api/produtos/disponiveis
+     * List available products only (public)
+     */
+    @FunctionName("getAvailableProducts")
+    public HttpResponseMessage getAvailableProducts(
+            @HttpTrigger(
+                name = "req",
+                methods = {HttpMethod.GET},
+                authLevel = AuthorizationLevel.ANONYMOUS,
+                route = "produtos/disponiveis"
+            ) HttpRequestMessage<Optional<String>> request,
+            final ExecutionContext context) {
+
+        context.getLogger().info("Getting available products");
+
+        List<Produto> produtos = produtoRepository.findProdutosDisponiveis();
+        List<ProdutoResponseDTO> response = produtos.stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+
+        return request.createResponseBuilder(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(response)
+                .build();
+    }
+
+    /**
      * GET /api/produtos/{id}
      * Get product by ID (public)
      */
@@ -153,6 +180,34 @@ public class ProductFunctions {
     }
 
     /**
+     * GET /api/produtos/categoria/{categoriaId}/disponiveis
+     * Get available products by category (public)
+     */
+    @FunctionName("getAvailableProductsByCategory")
+    public HttpResponseMessage getAvailableProductsByCategory(
+            @HttpTrigger(
+                name = "req",
+                methods = {HttpMethod.GET},
+                authLevel = AuthorizationLevel.ANONYMOUS,
+                route = "produtos/categoria/{categoriaId}/disponiveis"
+            ) HttpRequestMessage<Optional<String>> request,
+            @BindingName("categoriaId") Long categoriaId,
+            final ExecutionContext context) {
+
+        context.getLogger().info("Getting available products by category: " + categoriaId);
+
+        List<Produto> produtos = produtoRepository.findProdutosDisponiveisPorCategoria(ValidationUtils.requireNonNullId(categoriaId, "Categoria"));
+        List<ProdutoResponseDTO> response = produtos.stream()
+                .map(this::toResponseDTO)
+                .collect(Collectors.toList());
+
+        return request.createResponseBuilder(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(response)
+                .build();
+    }
+
+    /**
      * GET /api/produtos/buscar
      * Search products by name (public)
      */
@@ -184,6 +239,94 @@ public class ProductFunctions {
         return request.createResponseBuilder(HttpStatus.OK)
                 .header("Content-Type", "application/json")
                 .body(response)
+                .build();
+    }
+
+    /**
+     * GET /api/produtos/estoque-baixo
+     * Get products with low stock (Admin only)
+     */
+    @FunctionName("getLowStockProducts")
+    public HttpResponseMessage getLowStockProducts(
+            @HttpTrigger(
+                name = "req",
+                methods = {HttpMethod.GET},
+                authLevel = AuthorizationLevel.ANONYMOUS,
+                route = "produtos/estoque-baixo"
+            ) HttpRequestMessage<Optional<String>> request,
+            final ExecutionContext context) {
+
+        context.getLogger().info("Getting low stock products");
+
+        return functionAuthorization.executeProtectedAdmin(request, authResult -> {
+            int threshold = 10; // Default threshold
+            String thresholdParam = request.getQueryParameters().get("quantidade");
+            if (thresholdParam != null) {
+                try {
+                    threshold = Integer.parseInt(thresholdParam);
+                } catch (NumberFormatException ignored) {
+                    // Use default threshold
+                }
+            }
+
+            List<Produto> produtos = produtoRepository.findByQuantidadeEstoqueLessThan(threshold);
+            List<ProdutoResponseDTO> response = produtos.stream()
+                    .map(this::toResponseDTO)
+                    .collect(Collectors.toList());
+
+            return request.createResponseBuilder(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(response)
+                    .build();
+        });
+    }
+
+    /**
+     * GET /api/produtos/{id}/verificar-estoque
+     * Check product stock availability (public)
+     */
+    @FunctionName("checkProductStock")
+    public HttpResponseMessage checkProductStock(
+            @HttpTrigger(
+                name = "req",
+                methods = {HttpMethod.GET},
+                authLevel = AuthorizationLevel.ANONYMOUS,
+                route = "produtos/{id}/verificar-estoque"
+            ) HttpRequestMessage<Optional<String>> request,
+            @BindingName("id") Long id,
+            final ExecutionContext context) {
+
+        context.getLogger().info("Checking product stock: " + id);
+
+        String quantidadeParam = request.getQueryParameters().get("quantidade");
+        int quantidadeDesejada = 1;
+        if (quantidadeParam != null) {
+            try {
+                quantidadeDesejada = Integer.parseInt(quantidadeParam);
+            } catch (NumberFormatException ignored) {
+                // Use default
+            }
+        }
+
+        Optional<Produto> produtoOpt = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"));
+        
+        if (produtoOpt.isEmpty()) {
+            return request.createResponseBuilder(HttpStatus.NOT_FOUND)
+                    .header("Content-Type", "application/json")
+                    .body(Map.of("error", "Produto não encontrado"))
+                    .build();
+        }
+
+        Produto produto = produtoOpt.get();
+        boolean disponivel = produto.getAtivo() && produto.getQuantidadeEstoque() >= quantidadeDesejada;
+
+        return request.createResponseBuilder(HttpStatus.OK)
+                .header("Content-Type", "application/json")
+                .body(Map.of(
+                        "disponivel", disponivel,
+                        "estoqueAtual", produto.getQuantidadeEstoque(),
+                        "quantidadeSolicitada", quantidadeDesejada
+                ))
                 .build();
     }
 
@@ -429,6 +572,127 @@ public class ProductFunctions {
             return request.createResponseBuilder(HttpStatus.OK)
                     .header("Content-Type", "application/json")
                     .body(Map.of("estoque", produto.getQuantidadeEstoque()))
+                    .build();
+        });
+    }
+
+    /**
+     * PATCH /api/produtos/{id}/adicionar-estoque
+     * Add stock to product (Admin only)
+     */
+    @FunctionName("addProductStock")
+    public HttpResponseMessage addProductStock(
+            @HttpTrigger(
+                name = "req",
+                methods = {HttpMethod.PATCH},
+                authLevel = AuthorizationLevel.ANONYMOUS,
+                route = "produtos/{id}/adicionar-estoque"
+            ) HttpRequestMessage<Optional<Map<String, Integer>>> request,
+            @BindingName("id") Long id,
+            final ExecutionContext context) {
+
+        context.getLogger().info("Adding product stock: " + id);
+
+        return functionAuthorization.executeProtectedAdmin(request, authResult -> {
+            Optional<Produto> produtoOpt = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"));
+            if (produtoOpt.isEmpty()) {
+                return request.createResponseBuilder(HttpStatus.NOT_FOUND)
+                        .header("Content-Type", "application/json")
+                        .body(Map.of("error", "Produto não encontrado"))
+                        .build();
+            }
+
+            Optional<Map<String, Integer>> bodyOpt = request.getBody();
+            if (bodyOpt.isEmpty() || !bodyOpt.get().containsKey("quantidade")) {
+                return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
+                        .header("Content-Type", "application/json")
+                        .body(Map.of("error", "quantidade é obrigatório"))
+                        .build();
+            }
+
+            int quantidade = bodyOpt.get().get("quantidade");
+            Produto produto = produtoOpt.get();
+
+            produto.setQuantidadeEstoque(produto.getQuantidadeEstoque() + quantidade);
+            produtoRepository.save(produto);
+
+            return request.createResponseBuilder(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(toResponseDTO(produto))
+                    .build();
+        });
+    }
+
+    /**
+     * PATCH /api/produtos/{id}/ativar
+     * Activate product (Admin only)
+     */
+    @FunctionName("activateProduct")
+    public HttpResponseMessage activateProduct(
+            @HttpTrigger(
+                name = "req",
+                methods = {HttpMethod.PATCH},
+                authLevel = AuthorizationLevel.ANONYMOUS,
+                route = "produtos/{id}/ativar"
+            ) HttpRequestMessage<Optional<String>> request,
+            @BindingName("id") Long id,
+            final ExecutionContext context) {
+
+        context.getLogger().info("Activating product: " + id);
+
+        return functionAuthorization.executeProtectedAdmin(request, authResult -> {
+            Optional<Produto> produtoOpt = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"));
+            if (produtoOpt.isEmpty()) {
+                return request.createResponseBuilder(HttpStatus.NOT_FOUND)
+                        .header("Content-Type", "application/json")
+                        .body(Map.of("error", "Produto não encontrado"))
+                        .build();
+            }
+
+            Produto produto = produtoOpt.get();
+            produto.setAtivo(true);
+            produtoRepository.save(produto);
+
+            return request.createResponseBuilder(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(toResponseDTO(produto))
+                    .build();
+        });
+    }
+
+    /**
+     * PATCH /api/produtos/{id}/desativar
+     * Deactivate product (Admin only)
+     */
+    @FunctionName("deactivateProduct")
+    public HttpResponseMessage deactivateProduct(
+            @HttpTrigger(
+                name = "req",
+                methods = {HttpMethod.PATCH},
+                authLevel = AuthorizationLevel.ANONYMOUS,
+                route = "produtos/{id}/desativar"
+            ) HttpRequestMessage<Optional<String>> request,
+            @BindingName("id") Long id,
+            final ExecutionContext context) {
+
+        context.getLogger().info("Deactivating product: " + id);
+
+        return functionAuthorization.executeProtectedAdmin(request, authResult -> {
+            Optional<Produto> produtoOpt = produtoRepository.findById(ValidationUtils.requireNonNullId(id, "Produto"));
+            if (produtoOpt.isEmpty()) {
+                return request.createResponseBuilder(HttpStatus.NOT_FOUND)
+                        .header("Content-Type", "application/json")
+                        .body(Map.of("error", "Produto não encontrado"))
+                        .build();
+            }
+
+            Produto produto = produtoOpt.get();
+            produto.setAtivo(false);
+            produtoRepository.save(produto);
+
+            return request.createResponseBuilder(HttpStatus.OK)
+                    .header("Content-Type", "application/json")
+                    .body(toResponseDTO(produto))
                     .build();
         });
     }
