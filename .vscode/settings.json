@@ -1,4 +1,9 @@
 {
   "github.copilot.chat.model": "claude-sonnet-4.5",
-  "java.compile.nullAnalysis.mode": "automatic"
+  "java.compile.nullAnalysis.mode": "automatic",
+  // 🆕 Múltiplas Sessões
+  "chat.viewSessions.enabled": true,
+  "chat.viewSessions.orientation": "sideBySide",
+  "chat.agent.enabled": true,
+  "chat.agentsControl.enabled": true,
 }
