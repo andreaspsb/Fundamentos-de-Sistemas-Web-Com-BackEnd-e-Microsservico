@@ -1,5 +1,14 @@
 # Integração Frontend + Backend - Pet Shop
 
+> **📌 Nota sobre Backends:** Este projeto suporta **4 backends intercambiáveis** que compartilham o mesmo banco de dados:
+> - **Spring Boot** (porta 8080) - Monolito Java
+> - **ASP.NET Core** (porta 5000) - Monolito C#
+> - **C# Azure Functions** (portas 7071-7076) - Microsserviços C#
+> - **Java Azure Functions** (portas 7081-7086) - Microsserviços Java
+>
+> Os exemplos abaixo usam Spring Boot, mas você pode testar com qualquer um dos 4 backends.
+> Use o **toggle visual** no frontend para alternar entre eles dinamicamente.
+
 ## 📋 Arquivos Criados/Atualizados
 
 ### Novos Arquivos
@@ -13,13 +22,13 @@
 
 ## 🚀 Como Testar
 
-### 1. Iniciar o Backend
+### 1. Iniciar o Backend (escolha 1 ou mais dos 4 disponíveis)
 
+**Opção A - Spring Boot (Monolito):**
 ```bash
 cd backend-springboot
 mvn spring-boot:run
 ```
-
 Aguarde até ver a mensagem:
 ```
 ✅ Dados iniciais carregados com sucesso!
@@ -27,6 +36,31 @@ Aguarde até ver a mensagem:
    - 6 Produtos criados
    - 3 Serviços criados
 ```
+
+**Opção B - ASP.NET Core (Monolito):**
+```bash
+cd backend-aspnet/PetshopApi
+dotnet run
+```
+Aguarde até ver: `Now listening on: http://localhost:5000`
+
+**Opção C - C# Azure Functions (Microsserviços):**
+```bash
+cd functions
+./start-all.sh      # Linux/Mac
+# ou
+./start-all.ps1     # Windows
+```
+Aguarde até ver as 6 funções iniciadas (portas 7071-7076)
+
+**Opção D - Java Azure Functions (Microsserviços):**
+```bash
+cd functions-java
+./start-all-java.sh      # Linux/Mac
+# ou
+./start-all-java.ps1     # Windows
+```
+Aguarde até ver as 6 funções Java iniciadas (portas 7081-7086)
 
 ### 2. Acessar o Frontend
 
@@ -103,22 +137,39 @@ JOIN categorias c ON p.categoria_id = c.id;
 SELECT * FROM servicos WHERE ativo = true;
 ```
 
-### 6. Testar API via Swagger
+### 6. Testar API via Swagger (Monolitos)
 
+**Spring Boot:**
 1. Acesse: `http://localhost:8080/swagger-ui.html`
-2. Teste endpoints manualmente:
-   - **GET /api/clientes** - Listar todos os clientes
-   - **GET /api/produtos/disponiveis** - Listar produtos disponíveis
-   - **GET /api/servicos/ativos** - Listar serviços ativos
-   - **GET /api/categorias/ativas** - Listar categorias ativas
+
+**ASP.NET Core:**
+1. Acesse: `http://localhost:5000/swagger`
+
+**Endpoints Comuns (disponíveis em todos os backends):**
+- **GET /api/clientes** - Listar todos os clientes
+- **GET /api/produtos/disponiveis** - Listar produtos disponíveis
+- **GET /api/servicos/ativos** - Listar serviços ativos
+- **GET /api/categorias/ativas** - Listar categorias ativas
+
+**Microsserviços (Azure Functions):**
+- Não possuem Swagger UI centralizado
+- Cada função expõe seus endpoints individuais
+- Teste diretamente via navegador ou curl nas portas específicas (7071-7076 para C#, 7081-7086 para Java)
 
 ## 🔍 Console do Navegador
 
 Abra o DevTools (F12) para ver logs detalhados:
 
-### Exemplo de Log de Cadastro Bem-Sucedido:
+> **💡 Nota:** As URLs nos logs variam conforme o backend selecionado no toggle:
+> - Spring Boot: `http://localhost:8080/api/...`
+> - ASP.NET Core: `http://localhost:5000/api/...`
+> - C# Functions: `http://localhost:7071-7076/api/...` (roteado por função)
+> - Java Functions: `http://localhost:7081-7086/api/...` (roteado por função)
+
+### Exemplo de Log de Cadastro Bem-Sucedido (Spring Boot):
 ```
 ✅ API Config carregado!
+🎯 Backend atual: Spring Boot (http://localhost:8080/api)
 📋 Formulário de cadastro carregado!
 ✨ Máscaras de formatação aplicadas
 ═══════════════════════════════════════
@@ -150,6 +201,8 @@ Abra o DevTools (F12) para ver logs detalhados:
 ```
 
 ## 🎯 Dados Iniciais Disponíveis
+
+> **📌 Importante:** Todos os 4 backends compartilham o **mesmo banco de dados** (Azure SQL em produção, H2/SQLite em desenvolvimento). Os dados criados em um backend são visíveis em todos os outros.
 
 ### Categorias:
 1. Rações e Alimentação
@@ -200,19 +253,28 @@ Adicione o script `produtos.js` antes do fechamento do `</body>`:
 ## 🐛 Solução de Problemas
 
 ### Erro: "Failed to fetch"
-- Verifique se o backend está rodando em `http://localhost:8080`
+- Verifique qual backend está selecionado no toggle
+- Verifique se o backend correspondente está rodando:
+  - Spring Boot: `http://localhost:8080`
+  - ASP.NET Core: `http://localhost:5000`
+  - C# Functions: portas 7071-7076
+  - Java Functions: portas 7081-7086
 - Verifique se não há firewall bloqueando
+- Teste alternar para outro backend no toggle
 
 ### Erro: "CPF já cadastrado"
 - Use um CPF diferente para cada teste
 - Ou reinicie o servidor para limpar o banco
+- Lembre-se: dados são compartilhados entre os 4 backends
 
 ### Produtos não aparecem
 - Abra o console (F12) para ver erros
-- Verifique se o DataInitializer foi executado
+- Verifique se o DataInitializer foi executado no backend escolhido
 - Verifique a URL da categoria no código
+- Teste alternar entre backends usando o toggle
 
 ### Erro 400 (Bad Request)
 - Verifique os dados enviados no console
 - Confirme que todos os campos obrigatórios foram preenchidos
+- Verifique se o formato dos dados está correto (JSON camelCase)
 - Verifique formato de data (yyyy-MM-dd)

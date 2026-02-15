@@ -2,17 +2,21 @@
 
 ## 🎯 O que foi implementado?
 
-Um **sistema de alternância dinâmica** que permite ao frontend se comunicar com **dois backends diferentes**:
+Um **sistema de alternância dinâmica** que permite ao frontend se comunicar com **quatro backends diferentes**:
 
-- **🟢 Spring Boot** (Java) - `http://localhost:8080/api`
-- **🟣 ASP.NET Core** (C#/.NET) - `http://localhost:5000/api`
+- **🟢 Spring Boot** (Java Monolito) - `http://localhost:8080/api`
+- **🟣 ASP.NET Core** (C#/.NET Monolito) - `http://localhost:5000/api`
+- **🔵 C# Azure Functions** (Microsserviços) - `http://localhost:7071-7076/api`
+- **🟡 Java Azure Functions** (Microsserviços) - `http://localhost:7081-7086/api`
 
 ## ✨ Características
 
-- ✅ **Toggle visual** no canto superior direito de cada página
+- ✅ **Toggle visual** com 4 opções de backend
 - ✅ **Persistência** da escolha via `localStorage`
 - ✅ **Notificações** ao trocar de backend
 - ✅ **Detecção automática** de backend offline
+- ✅ **Suporte a microsserviços** com múltiplas portas
+- ✅ **Roteamento inteligente** para serviços específicos
 - ✅ **Totalmente responsivo** (desktop, tablet, mobile)
 - ✅ **16 páginas HTML** atualizadas automaticamente
 
@@ -44,7 +48,7 @@ frontend/
 
 ## 🚀 Como Usar
 
-### 1. Iniciar os Backends
+### 1. Iniciar os Backends (escolha até 4)
 
 **Terminal 1 - Spring Boot:**
 ```bash
@@ -56,6 +60,22 @@ cd backend-springboot
 ```bash
 cd backend-aspnet/PetshopApi
 dotnet run
+```
+
+**Terminal 3 - C# Functions (Opcional):**
+```bash
+cd functions
+./start-all.sh      # Linux/Mac
+# ou
+./start-all.ps1     # Windows
+```
+
+**Terminal 4 - Java Functions (Opcional):**
+```bash
+cd functions-java
+./start-all-java.sh      # Linux/Mac
+# ou
+./start-all-java.ps1     # Windows
 ```
 
 ### 2. Abrir o Frontend
@@ -106,14 +126,31 @@ cd frontend
 getBackendInfo()
 // { key: 'SPRINGBOOT', name: 'Spring Boot', url: 'http://localhost:8080/api', port: 8080 }
 
-// Alternar para ASP.NET
+// Alternar para ASP.NET Core (Monolito)
 alternarBackend('ASPNET')
+
+// Alternar para C# Azure Functions (Microsserviços)
+alternarBackend('FUNCTIONS')
+// Nota: Requisições serão roteadas para funções específicas (7071-7076)
+
+// Alternar para Java Azure Functions (Microsserviços)
+alternarBackend('FUNCTIONS_JAVA')
+// Nota: Requisições serão roteadas para funções Java (7081-7086)
 
 // Fazer uma requisição de teste
 ApiService.get('/produtos')
   .then(produtos => console.table(produtos))
 
-// Alternar de volta
+// Testar autenticação em diferentes backends
+alternarBackend('FUNCTIONS')
+ApiService.post('/auth/login', { username: 'admin', password: 'admin123' })
+  .then(response => console.log('Login em Functions:', response))
+
+alternarBackend('FUNCTIONS_JAVA')
+ApiService.post('/auth/login', { username: 'admin', password: 'admin123' })
+  .then(response => console.log('Login em Functions Java:', response))
+
+// Alternar de volta para monolito
 alternarBackend('SPRINGBOOT')
 ```
 
@@ -210,8 +247,10 @@ location.reload()
 - Verifique CORS no backend
 
 ### Erro de CORS
-- Spring Boot: verificar `@CrossOrigin` nos controllers
-- ASP.NET: verificar `builder.Services.AddCors()` no `Program.cs`
+- **Spring Boot:** verificar `@CrossOrigin` nos controllers
+- **ASP.NET:** verificar `builder.Services.AddCors()` no `Program.cs`
+- **C# Functions:** verificar `local.settings.json` - seção `Host.CORS`
+- **Java Functions:** verificar `local.settings.json` ou headers em `HttpResponseMessage`
 
 ## 📖 Documentação Completa
 
@@ -220,17 +259,22 @@ location.reload()
 
 ## 🎯 Compatibilidade dos Backends
 
-Ambos implementam **exatamente a mesma API**:
+**Os 4 backends implementam exatamente o mesmo contrato de API**:
 
-| Endpoint | Método | Spring Boot | ASP.NET |
-|----------|--------|-------------|---------|
-| `/produtos` | GET | ✅ | ✅ |
-| `/produtos/{id}` | GET | ✅ | ✅ |
-| `/categorias` | GET | ✅ | ✅ |
-| `/servicos` | GET | ✅ | ✅ |
-| `/auth/login` | POST | ✅ | ✅ |
-| `/clientes` | GET/POST | ✅ | ✅ |
-| `/pets` | GET/POST | ✅ | ✅ |
+| Endpoint | Método | Spring Boot | ASP.NET | C# Functions | Java Functions |
+|----------|--------|-------------|---------|--------------|----------------|
+| `/produtos` | GET | ✅ | ✅ | ✅ | ✅ |
+| `/produtos/{id}` | GET | ✅ | ✅ | ✅ | ✅ |
+| `/categorias` | GET | ✅ | ✅ | ✅ | ✅ |
+| `/servicos` | GET | ✅ | ✅ | ✅ | ✅ |
+| `/auth/login` | POST | ✅ | ✅ | ✅ | ✅ |
+| `/clientes` | GET/POST | ✅ | ✅ | ✅ | ✅ |
+| `/pets` | GET/POST | ✅ | ✅ | ✅ | ✅ |
+
+**Notas Importantes:**
+- **Monolitos** (Spring Boot, ASP.NET): Todos os endpoints na mesma porta
+- **Microsserviços** (Functions): Requisições roteadas automaticamente para a função apropriada
+- **Banco de Dados Compartilhado**: Todos conectam ao mesmo banco (Azure SQL ou H2/SQLite local)
 
 ### Dados Iniciais Idênticos
 
@@ -250,20 +294,21 @@ Ambos implementam **exatamente a mesma API**:
 ## ✅ Resultado Final
 
 - ✨ **16 páginas** com toggle funcional
-- 🔄 **Alternância dinâmica** entre backends
+- 🔄 **Alternância dinâmica** entre **4 backends diferentes**
 - 💾 **Persistência** da escolha do usuário
-- 🎯 **100% compatível** com ambos os backends
+- 🎯 **100% compatível** com todos os backends (monolitos e microsserviços)
 - 📱 **Responsivo** em todos os dispositivos
 - 🎨 **Interface moderna** e intuitiva
 
 ## 🎓 Lições Aprendidas
 
-1. **Frontend agnóstico:** Um frontend bem arquitetado funciona com qualquer backend
-2. **Padrão de configuração:** Centralizar configurações facilita manutenção
+1. **Frontend agnóstico:** Um frontend bem arquitetado funciona com qualquer backend (monolito ou microsserviços)
+2. **Padrão de configuração:** Centralizar configurações facilita manutenção de múltiplos backends
 3. **DRY (Don't Repeat Yourself):** O script automático evitou edição manual de 16 arquivos
 4. **Feedback visual:** Notificações melhoram a experiência do usuário
 5. **Debugging:** Logs detalhados facilitam troubleshooting
+6. **Interoperabilidade:** Banco de dados compartilhado entre 4 backends diferentes demonstra flexibilidade arquitetural
 
 ---
 
-**Desenvolvido para demonstrar a flexibilidade e interoperabilidade entre diferentes tecnologias de backend.**
+**Desenvolvido para demonstrar a flexibilidade e interoperabilidade entre diferentes tecnologias de backend (Java, C#) e arquiteturas (monolítica vs microsserviços).**

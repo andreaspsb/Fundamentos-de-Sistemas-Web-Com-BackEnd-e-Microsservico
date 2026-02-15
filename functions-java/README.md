@@ -1,16 +1,25 @@
 # Petshop Functions - Java/Spring Boot
 
+> **📌 Arquitetura Multi-Backend:** Este é **um dos 4 backends intercambiáveis** do projeto:
+> - **Spring Boot** (porta 8080) - Monolito Java
+> - **ASP.NET Core** (porta 5000) - Monolito C#
+> - **C# Azure Functions** (portas 7071-7076) - Microsserviços C#
+> - **Java Azure Functions** (portas 7081-7086) - **Microsserviços Java (este backend)**
+>
+> **Todos compartilham o mesmo banco de dados** (Azure SQL em produção, H2/SQLite em desenvolvimento).
+> O frontend pode alternar entre eles dinamicamente usando o sistema de toggle.
+
 Backend em microsserviços usando Azure Functions com Spring Boot e Spring Cloud Function.
 
 ## Arquitetura
 
-Este projeto implementa a quarta versão do backend da Petshop, usando:
+Este projeto implementa **uma das 4 opções de backend** (microsserviços Java), usando:
 
 - **Java 17** com **Spring Boot 3.2.12**
 - **Spring Cloud Function** com adaptador Azure
 - **Azure Functions** para hospedagem serverless (Consumption Plan Windows)
 - **H2 Database** em modo TCP (desenvolvimento) para compartilhamento entre microsserviços
-- **Azure SQL Database** para produção
+- **Azure SQL Database** (produção) - **compartilhado com os outros 3 backends**
 - **JWT** para autenticação
 - **Resilience4j** para circuit breaker e retry em comunicação entre serviços
 
@@ -199,14 +208,24 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.SQLServerDialect
 
 ## Comparação com Outros Backends
 
-| Feature | ASP.NET | Spring Boot | Functions C# | Functions Java |
-|---------|---------|-------------|--------------|----------------|
-| Framework | .NET 8 | Spring Boot 3.2 | .NET 8 | Spring Boot 3.2 |
+**Todos os 4 backends implementam o mesmo contrato de API:**
+
+| Feature | Spring Boot | ASP.NET Core | C# Functions | Java Functions (este) |
+|---------|-------------|--------------|--------------|----------------|
+| Framework | Spring Boot 3.2 | .NET 8 | .NET 8 | Spring Boot 3.2 |
 | Arquitetura | Monolítico | Monolítico | Microsserviços | Microsserviços |
 | Hospedagem | App Service | App Service | Azure Functions | Azure Functions |
-| Banco Dev | SQLite | H2 | SQLite | H2 (TCP) |
+| Banco Dev | H2 | SQLite | SQLite | H2 (TCP) |
+| Banco Prod | Azure SQL (compartilhado) | Azure SQL (compartilhado) | Azure SQL (compartilhado) | Azure SQL (compartilhado) |
 | Auth | JWT | JWT | JWT | JWT |
-| Portas | 5000 | 8080 | 7071-7076 | 7081-7086 |
+| Portas Dev | 8080 | 5000 | 7071-7076 | 7081-7086 |
+| Swagger/OpenAPI | ✅ | ✅ | ❌ | ❌ |
+| Enum Convention | SCREAMING_SNAKE_CASE | SCREAMING_SNAKE_CASE | SCREAMING_SNAKE_CASE | SCREAMING_SNAKE_CASE |
+
+**Banco de Dados Compartilhado:**
+- Dados criados em um backend são **imediatamente visíveis** em todos os outros
+- Migrações de schema afetam todos os backends simultaneamente
+- Frontend pode alternar entre backends sem perda de dados
 
 ## Estrutura de Resposta
 

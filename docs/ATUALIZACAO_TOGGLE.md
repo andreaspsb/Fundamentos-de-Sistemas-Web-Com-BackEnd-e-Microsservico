@@ -1,5 +1,13 @@
 # 🔧 Guia de Atualização - Backend Toggle
 
+> **📌 Nota:** Este sistema suporta **4 backends intercambiáveis**:
+> - Spring Boot (porta 8080) - Monolito Java
+> - ASP.NET Core (porta 5000) - Monolito C#
+> - C# Azure Functions (portas 7071-7076) - Microsserviços C#
+> - Java Azure Functions (portas 7081-7086) - Microsserviços Java
+>
+> Todos compartilham o mesmo banco de dados. O toggle permite alternar entre eles dinamicamente.
+
 ## ⚡ Adição Rápida do Toggle nas Páginas
 
 Para adicionar o seletor de backend em qualquer página HTML do projeto, siga estes passos:
@@ -142,6 +150,9 @@ Após atualizar as páginas, teste:
    🎯 Backend atual: Spring Boot (http://localhost:8080/api)
    ✅ Backend Toggle inicializado
    ```
+5. Verifique se o toggle mostra **4 opções de backend** (Spring Boot, ASP.NET Core, C# Functions, Java Functions)
+6. Teste alternar entre os backends disponíveis
+7. Verifique se notificações aparecem ao trocar
 
 ## 🆘 Troubleshooting
 

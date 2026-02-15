@@ -1,6 +1,15 @@
 # 🐾 PetShop Microservices - Azure Functions
 
-Este projeto é uma migração da aplicação PetShop de uma arquitetura monolítica (ASP.NET Core) para uma arquitetura de microsserviços utilizando **Azure Functions**.
+> **📌 Arquitetura Multi-Backend:** Este é **um dos 4 backends intercambiáveis** do projeto:
+> - **Spring Boot** (porta 8080) - Monolito Java
+> - **ASP.NET Core** (porta 5000) - Monolito C#
+> - **C# Azure Functions** (portas 7071-7076) - **Microsserviços C# (este backend)**
+> - **Java Azure Functions** (portas 7081-7086) - Microsserviços Java
+>
+> **Todos compartilham o mesmo banco de dados** (Azure SQL em produção, SQLite/H2 em desenvolvimento).
+> O frontend pode alternar entre eles dinamicamente usando o sistema de toggle.
+
+Este projeto demonstra uma **arquitetura de microsserviços** utilizando **Azure Functions**, contrastando com a arquitetura monolítica dos backends Spring Boot e ASP.NET Core.
 
 ## 📋 Índice
 
@@ -286,10 +295,53 @@ cd func-petshop-orders && func start --port 7076
 
 ### 4. Executar Todos (Script)
 
+**Recomendado:** Use o script `start-all.sh` (Linux/Mac) ou `start-all.ps1` (Windows):
+
 ```bash
-# Criar script de inicialização
+# Linux/Mac
 chmod +x start-all.sh
 ./start-all.sh
+
+# Windows PowerShell
+.\start-all.ps1
+```
+
+O script inicia automaticamente todas as 6 funções nas portas corretas.
+
+### 5. Teste de Integração com Outros Backends
+
+Como todos os 4 backends compartilham o mesmo banco de dados:
+
+```bash
+# 1. Criar um produto usando ASP.NET Core (porta 5000)
+curl -X POST http://localhost:5000/api/produtos \
+  -H "Content-Type: application/json" \
+  -d '{"nome": "Teste", "preco": 100, "categoriaId": 1}'
+
+# 2. Verificar que o produto é visível nas C# Functions (porta 7074)
+curl http://localhost:7074/api/produtos
+
+# 3. Alternar no frontend para Functions e ver o mesmo dado
+# Abrir Developer Tools (F12) e executar:
+alternarBackend('FUNCTIONS')
+```
+
+### 5. Teste de Integração com Outros Backends
+
+Como todos os 4 backends compartilham o mesmo banco de dados:
+
+```bash
+# 1. Criar um produto usando ASP.NET Core (porta 5000)
+curl -X POST http://localhost:5000/api/produtos \
+  -H "Content-Type: application/json" \
+  -d '{"nome": "Teste", "preco": 100, "categoriaId": 1}'
+
+# 2. Verificar que o produto é visível nas C# Functions (porta 7074)
+curl http://localhost:7074/api/produtos
+
+# 3. Alternar no frontend para Functions e ver o mesmo dado
+# Abrir Developer Tools (F12) e executar:
+alternarBackend('FUNCTIONS')
 ```
 
 ## ⚙️ Configuração

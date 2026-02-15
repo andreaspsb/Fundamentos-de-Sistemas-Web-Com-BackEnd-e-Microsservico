@@ -1,6 +1,6 @@
 # Fundamentos de Sistemas Web - Pet Shop (Full Stack)
 
-Sistema completo de e-commerce e gerenciamento para Pet Shop, desenvolvido com **dois backends alternativos** (Spring Boot + ASP.NET Core), **Frontend Web** (HTML5, CSS3, Bootstrap 5, JavaScript) e **App Mobile** (React Native/Expo) com sistema de toggle para alternar entre backends dinamicamente.
+Sistema completo de e-commerce e gerenciamento para Pet Shop, desenvolvido com **quatro backends intercambiáveis** (Spring Boot, ASP.NET Core, C# Azure Functions e Java Azure Functions), **Frontend Web** (HTML5, CSS3, Bootstrap 5, JavaScript) e **App Mobile** (React Native/Expo) com sistema de toggle para alternar entre backends dinamicamente.
 
 ## 📋 Descrição do Projeto
 
@@ -10,10 +10,30 @@ Este projeto consiste em um **sistema full-stack** completo para Pet Shop, inclu
 - 👤 **Autenticação** - Login/logout com BCrypt e JWT
 - 🔐 **Autorização** - Sistema de roles (ADMIN, CLIENTE)
 - 🛠️ **Painel Admin** - CRUD completo de produtos, clientes, agendamentos e pedidos
-- 📦 **Dual Backend** - Spring Boot (Java) e ASP.NET Core (C#/.NET)
-- 🔄 **Backend Toggle** - Sistema de alternância dinâmica entre backends
+- 📦 **Multi-Backend (4 opções)** - Spring Boot (Java Monolito), ASP.NET Core (C#/.NET Monolito), C# Azure Functions (Microsserviços), Java Azure Functions (Microsserviços)
+- 🔄 **Backend Toggle** - Sistema de alternância dinâmica entre os 4 backends
 - 📱 **App Mobile** - React Native/Expo com suporte a Android, iOS e Web
-- 💾 **Banco de Dados** - H2 (Spring Boot), SQLite (ASP.NET Core), PostgreSQL (Docker)
+- 💾 **Banco de Dados** - H2 (Spring Boot), SQLite (ASP.NET Core), SQL Server (Azure Functions), Azure SQL Database (Produção)
+
+### 🗄️ Arquitetura de Banco de Dados Compartilhado
+
+**Conceito Fundamental:** Todos os 4 backends conectam ao **MESMO banco de dados**. Esta é uma característica arquitetural crítica do projeto.
+
+#### Implicações:
+- 📊 **Schema único** - Mudanças no schema afetam todos os backends simultaneamente
+- 🔄 **Dados compartilhados** - Dados criados por um backend são imediatamente visíveis aos outros
+- 📝 **EF Core como fonte de verdade** - Migrations em `backend-aspnet/` definem o schema canônico
+- 📜 **Scripts SQL** - Migrations exportadas para `scripts/` são aplicadas aos outros backends
+- ⚖️ **Consistência obrigatória** - Enums, DTOs e contratos de API devem ser idênticos
+
+#### Bancos por Ambiente:
+- **Produção**: Azure SQL Database (`petshop-db.database.windows.net`)
+- **Desenvolvimento**: 
+  - Spring Boot: H2 (in-memory)
+  - ASP.NET Core: SQLite (arquivo local)
+  - Azure Functions (C# e Java): SQL Server via Docker
+
+> 💡 **Exemplo prático:** Se você criar um produto usando o backend Spring Boot, esse produto estará imediatamente disponível ao buscar via ASP.NET Core ou Azure Functions, pois todos compartilham o mesmo banco.
 
 ## 🎯 Funcionalidades
 
@@ -220,6 +240,98 @@ O sistema cria automaticamente ao iniciar:
 - ✅ **3 Serviços** (Banho, Tosa, Combo)
 - ✅ **1 Usuário Admin** (admin/admin123 com senha hash BCrypt)
 
+### 🔧 Backend (ASP.NET Core)
+
+Backend monolítico em C#/.NET com estrutura similar ao Spring Boot. Veja documentação completa em [backend-aspnet/README.md](backend-aspnet/README.md).
+
+**Características:**
+- ✅ Entity Framework Core com SQLite
+- ✅ Swagger/OpenAPI integrado
+- ✅ Mesmas 9 entidades e endpoints do Spring Boot
+- ✅ BCrypt.NET para hash de senhas
+- ✅ Migrations como fonte de verdade do schema
+
+**URL Base:** http://localhost:5000/api
+
+### ⚡ Backend (Azure Functions - Microsserviços C#)
+
+Arquitetura de microsserviços usando Azure Functions HTTP Triggers. Cada serviço é independente e possui seu próprio endpoint. Veja documentação completa em [functions/README.md](functions/README.md).
+
+#### Serviços e Portas
+
+| Serviço | Porta | Responsabilidades |
+|---------|-------|-------------------|
+| **Auth** | 7071 | Login, JWT, validação de token, gestão de usuários |
+| **Customers** | 7072 | CRUD de clientes, busca por CPF |
+| **Pets** | 7073 | CRUD de pets, listagem por cliente |
+| **Catalog** | 7074 | Produtos, categorias, serviços, gestão de estoque |
+| **Scheduling** | 7075 | Agendamentos, disponibilidade, confirmações |
+| **Orders** | 7076 | Pedidos, itens de pedido, checkout |
+
+#### Características Técnicas
+- ✅ **Azure Functions v4** - Serverless compute platform
+- ✅ **HTTP Triggers** - REST API endpoints
+- ✅ **Timer Triggers** - Jobs agendados (limpeza, notificações)
+- ✅ **Polly** - Resilience policies (retry, circuit breaker, timeout)
+- ✅ **SQL Server** - Banco compartilhado via Docker
+- ✅ **Shared Library** - `Petshop.Shared` com models, DTOs e utils
+
+#### Como Iniciar
+```bash
+cd functions
+./start-all.sh  # Linux/Mac
+# ou
+./start-all.ps1 # Windows PowerShell
+```
+
+**URLs Base:** 
+- Auth: http://localhost:7071/api
+- Customers: http://localhost:7072/api
+- Pets: http://localhost:7073/api
+- Catalog: http://localhost:7074/api
+- Scheduling: http://localhost:7075/api
+- Orders: http://localhost:7076/api
+
+### ⚡ Backend (Azure Functions - Microsserviços Java)
+
+Implementação Java dos microsserviços com estrutura idêntica às C# Functions. Veja documentação completa em [functions-java/README.md](functions-java/README.md).
+
+#### Serviços e Portas
+
+| Serviço | Porta | Responsabilidades |
+|---------|-------|-------------------|
+| **Auth (Java)** | 7081 | Login, JWT, validação de token, gestão de usuários |
+| **Customers (Java)** | 7082 | CRUD de clientes, busca por CPF |
+| **Pets (Java)** | 7083 | CRUD de pets, listagem por cliente |
+| **Catalog (Java)** | 7084 | Produtos, categorias, serviços, gestão de estoque |
+| **Scheduling (Java)** | 7085 | Agendamentos, disponibilidade, confirmações |
+| **Orders (Java)** | 7086 | Pedidos, itens de pedido, checkout |
+
+#### Características Técnicas
+- ✅ **Azure Functions Java SDK** - Java 17+
+- ✅ **Maven** - Build e gerenciamento de dependências
+- ✅ **Resilience4j** - Padrões de resiliência
+- ✅ **SQL Server** - Banco compartilhado via Docker
+- ✅ **Shared Module** - `petshop-functions-shared` com models e utils
+
+#### Como Iniciar
+```bash
+cd functions-java
+./start-all-java.sh  # Linux/Mac
+# ou
+./start-all-java.ps1 # Windows PowerShell
+```
+
+**URLs Base:**
+- Auth: http://localhost:7081/api
+- Customers: http://localhost:7082/api
+- Pets: http://localhost:7083/api
+- Catalog: http://localhost:7084/api
+- Scheduling: http://localhost:7085/api
+- Orders: http://localhost:7086/api
+
+> 💡 **Dica:** Todos os 4 backends podem ser executados simultaneamente! Use o sistema de toggle no frontend para alternar entre eles em tempo real.
+
 ## 📁 Estrutura do Projeto
 
 ```
@@ -364,9 +476,9 @@ docker-compose logs -f
 docker-compose down
 ```
 
-### 1. Iniciar um dos Backends
+### 1. Iniciar um dos Backends (ou todos simultaneamente)
 
-#### Opção A: Backend Spring Boot (Recomendado - Mais Completo)
+#### Opção A: Backend Spring Boot (Monolito Java)
 
 ```bash
 # Navegar para o diretório do backend
@@ -383,7 +495,7 @@ mvn spring-boot:run
 **Swagger UI:** http://localhost:8080/swagger-ui.html  
 **H2 Console:** http://localhost:8080/h2-console
 
-#### Opção B: Backend ASP.NET Core
+#### Opção B: Backend ASP.NET Core (Monolito C#)
 
 ```bash
 # Navegar para o diretório do projeto ASP.NET
@@ -399,7 +511,53 @@ dotnet run
 **Disponível em:** http://localhost:5000  
 **Swagger UI:** http://localhost:5000
 
-> **💡 Dica:** Você pode executar **ambos os backends simultaneamente** e usar o sistema de toggle no frontend para alternar entre eles!
+#### Opção C: Azure Functions C# (Microsserviços)
+
+```bash
+# Navegar para o diretório das functions
+cd functions
+
+# Linux/Mac
+./start-all.sh
+
+# Windows PowerShell
+./start-all.ps1
+```
+
+**Serviços disponíveis:**
+- Auth: http://localhost:7071/api
+- Customers: http://localhost:7072/api
+- Pets: http://localhost:7073/api
+- Catalog: http://localhost:7074/api
+- Scheduling: http://localhost:7075/api
+- Orders: http://localhost:7076/api
+
+**Logs:** Verifique a pasta `functions/logs/` para logs de cada serviço
+
+#### Opção D: Azure Functions Java (Microsserviços)
+
+```bash
+# Navegar para o diretório das functions Java
+cd functions-java
+
+# Linux/Mac
+./start-all-java.sh
+
+# Windows PowerShell
+./start-all-java.ps1
+```
+
+**Serviços disponíveis:**
+- Auth: http://localhost:7081/api
+- Customers: http://localhost:7082/api
+- Pets: http://localhost:7083/api
+- Catalog: http://localhost:7084/api
+- Scheduling: http://localhost:7085/api
+- Orders: http://localhost:7086/api
+
+**Logs:** Verifique a pasta `java-func-logs/` para logs de cada serviço
+
+> **💡 Dica:** Você pode executar **todos os 4 backends simultaneamente** (portas diferentes) e usar o sistema de toggle no frontend para alternar entre eles em tempo real!
 
 ### 2. Iniciar o Frontend
 
@@ -437,18 +595,43 @@ Acesse: **http://localhost:5500**
 - API: http://localhost:5000
 - Swagger UI: http://localhost:5000
 
+**Azure Functions C#:**
+- Auth: http://localhost:7071/api
+- Customers: http://localhost:7072/api
+- Pets: http://localhost:7073/api
+- Catalog: http://localhost:7074/api
+- Scheduling: http://localhost:7075/api
+- Orders: http://localhost:7076/api
+
+**Azure Functions Java:**
+- Auth: http://localhost:7081/api
+- Customers: http://localhost:7082/api
+- Pets: http://localhost:7083/api
+- Catalog: http://localhost:7084/api
+- Scheduling: http://localhost:7085/api
+- Orders: http://localhost:7086/api
+
 ### 4. Sistema de Toggle entre Backends
 
-O frontend possui um **toggle visual** no canto superior direito que permite alternar entre os backends:
+O frontend possui um **toggle visual** que permite alternar dinamicamente entre os 4 backends disponíveis:
 
-- 🟢 **Spring Boot** (http://localhost:8080/api) - Mais completo
-- 🟣 **ASP.NET Core** (http://localhost:5000/api) - Parcialmente implementado
+- 🟢 **Spring Boot** (http://localhost:8080/api) - Monolito Java
+- 🟣 **ASP.NET Core** (http://localhost:5000/api) - Monolito C#
+- 🔵 **Azure Functions C#** (http://localhost:707X/api) - Microsserviços C#
+- 🟡 **Azure Functions Java** (http://localhost:708X/api) - Microsserviços Java
 
 **Como usar:**
-1. Inicie um ou ambos os backends
+1. Inicie um ou mais backends (podem ser todos simultaneamente)
 2. Abra o frontend no navegador
-3. Clique no botão do backend desejado no toggle
+3. Clique no botão do backend desejado no toggle (canto superior direito)
 4. A escolha é salva automaticamente no localStorage
+5. Todas as requisições serão direcionadas ao backend selecionado
+
+**Configuração Técnica:**
+- Arquivo: `frontend/js/api-config.js`
+- Valores possíveis: `SPRINGBOOT`, `ASPNET`, `FUNCTIONS`, `FUNCTIONS_JAVA`
+- Armazenamento: `localStorage.getItem('backend-selecionado')`
+- Normalização automática: Converte PascalCase → camelCase
 
 **Documentação completa:** Veja [BACKEND_TOGGLE_README.md](frontend/BACKEND_TOGGLE_README.md)
 
@@ -480,6 +663,16 @@ O frontend possui um **toggle visual** no canto superior direito que permite alt
 - **BCrypt.NET** - Biblioteca para hash de senhas
 - **Swagger/OpenAPI** - Documentação interativa da API
 
+### Azure Functions (C# e Java)
+- **Azure Functions v4** - Plataforma serverless compute
+- **HTTP Triggers** - Endpoints REST API
+- **Timer Triggers** - Jobs agendados (limpeza, notificações)
+- **Polly** (C#) - Resilience policies (retry, circuit breaker, timeout)
+- **Resilience4j** (Java) - Padrões de resiliência
+- **SQL Server** - Banco compartilhado via Docker
+- **Maven** (Java) - Build e gerenciamento de dependências
+- **Shared Libraries** - Módulos compartilhados com models, DTOs e utils
+
 ### Frontend
 - **HTML5** - Estrutura semântica das páginas
 - **CSS3** - Estilos customizados, animações e transições
@@ -494,6 +687,18 @@ O frontend possui um **toggle visual** no canto superior direito que permite alt
 - **localStorage** - Persistência de carrinho e autenticação no client-side
 - **CORS habilitado** - Permite chamadas cross-origin
 - **DTO Pattern** - Separação entre entidades e dados da API
+- **Multi-Backend** - 4 backends intercambiáveis com contrato de API idêntico
+- **Banco Compartilhado** - Todos os backends conectam ao mesmo banco de dados
+- **Microsserviços** - Arquitetura distribuída com Azure Functions
+
+### App Mobile
+- **React Native** - Framework para apps nativos
+- **Expo** - Plataforma para desenvolvimento React Native
+- **TypeScript** - Tipagem estática para JavaScript
+- **React Navigation** - Navegação entre telas
+- **React Native Paper** - Material Design components
+- **Axios** - Cliente HTTP
+- **Expo SecureStore** - Armazenamento seguro de tokens
 
 ## 📝 Características Técnicas
 
@@ -543,23 +748,88 @@ O frontend possui um **toggle visual** no canto superior direito que permite alt
 - ✅ **Loading states** - Spinners durante carregamento
 - ✅ **Dynamic rendering** - Conteúdo carregado do backend
 
+### 🎯 Convenções de Código (CRÍTICO)
+
+#### Serialização JSON
+Todos os backends utilizam **camelCase** para campos JSON nas respostas da API:
+
+- ✅ ASP.NET: `JsonNamingPolicy.CamelCase` em `Program.cs`
+- ✅ Spring Boot: `spring.jackson.property-naming-strategy=LOWER_CAMEL_CASE`
+- ✅ Frontend: `normalizeResponse()` em `js/api-config.js` converte PascalCase → camelCase
+- ✅ Datas: Formato ISO 8601 (`yyyy-MM-dd` ou `yyyy-MM-ddTHH:mm:ss`)
+
+#### Enums de Status (OBRIGATÓRIO)
+
+**Todos os enums de status usam SCREAMING_SNAKE_CASE** em todos os 4 backends. Esta convenção é **crítica** para garantir consistência ao alternar backends com banco de dados compartilhado.
+
+**StatusPedido:**
+- `PENDENTE` - Pedido criado, aguardando confirmação
+- `CONFIRMADO` - Pagamento confirmado
+- `PROCESSANDO` - Em preparação
+- `ENVIADO` - Pedido despachado para entrega
+- `ENTREGUE` - Pedido entregue ao cliente
+- `CANCELADO` - Pedido cancelado
+
+**StatusAgendamento:**
+- `PENDENTE` - Agendamento criado, aguardando confirmação
+- `CONFIRMADO` - Agendamento confirmado
+- `EM_ANDAMENTO` - Serviço em execução
+- `CONCLUIDO` - Serviço finalizado
+- `CANCELADO` - Agendamento cancelado
+
+> ⚠️ **Importante:** Qualquer mudança em enums deve ser replicada em **todos os 4 backends** simultaneamente para manter a consistência do banco compartilhado.
+
 ## 📊 Estatísticas do Projeto
 
 ### Frontend
 - **Páginas HTML**: 15+
-- **Arquivos JavaScript**: 6
+- **Arquivos JavaScript**: 6+
 - **Arquivos CSS**: 1 (+ Bootstrap CDN)
 - **Linhas de Código JS**: ~2000+
 - **Linhas de CSS**: ~300
 
-### Backend
+### Backend (Total - 4 Implementações)
+
+#### Spring Boot (Monolito Java)
 - **Entidades JPA**: 9
 - **Controllers REST**: 7
 - **Services**: 5
 - **Repositories**: 9
 - **DTOs**: 6+
-- **Endpoints API**: 40+
-- **Linhas de Código Java**: ~3000+
+- **Endpoints API**: ~40
+- **Linhas de Código**: ~3000+
+
+#### ASP.NET Core (Monolito C#)
+- **Entidades EF**: 9
+- **Controllers REST**: 7
+- **DTOs**: 6+
+- **Endpoints API**: ~40
+- **Linhas de Código**: ~2800+
+
+#### Azure Functions C# (Microsserviços)
+- **Serviços**: 6 (Auth, Customers, Pets, Catalog, Scheduling, Orders)
+- **HTTP Triggers**: ~40
+- **Timer Triggers**: 3+
+- **Shared Models**: 9 entidades
+- **Linhas de Código**: ~2500+
+
+#### Azure Functions Java (Microsserviços)
+- **Serviços**: 6 (Auth, Customers, Pets, Catalog, Scheduling, Orders)
+- **HTTP Triggers**: ~40
+- **Timer Triggers**: 3+
+- **Shared Models**: 9 entidades
+- **Linhas de Código**: ~2500+
+
+#### Totais Consolidados
+- **Total de Endpoints API**: ~160 (40 × 4 backends)
+- **Total de Linhas de Código Backend**: ~11000+
+- **Total de Linhas de Código (Full Stack)**: ~13000+
+
+### App Mobile
+- **Telas**: 12+
+- **Componentes React Native**: 15+
+- **Contextos**: 2 (Auth, Cart)
+- **Linhas de TypeScript**: ~1500+
 
 ### Funcionalidades
 - ✅ Sistema de autenticação completo

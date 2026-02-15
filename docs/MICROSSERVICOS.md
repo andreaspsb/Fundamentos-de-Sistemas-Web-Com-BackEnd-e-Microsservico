@@ -33,10 +33,15 @@ O projeto Pet Shop implementa uma arquitetura flexível que suporta **4 backends
                                   ▼
                         ┌─────────────────┐
                         │    DATABASE     │
-                        │    (SQLite)     │
-                        │   petshop.db    │
+                        │  (compartilhado) │
+                        │                 │
+                        │ Dev: H2/SQLite  │
+                        │ Prod: Azure SQL │
                         └─────────────────┘
 ```
+
+> **⚠️ Importante:** Todos os 4 backends compartilham o **mesmo banco de dados**.
+> Isso significa que dados criados em um backend são imediatamente visíveis em todos os outros.
 
 ## Backends Disponíveis
 
@@ -44,9 +49,11 @@ O projeto Pet Shop implementa uma arquitetura flexível que suporta **4 backends
 - **Porta:** 8080
 - **Tecnologia:** Java 17, Spring Boot 3
 - **Base URL:** `http://localhost:8080/api`
+- **Banco de Dados:**
+  - **Dev:** H2 in-memory / file-based
+  - **Prod:** Azure SQL Database (compartilhado)
 - **Características:**
   - Monolito tradicional
-  - Banco de dados SQLite
   - Autenticação JWT
   - Swagger/OpenAPI
 
@@ -54,15 +61,21 @@ O projeto Pet Shop implementa uma arquitetura flexível que suporta **4 backends
 - **Porta:** 5000
 - **Tecnologia:** .NET 8, ASP.NET Core
 - **Base URL:** `http://localhost:5000/api`
+- **Banco de Dados:**
+  - **Dev:** SQLite file-based
+  - **Prod:** Azure SQL Database (compartilhado)
 - **Características:**
   - Monolito tradicional
   - Entity Framework Core
-  - Banco de dados SQLite
   - Autenticação JWT
+  - Swagger/OpenAPI
 
 ### 3. C# Azure Functions (Microsserviços .NET)
 - **Portas:** 7071-7076
 - **Tecnologia:** .NET 8, Azure Functions Isolated Worker
+- **Banco de Dados:**
+  - **Dev:** SQLite file-based (compartilhado via arquivo)
+  - **Prod:** Azure SQL Database (compartilhado)
 - **Características:**
   - Arquitetura de microsserviços
   - Comunicação via HTTP
@@ -80,11 +93,14 @@ O projeto Pet Shop implementa uma arquitetura flexível que suporta **4 backends
 
 ### 4. Java Azure Functions (Microsserviços Java)
 - **Portas:** 7081-7086
-- **Tecnologia:** Java 17, Azure Functions
+- **Tecnologia:** Java 17, Azure Functions, Spring Cloud Function
+- **Banco de Dados:**
+  - **Dev:** H2 in-memory com modo TCP (compartilhado)
+  - **Prod:** Azure SQL Database (compartilhado)
 - **Características:**
   - Arquitetura de microsserviços
-  - Banco H2 in-memory
   - Comunicação via HTTP
+  - Resilience4j para circuit breaker
 
 | Serviço | Porta | Endpoint Base |
 |---------|-------|---------------|
@@ -222,10 +238,12 @@ Para microsserviços, o frontend roteia automaticamente para o serviço correto 
 | Desafio | Solução Implementada |
 |---------|---------------------|
 | Comunicação entre serviços | HTTP + Service Bus |
-| Consistência de dados | Transações locais + Eventual Consistency |
-| Falhas em cascata | Circuit Breaker (Polly) |
+| Consistência de dados | **Banco compartilhado** (simplifica desenvolvimento) |
+| Falhas em cascata | Circuit Breaker (Polly/Resilience4j) |
 | Service Discovery | Configuração estática (dev) / Azure Service Discovery (prod) |
 | Autenticação distribuída | JWT compartilhado |
+| Migrações de schema | EF Core migrations (ASP.NET) aplicadas ao Azure SQL |
+| Enum conventions | SCREAMING_SNAKE_CASE em todos os backends |
 
 ## Monitoramento
 

@@ -2,12 +2,14 @@
 
 ## 📋 Visão Geral
 
-O sistema agora suporta **dois backends diferentes** que podem ser alternados dinamicamente:
+O sistema agora suporta **quatro backends diferentes** que podem ser alternados dinamicamente:
 
-- **Spring Boot** (Java) - porta 8080
-- **ASP.NET Core** (C#) - porta 5000
+- **Spring Boot** (Java Monolito) - porta 8080
+- **ASP.NET Core** (C# Monolito) - porta 5000
+- **C# Azure Functions** (Microsserviços) - portas 7071-7076
+- **Java Azure Functions** (Microsserviços) - portas 7081-7086
 
-Ambos os backends implementam a mesma API REST e compartilham os mesmos dados iniciais.
+Todos os backends implementam a mesma API REST e compartilham o mesmo banco de dados em produção.
 
 ## 🎯 Como Usar
 
@@ -49,10 +51,29 @@ alternarBackend('SPRINGBOOT');
 // Alternar para ASP.NET Core
 alternarBackend('ASPNET');
 
+// Alternar para C# Functions
+alternarBackend('FUNCTIONS');
+
+// Alternar para Java Functions
+alternarBackend('FUNCTIONS_JAVA');
+
 // Verificar backend atual
 console.log(getBackendInfo());
 // { key: 'SPRINGBOOT', name: 'Spring Boot', url: 'http://localhost:8080/api', port: 8080 }
 ```
+
+## 🔧 Backends Disponíveis
+
+| Chave | Nome | URL Base | Portas | Tipo |
+|-------|------|----------|--------|------|
+| `SPRINGBOOT` | Spring Boot | http://localhost:8080/api | 8080 | Monolito |
+| `ASPNET` | ASP.NET Core | http://localhost:5000/api | 5000 | Monolito |
+| `FUNCTIONS` | C# Functions | http://localhost:707X/api | 7071-7076 | Microsserviços |
+| `FUNCTIONS_JAVA` | Java Functions | http://localhost:708X/api | 7081-7086 | Microsserviços |
+
+> **Nota:** Para microsserviços, cada serviço tem sua própria porta:
+> - Auth, Customers, Pets, Catalog, Scheduling, Orders
+> - O roteamento é feito automaticamente baseado no endpoint
 
 ## 🔧 Persistência
 

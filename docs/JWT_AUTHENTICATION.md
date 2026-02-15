@@ -1,5 +1,13 @@
 # 🔐 Autenticação JWT - JSON Web Tokens
 
+> **📌 Nota:** JWT está implementado de forma **idêntica nos 4 backends** do projeto:
+> - Spring Boot (porta 8080)
+> - ASP.NET Core (porta 5000)
+> - C# Azure Functions (portas 7071-7076)
+> - Java Azure Functions (portas 7081-7086)
+>
+> Todos usam a mesma chave secreta e geram tokens compatíveis entre si.
+
 ## 📋 Visão Geral
 
 Este documento descreve a implementação completa de autenticação JWT (JSON Web Tokens) nos backends do projeto Pet Shop, substituindo o sistema anterior baseado em tokens Base64.

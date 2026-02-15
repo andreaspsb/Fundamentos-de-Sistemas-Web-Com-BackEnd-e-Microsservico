@@ -1,4 +1,8 @@
-# 🚀 Quick Start - Backend ASP.NET
+# 🚀 Quick Start - Backend ASP.NET Core
+
+> **📌 Nota:** Este é **um dos 4 backends intercambiáveis** do projeto.
+> Você pode usar Spring Boot (8080), ASP.NET Core (5000), C# Functions (7071-7076) ou Java Functions (7081-7086).
+> Todos compartilham o mesmo banco de dados.
 
 ## Executar o Projeto
 
@@ -50,10 +54,25 @@ curl http://localhost:5000/api/servicos
 
 ## Compatibilidade
 
-✅ API 100% compatível com o backend Spring Boot
-✅ Mesmos endpoints
-✅ Mesmos dados iniciais
-✅ Mesma estrutura de DTOs
+✅ API 100% compatível com os outros 3 backends
+✅ Mesmos endpoints (Spring Boot, C# Functions, Java Functions)
+✅ Mesmos dados iniciais (banco compartilhado)
+✅ Mesma estrutura de DTOs (camelCase JSON)
+✅ Frontend pode alternar dinamicamente usando o toggle
+
+**Teste de Integração:**
+```bash
+# 1. Criar produto no ASP.NET Core
+curl -X POST http://localhost:5000/api/produtos \
+  -H "Content-Type: application/json" \
+  -d '{"nome":"Teste","preco":100,"categoriaId":1}'
+
+# 2. Ver mesmo produto no Spring Boot (banco compartilhado)
+curl http://localhost:8080/api/produtos
+
+# 3. Ou nas C# Functions
+curl http://localhost:7074/api/produtos
+```
 
 ## Tecnologias
 

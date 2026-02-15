@@ -1,5 +1,7 @@
 # Guia de Testes e Cobertura de Código
 
+> **⚙️ Sobre os backends:** Este projeto possui **4 backends intercambiáveis** (Spring Boot, ASP.NET Core, C# Azure Functions, Java Azure Functions). Este documento cobre os testes implementados em cada backend.
+
 ## Resumo da Cobertura de Testes
 
 ### Spring Boot (Backend Java)
@@ -71,6 +73,26 @@
 - `ServicosControllerTests`: 14 testes (CRUD, ativar/desativar)
 - `CategoriasControllerTests`: 11 testes (CRUD, listagem de ativas)
 
+### C# Azure Functions
+- **Total de Testes**: Em desenvolvimento
+- **Status**: ⏳ Testes de integração implementados
+- **Framework**: xUnit + Moq
+- **Estrutura**: 6 funções separadas (auth, customers, pets, catalog, scheduling, orders)
+
+**Cobertura atual:**
+- Testes de integração E2E via Playwright (testa todos os endpoints)
+- Testes unitários por função individual (em desenvolvimento)
+
+### Java Azure Functions
+- **Total de Testes**: Em desenvolvimento
+- **Status**: ⏳ Testes de integração implementados
+- **Framework**: JUnit 5 + Mockito
+- **Estrutura**: 6 funções separadas (auth-java, customers-java, pets-java, catalog-java, scheduling-java, orders-java)
+
+**Cobertura atual:**
+- Testes de integração E2E via Playwright (testa todos os endpoints)
+- Testes unitários compartilhados via `petshop-functions-shared` (em desenvolvimento)
+
 ---
 
 ## Executando os Testes
@@ -105,6 +127,38 @@ dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
 # Executar testes de uma classe específica
 dotnet test --filter "FullyQualifiedName~ProdutosControllerTests"
 dotnet test --filter "FullyQualifiedName~ClientesControllerTests"
+```
+
+### C# Azure Functions
+
+```bash
+# Testes de integração (E2E com Playwright)
+npm test  # Do diretório raiz do projeto
+
+# Testes unitários (quando implementados)
+cd functions/func-petshop-auth
+dotnet test
+
+cd ../func-petshop-customers
+dotnet test
+
+# E assim por diante para cada função
+```
+
+### Java Azure Functions
+
+```bash
+# Testes de integração (E2E com Playwright)
+npm test  # Do diretório raiz do projeto
+
+# Testes unitários (quando implementados)
+cd functions-java/func-petshop-auth-java
+mvn test
+
+cd ../func-petshop-customers-java
+mvn test
+
+# E assim por diante para cada função
 ```
 
 ---

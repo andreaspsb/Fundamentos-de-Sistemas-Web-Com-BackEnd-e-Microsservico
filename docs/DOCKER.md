@@ -2,6 +2,8 @@
 
 Este documento explica como usar Docker e Docker Compose para executar o projeto completo.
 
+> **⚙️ Sobre os backends:** Este projeto possui **4 backends intercambiáveis** (Spring Boot, ASP.NET Core, C# Functions, Java Functions). O `docker-compose.yml` inclui os 2 backends monolíticos (Spring Boot e ASP.NET). As Azure Functions (C# e Java) são executadas localmente com `func start` - veja [docs/MICROSSERVICOS.md](MICROSSERVICOS.md) para detalhes.
+
 ## 📋 Pré-requisitos
 
 - **Docker** 20.10+

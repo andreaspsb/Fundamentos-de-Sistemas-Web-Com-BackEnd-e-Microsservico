@@ -1,5 +1,14 @@
 # Petshop Backend - ASP.NET Core
 
+> **📌 Arquitetura Multi-Backend:** Este é **um dos 4 backends intercambiáveis** do projeto:
+> - **Spring Boot** (porta 8080) - Monolito Java
+> - **ASP.NET Core** (porta 5000) - **Monolito C# (este backend)**
+> - **C# Azure Functions** (portas 7071-7076) - Microsserviços C#
+> - **Java Azure Functions** (portas 7081-7086) - Microsserviços Java
+>
+> **Todos compartilham o mesmo banco de dados** (Azure SQL em produção, SQLite/H2 em desenvolvimento).
+> O frontend pode alternar entre eles dinamicamente usando o sistema de toggle.
+
 ## 🚀 Tecnologias
 
 - **.NET 8.0** - Framework multiplataforma da Microsoft
@@ -73,6 +82,12 @@ A aplicação estará disponível em:
 - **API**: http://localhost:5000 (HTTP) ou https://localhost:5001 (HTTPS)
 - **Swagger UI**: http://localhost:5000 ou https://localhost:5001
 
+**Portas dos Backends:**
+- **Spring Boot**: 8080
+- **ASP.NET Core** (este): 5000/5001
+- **C# Functions**: 7071-7076 (cada função em uma porta)
+- **Java Functions**: 7081-7086 (cada função em uma porta)
+
 ## 📚 Endpoints Disponíveis
 
 ### Autenticação
@@ -132,6 +147,7 @@ A aplicação estará disponível em:
 
 ## 💾 Banco de Dados
 
+### Desenvolvimento Local
 O projeto usa **SQLite**, um banco de dados baseado em arquivo que não requer instalação de servidor. 
 
 **Características do SQLite:**
@@ -140,6 +156,13 @@ O projeto usa **SQLite**, um banco de dados baseado em arquivo que não requer i
 - ✅ Ideal para desenvolvimento e aplicações pequenas/médias
 - ✅ Não requer configuração de servidor
 - ⚠️  Pode ser configurado para rodar em memória, mas por padrão persiste em arquivo
+
+### Produção (Azure)
+**Todos os 4 backends compartilham o mesmo Azure SQL Database:**
+- **Server**: `petshop-db.database.windows.net`
+- **Database**: `petshop-db`
+- **Implicação**: Dados criados em um backend são **imediatamente visíveis** em todos os outros
+- **Consistência**: Todos os backends usam as mesmas convenções (enums em SCREAMING_SNAKE_CASE)
 
 ### Connection String
 ```json
@@ -150,7 +173,7 @@ O projeto usa **SQLite**, um banco de dados baseado em arquivo que não requer i
 
 ### Dados Iniciais (Seed Data)
 
-O banco é inicializado automaticamente com dados **idênticos ao backend Spring Boot**:
+O banco é inicializado automaticamente com dados **idênticos aos outros 3 backends**:
 
 - **3 Categorias**:
   - Rações e Alimentação
@@ -263,7 +286,20 @@ Acesse o Swagger UI em http://localhost:5000 para documentação interativa e te
 
 ## 🤝 Compatibilidade com Frontend
 
-Esta API foi projetada para ser compatível com o frontend existente, mantendo a mesma estrutura de endpoints e contratos de dados do backend Spring Boot.
+Esta API implementa **exatamente o mesmo contrato de API** dos outros 3 backends:
+
+| Característica | Spring Boot | ASP.NET Core | C# Functions | Java Functions |
+|----------------|-------------|--------------|--------------|----------------|
+| Endpoints | ✅ | ✅ (este) | ✅ | ✅ |
+| DTOs (camelCase JSON) | ✅ | ✅ (este) | ✅ | ✅ |
+| Enum Convention | SCREAMING_SNAKE_CASE | SCREAMING_SNAKE_CASE | SCREAMING_SNAKE_CASE | SCREAMING_SNAKE_CASE |
+| Banco de Dados | Compartilhado | Compartilhado | Compartilhado | Compartilhado |
+| Swagger/OpenAPI | ✅ | ✅ (este) | ❌ | ❌ |
+| Arquitetura | Monolito | Monolito (este) | Microsserviços | Microsserviços |
+
+**Frontend Toggle System:**
+O frontend pode alternar dinamicamente entre os 4 backends usando o sistema de toggle visual.
+Todas as requisições funcionam identicamente, independente do backend escolhido.
 
 ## 📄 Licença
 

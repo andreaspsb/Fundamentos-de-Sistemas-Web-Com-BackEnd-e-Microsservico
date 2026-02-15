@@ -1,5 +1,13 @@
 # 🚀 Guia de Deploy - Pet Shop Full Stack
 
+> **📌 Arquitetura Multi-Backend:** Este projeto possui **4 backends diferentes** que podem ser deployados:
+> - **Spring Boot** (monolito Java) - portas 8080
+> - **ASP.NET Core** (monolito C#) - porta 5000
+> - **C# Azure Functions** (microsserviços) - portas 7071-7076
+> - **Java Azure Functions** (microsserviços) - portas 7081-7086
+>
+> Escolha qual backend deployar baseado em suas necessidades de arquitetura.
+
 Guia completo para fazer deploy do sistema Pet Shop em produção.
 
 ## 📋 Índice
@@ -15,6 +23,9 @@ Guia completo para fazer deploy do sistema Pet Shop em produção.
   - [Railway](#railway)
   - [AWS Elastic Beanstalk](#aws-elastic-beanstalk)
   - [Render](#render)
+- [Deploy de Azure Functions](#deploy-de-azure-functions) ⚡ **NOVO**
+  - [C# Azure Functions](#c-azure-functions)
+  - [Java Azure Functions](#java-azure-functions)
 - [Deploy do Frontend](#deploy-do-frontend)
   - [Vercel](#vercel)
   - [Netlify](#netlify)
@@ -526,6 +537,164 @@ eb open
 6. Adicione PostgreSQL: "New" → "PostgreSQL" → "Free"
 7. Conecte banco ao web service
 8. Deploy automático!
+
+---
+
+## ⚡ Deploy de Azure Functions
+
+**Recomendado para:** Arquitetura de microsserviços, escalabilidade automática  
+**Custo:** Consumption Plan (grátis até 1M execuções/mês) ou Premium  
+**Complexidade:** Alta (6 funções separadas)
+
+### C# Azure Functions
+
+#### Pré-requisitos
+```bash
+# Azure CLI
+az login
+
+# Azure Functions Core Tools
+npm install -g azure-functions-core-tools@4 --unsafe-perm true
+```
+
+#### Deploy via Azure CLI
+
+1. **Criar Resource Group:**
+```bash
+az group create --name petshop-rg --location brazilsouth
+```
+
+2. **Criar Storage Account:**
+```bash
+az storage account create \
+  --name petshopstorage \
+  --resource-group petshop-rg \
+  --location brazilsouth \
+  --sku Standard_LRS
+```
+
+3. **Criar Function App (para cada função):**
+```bash
+# Auth Service
+az functionapp create \
+  --resource-group petshop-rg \
+  --name func-petshop-auth \
+  --storage-account petshopstorage \
+  --consumption-plan-location brazilsouth \
+  --runtime dotnet-isolated \
+  --runtime-version 8 \
+  --functions-version 4
+
+# Repetir para: customers, pets, catalog, scheduling, orders
+```
+
+4. **Deploy de cada função:**
+```bash
+cd functions/func-petshop-auth
+func azure functionapp publish func-petshop-auth
+
+cd ../func-petshop-customers
+func azure functionapp publish func-petshop-customers
+
+# Repetir para todas as 6 funções
+```
+
+5. **Configurar variáveis de ambiente no Azure Portal:**
+```bash
+az functionapp config appsettings set \
+  --name func-petshop-auth \
+  --resource-group petshop-rg \
+  --settings \
+    "SqlConnectionString=Server=..." \
+    "Jwt__SecretKey=your-secret-key-256-bits" \
+    "Jwt__Issuer=PetshopApi" \
+    "Jwt__Audience=PetshopFrontend"
+```
+
+#### URLs de Produção (exemplo)
+```
+https://func-petshop-auth.azurewebsites.net/api/auth/login
+https://func-petshop-customers.azurewebsites.net/api/clientes
+https://func-petshop-pets.azurewebsites.net/api/pets
+https://func-petshop-catalog.azurewebsites.net/api/produtos
+https://func-petshop-scheduling.azurewebsites.net/api/agendamentos
+https://func-petshop-orders.azurewebsites.net/api/pedidos
+```
+
+### Java Azure Functions
+
+#### Pré-requisitos
+```bash
+# Java 17
+java -version
+
+# Maven
+mvn -version
+
+# Azure CLI
+az login
+```
+
+#### Deploy via Maven Plugin
+
+1. **Configurar `pom.xml` de cada função:**
+```xml
+<plugin>
+    <groupId>com.microsoft.azure</groupId>
+    <artifactId>azure-functions-maven-plugin</artifactId>
+    <version>1.27.0</version>
+    <configuration>
+        <appName>func-petshop-auth-java</appName>
+        <resourceGroup>petshop-rg</resourceGroup>
+        <region>brazilsouth</region>
+        <runtime>
+            <os>windows</os>
+            <javaVersion>17</javaVersion>
+        </runtime>
+    </configuration>
+</plugin>
+```
+
+2. **Deploy direto via Maven:**
+```bash
+cd functions-java/func-petshop-auth-java
+mvn clean package azure-functions:deploy
+
+# Repetir para todas as 6 funções Java
+```
+
+3. **Configurar connection string no Azure:**
+```bash
+az functionapp config appsettings set \
+  --name func-petshop-auth-java \
+  --resource-group petshop-rg \
+  --settings \
+    "SPRING_DATASOURCE_URL=jdbc:..." \
+    "JWT_SECRET=your-secret-key"
+```
+
+#### URLs de Produção (exemplo)
+```
+https://func-petshop-auth-java.azurewebsites.net/api/auth/login
+https://func-petshop-customers-java.azurewebsites.net/api/clientes
+https://func-petshop-pets-java.azurewebsites.net/api/pets
+https://func-petshop-catalog-java.azurewebsites.net/api/produtos
+https://func-petshop-scheduling-java.azurewebsites.net/api/agendamentos
+https://func-petshop-orders-java.azurewebsites.net/api/pedidos
+```
+
+### Configuração de CORS (Azure Functions)
+
+**IMPORTANTE:** CORS deve ser configurado no Azure Portal para cada Function App:
+
+```bash
+az functionapp cors add \
+  --name func-petshop-auth \
+  --resource-group petshop-rg \
+  --allowed-origins \
+    "https://yellow-field-047215b0f.3.azurestaticapps.net" \
+    "https://andreaspsb.github.io"
+```
 
 ---
 

@@ -2,9 +2,9 @@
 
 ## 🚀 3 Passos para Rodar o Projeto
 
-### Passo 1: Escolha seu Backend
+### Passo 1: Escolha seu Backend (4 Opções)
 
-#### Opção A: Spring Boot (Recomendado - Mais Completo) 🟢
+#### Opção A: Spring Boot (Monolito Java) 🟢
 
 ```bash
 cd backend-springboot
@@ -14,7 +14,7 @@ mvn spring-boot:run
 ✅ **Disponível em:** http://localhost:8080  
 ✅ **Swagger:** http://localhost:8080/swagger-ui.html
 
-#### Opção B: ASP.NET Core (Alternativo) 🟣
+#### Opção B: ASP.NET Core (Monolito C#) 🟣
 
 ```bash
 cd backend-aspnet/PetshopApi
@@ -24,7 +24,41 @@ dotnet run
 ✅ **Disponível em:** http://localhost:5000  
 ✅ **Swagger:** http://localhost:5000
 
-> 💡 **Dica:** Execute ambos e use o toggle no frontend!
+#### Opção C: Azure Functions C# (Microsserviços) 🔵
+
+```bash
+cd functions
+./start-all.sh      # Linux/Mac
+# ou
+./start-all.ps1     # Windows
+```
+
+✅ **Serviços disponíveis:**
+- Auth: http://localhost:7071/api
+- Customers: http://localhost:7072/api
+- Pets: http://localhost:7073/api
+- Catalog: http://localhost:7074/api
+- Scheduling: http://localhost:7075/api
+- Orders: http://localhost:7076/api
+
+#### Opção D: Azure Functions Java (Microsserviços) 🟡
+
+```bash
+cd functions-java
+./start-all-java.sh      # Linux/Mac
+# ou
+./start-all-java.ps1     # Windows
+```
+
+✅ **Serviços disponíveis:**
+- Auth: http://localhost:7081/api
+- Customers: http://localhost:7082/api
+- Pets: http://localhost:7083/api
+- Catalog: http://localhost:7084/api
+- Scheduling: http://localhost:7085/api
+- Orders: http://localhost:7086/api
+
+> 💡 **Dica:** Execute todos os 4 backends simultaneamente (portas diferentes) e use o toggle no frontend para alternar entre eles!
 
 ---
 
@@ -71,23 +105,29 @@ Ou use **Live Server** no VS Code (clique direito em `index.html` → "Open with
 
 ## 🔄 Sistema de Toggle
 
-**Alternar entre backends dinamicamente:**
+**Alternar entre os 4 backends dinamicamente:**
 
 1. Clique no toggle no canto superior direito
-2. Escolha **Spring Boot** ou **ASP.NET Core**
+2. Escolha entre:
+   - 🟢 **Spring Boot** (Monolito Java - porta 8080)
+   - 🟣 **ASP.NET Core** (Monolito C# - porta 5000)
+   - 🔵 **C# Functions** (Microsserviços - portas 7071-7076)
+   - 🟡 **Java Functions** (Microsserviços - portas 7081-7086)
 3. Pronto! Todas as requisições agora usam o backend selecionado
 
-**Spring Boot vs ASP.NET:**
+**Comparação de Backends:**
 
-| Funcionalidade | Spring Boot | ASP.NET Core |
-|----------------|-------------|--------------|
-| Produtos | ✅ | ✅ |
-| Categorias | ✅ | ✅ |
-| Clientes | ✅ | ✅ |
-| Pets | ✅ | ✅ |
-| Serviços | ✅ | ✅ |
-| Pedidos | ✅ | ⚠️ Em desenvolvimento |
-| Agendamentos | ✅ | ⚠️ Em desenvolvimento |
+| Funcionalidade | Spring Boot | ASP.NET Core | C# Functions | Java Functions |
+|----------------|-------------|--------------|--------------|----------------|
+| Produtos | ✅ | ✅ | ✅ | ✅ |
+| Categorias | ✅ | ✅ | ✅ | ✅ |
+| Clientes | ✅ | ✅ | ✅ | ✅ |
+| Pets | ✅ | ✅ | ✅ | ✅ |
+| Serviços | ✅ | ✅ | ✅ | ✅ |
+| Pedidos | ✅ | ✅ | ✅ | ✅ |
+| Agendamentos | ✅ | ✅ | ✅ | ✅ |
+| **Arquitetura** | Monolito | Monolito | Microsserviços | Microsserviços |
+| **Portas** | 8080 | 5000 | 7071-7076 | 7081-7086 |
 
 ---
 
@@ -182,10 +222,11 @@ cd frontend && python3 -m http.server 5500
 ## 🎉 Pronto!
 
 Agora você tem um sistema completo funcionando com:
-- ✅ Dois backends alternativos
+- ✅ Quatro backends intercambiáveis (2 monolitos + 2 microsserviços)
 - ✅ Frontend moderno e responsivo
-- ✅ Sistema de toggle dinâmico
+- ✅ Sistema de toggle dinâmico entre 4 opções
 - ✅ Dados iniciais já populados
 - ✅ Swagger para testar APIs
+- ✅ Banco de dados compartilhado entre todos os backends
 
 **Explore e divirta-se! 🐾**
